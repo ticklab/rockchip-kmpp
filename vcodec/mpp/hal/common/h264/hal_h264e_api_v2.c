@@ -20,8 +20,16 @@
 #include "hal_h264e_debug.h"
 #include "h264e_syntax.h"
 #include "hal_h264e_api_v2.h"
+
+#ifdef RKVEC580_H264
 #include "hal_h264e_vepu580.h"
+#endif
+
+#ifdef RKVEC540C_H264
 #include "hal_h264e_vepu540c.h"
+#endif
+
+
 
 typedef struct HalH264eCtx_t {
 	const MppEncHalApi *api;
@@ -43,7 +51,17 @@ static MPP_RET hal_h264e_init(void *hal, MppEncHalCfg * cfg)
 //      mpp_env_get_u32("hal_h264e_debug", &hal_h264e_debug, 0);
 
 //      if (vcodec_type & HAVE_RKVENC) {
+#ifdef RKVEC580_H264
 	api = &hal_h264e_vepu580;
+#endif
+
+#ifdef RKVEC540C_H264
+	api = &hal_h264e_vepu540c;
+#endif
+
+
+
+
 /*	} else {
 		mpp_err("vcodec type %08x can not find H.264 encoder device\n",
 			vcodec_type);

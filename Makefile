@@ -9,6 +9,8 @@ OSTYPE=linux
 
 TOP := $(PWD)
 
+VEPU_CORE := RKVEPU540C
+
 ifeq ($(CPU_TYPE), arm64)
 	export PREB_KO := ./prebuild/ko_64
 	export REL_KO  := ./prebuild/ko_64_rel
@@ -16,8 +18,6 @@ else
 	export PREB_KO := ./prebuild/ko_32
 	export REL_KO  := ./prebuild/ko_32_rel
 endif
-
-
 
 VCODEC_GIT_REVISION := \
 	$(shell git log -1 --no-decorate --date=short \
