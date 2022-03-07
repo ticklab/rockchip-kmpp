@@ -11,8 +11,10 @@ TOP := $(PWD)
 
 ifeq ($(CPU_TYPE), arm64)
 	export PREB_KO := ./prebuild/ko_64
+	export REL_KO  := ./prebuild/ko_64_rel
 else
 	export PREB_KO := ./prebuild/ko_32
+	export REL_KO  := ./prebuild/ko_32_rel
 endif
 
 
@@ -46,13 +48,20 @@ linux_build:
 	@echo ---- CPU_TYPE=$(CPU_TYPE)
 	@$(MAKE) CROSS_COMPILE=${CROSS_COMPILE} ARCH=$(CPU_TYPE) -C $(KERNEL_ROOT) M=$(PWD) modules
 	@mkdir -p $(PREB_KO)
-	cp mpp_vcodec.ko $(PREB_KO)
-	cp rk_vcodec.ko  $(PREB_KO)
+	@cp mpp_vcodec.ko $(PREB_KO)
+	@cp rk_vcodec.ko  $(PREB_KO)
+	@mkdir -p $(REL_KO)
+	@cp mpp_vcodec.ko $(REL_KO)
+	@cp rk_vcodec.ko  $(REL_KO)
+	@find $(REL_KO) -name "*.ko" | xargs ${CROSS_COMPILE}strip --strip-debug --remove-section=.comment --remove-section=.note --preserve-dates
 
 linux_clean:
 	@rm -f *.ko *.mod.c *.o
 	@rm -f *.symvers *.order
 	@rm -rf .*.ko.cmd .*.o.cmd .tmp_versions
 	@rm -rf $(PREB_KO)
-	$(RM) $(OBJS) 
-	$(RM) $(CMDS)
+	@$(RM) $(OBJS) 
+	@$(RM) $(CMDS)
+
+linux_release:
+	find $(REL_KO) -name "*.ko" | xargs ${CROSS_COMPILE}strip --strip-debug --remove-section=.comment --remove-section=.note --preserve-dates
