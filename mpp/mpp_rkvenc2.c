@@ -1278,6 +1278,12 @@ static inline int rkvenc_procfs_ccu_init(struct mpp_dev *mpp)
 {
 	return 0;
 }
+
+static inline int rkvenc_dump_session(struct mpp_session *session, struct seq_file *seq)
+{
+	return 0;
+}
+
 #endif
 
 static int rkvenc_init(struct mpp_dev *mpp)

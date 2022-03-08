@@ -365,18 +365,8 @@ static int mpp_service_probe(struct platform_device *pdev)
 	mpp_procfs_init(srv);
 
 	/* register sub drivers */
-	MPP_REGISTER_DRIVER(srv, HAS_RKVDEC, RKVDEC, rkvdec);
-	MPP_REGISTER_DRIVER(srv, HAS_RKVENC, RKVENC, rkvenc);
-	MPP_REGISTER_DRIVER(srv, HAS_VDPU1, VDPU1, vdpu1);
-	MPP_REGISTER_DRIVER(srv, HAS_VEPU1, VEPU1, vepu1);
-	MPP_REGISTER_DRIVER(srv, HAS_VDPU2, VDPU2, vdpu2);
-	MPP_REGISTER_DRIVER(srv, HAS_VEPU2, VEPU2, vepu2);
-	MPP_REGISTER_DRIVER(srv, HAS_VEPU22, VEPU22, vepu22);
-	MPP_REGISTER_DRIVER(srv, HAS_IEP2, IEP2, iep2);
-	MPP_REGISTER_DRIVER(srv, HAS_JPGDEC, JPGDEC, jpgdec);
-	MPP_REGISTER_DRIVER(srv, HAS_RKVDEC2, RKVDEC2, rkvdec2);
+
 	MPP_REGISTER_DRIVER(srv, HAS_RKVENC2, RKVENC2, rkvenc2);
-	MPP_REGISTER_DRIVER(srv, HAS_AV1DEC, AV1DEC, av1dec);
 
 	dev_info(dev, "probe success\n");
 	g_srv = srv;
