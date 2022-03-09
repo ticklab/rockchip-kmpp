@@ -2,9 +2,6 @@
 /*
  * Copyright (c) 2021 Fuzhou Rockchip Electronics Co., Ltd
  *
- * author:
- *
- *
  */
 #ifndef __ROCKCHIP_MPP_VCODEC_THREAD_H__
 #define __ROCKCHIP_MPP_VCODEC_THREAD_H__
@@ -71,7 +68,7 @@ struct vcodec_threads {
 	struct vcodec_module *module;
 
 	/* lock for global config and state change */
-	struct mutex lock;
+	spinlock_t lock;
 
 	enum vcodec_threads_status status;
 	int change;

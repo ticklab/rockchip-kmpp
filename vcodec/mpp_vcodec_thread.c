@@ -2,8 +2,6 @@
 /*
  * Copyright (c) 2021 Fuzhou Rockchip Electronics Co., Ltd
  *
- * author:
- *
  *
  */
 
@@ -152,8 +150,6 @@ struct vcodec_threads *vcodec_thread_create(struct vcodec_module *module)
 	struct vcodec_threads *thds = kzalloc(sizeof(*thds), GFP_KERNEL);
 
 	if (thds) {
-		mutex_init(&thds->lock);
-
 		/* setup init single thread pool without callback */
 		thds->set.count = 1;
 		thds->change =
@@ -163,6 +159,7 @@ struct vcodec_threads *vcodec_thread_create(struct vcodec_module *module)
 		thds->check = thds;
 		thds->module = module;
 		thds->status = VCODEC_THREADS_INVALID;
+		spin_lock_init(&thds->lock);
 	}
 
 	return thds;
@@ -170,10 +167,13 @@ struct vcodec_threads *vcodec_thread_create(struct vcodec_module *module)
 
 int vcodec_thread_destroy(struct vcodec_threads *thds)
 {
+	unsigned long lock_flags = 0;
+
 	if (check_vcodec_threads(thds, "destroy"))
 		return -EINVAL;
 
-	mutex_lock(&thds->lock);
+
+	spin_lock_irqsave(&thds->lock, lock_flags);
 
 	thds->status = VCODEC_THREADS_INVALID;
 
@@ -181,7 +181,8 @@ int vcodec_thread_destroy(struct vcodec_threads *thds)
 
 	thds->check = NULL;
 	thds->module = NULL;
-	mutex_unlock(&thds->lock);
+
+	spin_unlock_irqrestore(&thds->lock, lock_flags);
 
 	kfree(thds);
 
@@ -190,16 +191,20 @@ int vcodec_thread_destroy(struct vcodec_threads *thds)
 
 int vcodec_thread_set_count(struct vcodec_threads *thds, int count)
 {
+	unsigned long lock_flags = 0;
+
 	if (check_vcodec_threads(thds, "set count"))
 		return -EINVAL;
 
 	thread_dbg_flow("enter set count %d\n", count);
-	mutex_lock(&thds->lock);
+
+	spin_lock_irqsave(&thds->lock, lock_flags);
 	if (thds->set.count != count) {
 		thds->set.count = count;
 		thds->change |= VCODEC_THREADS_CHANGE_COUNT;
 	}
-	mutex_unlock(&thds->lock);
+
+	spin_unlock_irqrestore(&thds->lock, lock_flags);
 	thread_dbg_flow("leave set count\n");
 
 	return 0;
@@ -208,17 +213,21 @@ int vcodec_thread_set_count(struct vcodec_threads *thds, int count)
 int vcodec_thread_set_callback(struct vcodec_threads *thds,
 			       vcodec_work_func_t callback, void *param)
 {
+	unsigned long lock_flags = 0;
+
 	if (check_vcodec_threads(thds, "set callback"))
 		return -EINVAL;
 
 	thread_dbg_flow("enter set callback\n");
-	mutex_lock(&thds->lock);
+
+	spin_lock_irqsave(&thds->lock, lock_flags);
 	if (thds->set.callback != callback || thds->set.param != param) {
 		thds->set.callback = callback;
 		thds->set.param = param;
 		thds->change |= VCODEC_THREADS_CHANGE_CALLBACK;
 	}
-	mutex_unlock(&thds->lock);
+
+	spin_unlock_irqrestore(&thds->lock, lock_flags);
 	thread_dbg_flow("leave set callback\n");
 
 	return 0;
@@ -227,17 +236,20 @@ int vcodec_thread_set_callback(struct vcodec_threads *thds,
 int vcodec_thread_start(struct vcodec_threads *thds)
 {
 	int ret = 0;
+	unsigned long lock_flags = 0;
 
 	if (check_vcodec_threads(thds, "start"))
 		return -EINVAL;
 
 	thread_dbg_flow("enter start with change %x\n", thds->change);
-	mutex_lock(&thds->lock);
+
+	// spin_lock_irqsave(&thds->lock, lock_flags);
 	if (thds->status != VCODEC_THREADS_INVALID
 	    && thds->status != VCODEC_THREADS_READY) {
 		pr_err("%p can not start at status %s", thds,
 		       state_to_str(thds->status));
-		mutex_unlock(&thds->lock);
+
+		// spin_unlock_irqrestore(&thds->lock, lock_flags);
 		return -EINVAL;
 	}
 
@@ -259,7 +271,8 @@ int vcodec_thread_start(struct vcodec_threads *thds)
 	}
 
 	thds->status = VCODEC_THREADS_RUNNING;
-	mutex_unlock(&thds->lock);
+
+	// spin_unlock_irqrestore(&thds->lock, lock_flags);
 	thread_dbg_flow("leave start\n");
 
 	return ret;
@@ -267,16 +280,17 @@ int vcodec_thread_start(struct vcodec_threads *thds)
 
 int vcodec_thread_stop(struct vcodec_threads *thds)
 {
+	unsigned long lock_flags = 0;
+
 	if (check_vcodec_threads(thds, "stop"))
 		return -EINVAL;
 
 	thread_dbg_flow("enter stop\n");
-	mutex_lock(&thds->lock);
+
 	if (thds->status != VCODEC_THREADS_RUNNING
 	    && thds->status != VCODEC_THREADS_PAUSED) {
 		pr_err("%p can not stop at status %s", thds,
 		       state_to_str(thds->status));
-		mutex_unlock(&thds->lock);
 		return -EINVAL;
 	}
 
@@ -290,8 +304,9 @@ int vcodec_thread_stop(struct vcodec_threads *thds)
 		}
 	}
 
+	spin_lock_irqsave(&thds->lock, lock_flags);
 	thds->status = VCODEC_THREADS_READY;
-	mutex_unlock(&thds->lock);
+	spin_unlock_irqrestore(&thds->lock, lock_flags);
 	thread_dbg_flow("leave stop\n");
 
 	return 0;
@@ -299,52 +314,63 @@ int vcodec_thread_stop(struct vcodec_threads *thds)
 
 int vcodec_thread_pause(struct vcodec_threads *thds)
 {
+	unsigned long lock_flags = 0;
+
 	if (check_vcodec_threads(thds, "pause"))
 		return -EINVAL;
 
-	mutex_lock(&thds->lock);
+	spin_lock_irqsave(&thds->lock, lock_flags);
 	if (thds->status != VCODEC_THREADS_RUNNING) {
 		pr_err("%p can not pause at status %s", thds,
 		       state_to_str(thds->status));
-		mutex_unlock(&thds->lock);
+
+		spin_unlock_irqrestore(&thds->lock, lock_flags);
 		return -EINVAL;
 	}
 
 	thds->status = VCODEC_THREADS_PAUSED;
-	mutex_unlock(&thds->lock);
+
+	spin_unlock_irqrestore(&thds->lock, lock_flags);
 	return 0;
 }
 
 int vcodec_thread_resume(struct vcodec_threads *thds)
 {
+	unsigned long lock_flags = 0;
+
 	if (check_vcodec_threads(thds, "resume"))
 		return -EINVAL;
 
-	mutex_lock(&thds->lock);
+
+	spin_lock_irqsave(&thds->lock, lock_flags);
 	if (thds->status != VCODEC_THREADS_PAUSED) {
 		pr_err("%p can not resume at status %s", thds,
 		       state_to_str(thds->status));
-		mutex_unlock(&thds->lock);
+
+		spin_unlock_irqrestore(&thds->lock, lock_flags);
 		return -EINVAL;
 	}
 
 	thds->status = VCODEC_THREADS_RUNNING;
-	mutex_unlock(&thds->lock);
+
+	spin_unlock_irqrestore(&thds->lock, lock_flags);
 	return 0;
 }
 
 int vcodec_thread_trigger(struct vcodec_threads *thds)
 {
+	unsigned long lock_flags = 0;
+
 	if (check_vcodec_threads(thds, "stop"))
 		return -EINVAL;
 
-	mutex_lock(&thds->lock);
+	spin_lock_irqsave(&thds->lock, lock_flags);
 	thread_dbg_flow("enter trigger %llu\n", thds->queue_cnt);
 
 	if (thds->status != VCODEC_THREADS_RUNNING) {
 		pr_err("%p can not trigger at status %s", thds,
 		       state_to_str(thds->status));
-		mutex_unlock(&thds->lock);
+		spin_unlock_irqrestore(&thds->lock, lock_flags);
 		return -EINVAL;
 	}
 
@@ -385,7 +411,7 @@ int vcodec_thread_trigger(struct vcodec_threads *thds)
 
 	thread_dbg_flow("leave trigger %llu:%llu\n", thds->queue_cnt,
 			thds->miss_cnt);
-	mutex_unlock(&thds->lock);
 
+	spin_unlock_irqrestore(&thds->lock, lock_flags);
 	return 0;
 }
