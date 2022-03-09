@@ -177,6 +177,9 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 		enc->rc_ctx = NULL;
 	}
 
+    mpp_enc_unref_osd_buf(&enc->cfg.osd);
+	mpp_enc_unref_osd_buf(&enc->cur_osd);
+
 	MPP_FREE(enc->rc_cfg_info);
 	enc->rc_cfg_size = 0;
 	enc->rc_cfg_length = 0;

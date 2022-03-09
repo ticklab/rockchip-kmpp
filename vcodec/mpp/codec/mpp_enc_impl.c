@@ -667,6 +667,25 @@ static MPP_RET mpp_enc_proc_ref_cfg(MppEncImpl *enc, void *param)
 	return ret;
 }
 
+MPP_RET mpp_enc_unref_osd_buf(MppEncOSDData3 *osd)
+{
+	RK_U32 i = 0;
+	if (!osd || !osd->change){
+		return MPP_OK;
+	}
+
+	for( i = 0; i < osd->num_region; i ++){
+		MppEncOSDRegion3 *rgn = &osd->region[i];
+		if (rgn->osd_buf.buf) {
+			mpi_buf_unref(rgn->osd_buf.buf);
+		}
+
+		if (rgn->inv_cfg.inv_buf.buf) {
+			mpi_buf_unref(rgn->inv_cfg.inv_buf.buf);
+		}
+	}
+	return MPP_OK;
+}
 MPP_RET mpp_enc_proc_export_osd_buf(MppEncOSDData3 *osd)
 {
 	RK_U32 i = 0;
@@ -842,6 +861,7 @@ MPP_RET mpp_enc_proc_cfg(MppEncImpl * enc, MpiCmd cmd, void *param)
 		break;
 	case MPP_ENC_SET_OSD_DATA_CFG:{
 			MppEncCfgSet *cfg = &enc->cfg;
+            mpp_enc_unref_osd_buf(&cfg->osd);
 			memcpy(&cfg->osd, param, sizeof(cfg->osd));
             mpp_enc_proc_export_osd_buf(&cfg->osd);
 		}
@@ -1466,28 +1486,29 @@ MPP_RET mpp_enc_impl_free_task(MppEncImpl * enc)
 MPP_RET mpp_enc_impl_get_roi_osd(MppEncImpl * enc, MppFrame frame)
 {
 
-    if (enc->cfg.roi.change){
-        memcpy(&enc->cur_roi, &enc->cfg.roi, sizeof(enc->cur_roi));
-        enc->cfg.roi.change = 0;
-    }
+	if (enc->cfg.roi.change){
+		memcpy(&enc->cur_roi, &enc->cfg.roi, sizeof(enc->cur_roi));
+		enc->cfg.roi.change = 0;
+	}
 
-    if (enc->cfg.osd.change){
-        memcpy(&enc->cur_osd, &enc->cfg.osd, sizeof(enc->cur_osd));
-        enc->cfg.roi.change = 0;
-    }
+	if (enc->cfg.osd.change){
+		mpp_enc_unref_osd_buf(&enc->cur_osd);
+		memcpy(&enc->cur_osd, &enc->cfg.osd, sizeof(enc->cur_osd));
+		enc->cfg.osd.change = 0;
+	}
 
-    if (!frame){
-        return MPP_OK;
-    }
-    if (enc->cur_roi.change){
-        mpp_log("attch roi to frame");
-        mpp_frame_add_roi(frame, &enc->cur_roi);
-    }
+	if (!frame){
+		return MPP_OK;
+	}
+	if (enc->cur_roi.change){
+		mpp_log("attch roi to frame");
+		mpp_frame_add_roi(frame, &enc->cur_roi);
+	}
 
-    if (enc->cur_osd.change) {
-        mpp_log("attch osd to frame");
-        mpp_frame_add_osd(frame, &enc->cur_osd);
-    }
+	if (enc->cur_osd.change) {
+		mpp_log("attch osd to frame");
+		mpp_frame_add_osd(frame, &enc->cur_osd);
+	}
 	return MPP_OK;
 }
 

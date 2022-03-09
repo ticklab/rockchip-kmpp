@@ -126,6 +126,7 @@ extern "C" {
 	MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet, MppPacket * jpeg_packet);
 	MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx);
 	void    mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id);
+    MPP_RET mpp_enc_unref_osd_buf(MppEncOSDData3 *osd);
 #ifdef __cplusplus
 }
 #endif
