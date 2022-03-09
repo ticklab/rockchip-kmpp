@@ -78,6 +78,7 @@ MPP_RET hal_jpege_v540c_init(void *hal, MppEncHalCfg * cfg)
 
 	ctx->frame_cnt = 0;
 	ctx->enc_mode = 1;
+	ctx->online = cfg->online;
 	cfg->type = VPU_CLIENT_RKVENC;
 	ret = mpp_dev_init(&cfg->dev, cfg->type);
 	if (ret) {

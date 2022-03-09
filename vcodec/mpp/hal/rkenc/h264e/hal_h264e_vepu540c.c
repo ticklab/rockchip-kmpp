@@ -2049,6 +2049,7 @@ static MPP_RET hal_h264e_vepu540c_comb_start(void *hal, HalEncTask *task, HalEnc
 	jpeg_cfg.reg_tab = &ctx->regs_set->jpeg_table;
 	jpeg_cfg.enc_task = jpeg_task;
 	jpeg_cfg.input_fmt = &cfg;
+	jpeg_cfg.online = ctx->online;
 	vepu540c_set_jpeg_reg(&jpeg_cfg);
 	//osd part todo
 	if (jpeg_task->jpeg_tlb_reg)
