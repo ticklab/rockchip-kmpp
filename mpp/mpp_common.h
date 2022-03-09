@@ -85,6 +85,7 @@ enum MPP_DRIVER_TYPE {
 	MPP_DRIVER_JPGDEC,
 	MPP_DRIVER_RKVDEC2,
 	MPP_DRIVER_RKVENC2,
+	MPP_DRIVER_RKVENC540C,
 	MPP_DRIVER_AV1DEC,
 	MPP_DRIVER_BUTT,
 };
@@ -354,6 +355,7 @@ struct mpp_dev {
 	/* multi-core data */
 	struct list_head queue_link;
 	s32 core_id;
+	u32 dump_regs;
 };
 
 struct mpp_session {
@@ -418,6 +420,8 @@ enum mpp_task_state {
 	TASK_STATE_ABORT	= 9,
 	TASK_STATE_ABORT_READY	= 10,
 	TASK_STATE_PROC_DONE	= 11,
+	TASK_STATE_LINK_FILLED	= 12,
+	TASK_STATE_LINK_CONFIG	= 13,
 };
 
 /* The context for the a task */
@@ -455,6 +459,9 @@ struct mpp_task {
 	/* for multi-core */
 	struct mpp_dev *mpp;
 	s32 core_id;
+
+	u32 dvbm_en;
+	u32 task_no;
 };
 
 struct mpp_taskqueue {
@@ -835,6 +842,7 @@ extern struct platform_driver rockchip_iep2_driver;
 extern struct platform_driver rockchip_jpgdec_driver;
 extern struct platform_driver rockchip_rkvdec2_driver;
 extern struct platform_driver rockchip_rkvenc2_driver;
+extern struct platform_driver rockchip_rkvenc540c_driver;
 extern struct platform_driver rockchip_av1dec_driver;
 extern struct platform_driver rockchip_av1_iommu_driver;
 

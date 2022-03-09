@@ -36,8 +36,14 @@
 #include "mpp_common.h"
 #include "mpp_iommu.h"
 
+#if 0
 #define MPP_WORK_TIMEOUT_DELAY		(200)
 #define MPP_WAIT_TIMEOUT_DELAY		(2000)
+#else
+/* fpga test */
+#define MPP_WORK_TIMEOUT_DELAY		(2000)
+#define MPP_WAIT_TIMEOUT_DELAY		(5000)
+#endif
 
 /* Use 'v' as magic number */
 #define MPP_IOC_MAGIC		'v'
