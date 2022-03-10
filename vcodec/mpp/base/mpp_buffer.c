@@ -75,9 +75,6 @@ struct mpi_buf *mpi_buf_alloc_with_tag(size_t size, const char *tag,
 	if (mpibuf_fn->buf_alloc)
 		buf = mpibuf_fn->buf_alloc(size);
 
-	if (mpibuf_fn->buf_ref)
-		mpibuf_fn->buf_ref(buf);
-
 	return buf;
 }
 
@@ -163,9 +160,6 @@ MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer * buffer,
 	}
 	if (mpibuf_fn->buf_get_dmabuf)
 		buf_impl->dmabuf = mpibuf_fn->buf_get_dmabuf(mpi_buf);
-
-	if (mpibuf_fn->buf_ref)
-		mpibuf_fn->buf_ref(mpi_buf);
 
 	buf_impl->mpi_buf = mpi_buf;
 	buf_impl->info.size = size;
