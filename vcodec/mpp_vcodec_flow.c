@@ -126,8 +126,14 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 						    frm_info.jpeg_chan_id);
 				chan_entry->binder_chan_id =
 					frm_info.jpeg_chan_id;
+
 				comb_chan = mpp_vcodec_get_chan_entry(
 					frm_info.jpeg_chan_id, MPP_CTX_ENC);
+				atomic_inc(&comb_chan->runing);
+
+				if (comb_chan->state != CHAN_STATE_RUN) {
+					comb_chan = NULL;
+				}
 				if (comb_chan && comb_chan->handle) {
 					mpp_frame_init(&comb_frame);
 					mpp_frame_copy(comb_frame, frame);
@@ -158,11 +164,17 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 				if (MPP_OK == ret) {
 					atomic_inc(
 						&chan_entry->cfg.comb_runing);
-					atomic_inc(&comb_chan->runing);
+					mpp_enc_hw_start(
+						(MppEnc)chan_entry->handle,
+						(MppEnc)comb_chan->handle);
+				} else {
+					atomic_dec(&comb_chan->runing);
+					wake_up(&comb_chan->stop_wait);
+					mpp_enc_hw_start(
+						(MppEnc)chan_entry->handle,
+						NULL);
 				}
 
-				mpp_enc_hw_start((MppEnc)chan_entry->handle,
-						 (MppEnc)comb_chan->handle);
 			} else {
 				mpp_enc_hw_start((MppEnc)chan_entry->handle,
 						 NULL);
