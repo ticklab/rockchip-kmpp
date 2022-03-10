@@ -784,7 +784,7 @@ static int rkvenc_link_fill_table(struct rkvenc_link_dev *link,
 	u32 *tb_reg = (u32 *)table->vaddr;
 	struct rkvenc_hw_info *hw = task->hw_info;
 
-	mpp_err("table->iova=%llx\n", table->iova);
+	mpp_err("table->iova=%pad \n", &table->iova);
 	/* set class data addr valid */
 	hdr = (struct rkvenc_link_header *)table->vaddr;
 	hdr->node_cfg.node_int = 1;
