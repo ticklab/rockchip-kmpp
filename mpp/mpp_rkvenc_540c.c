@@ -783,9 +783,8 @@ static int rkvenc_link_fill_table(struct rkvenc_link_dev *link,
 	struct rkvenc_reg_msg *msg;
 	u32 *tb_reg = (u32 *)table->vaddr;
 	struct rkvenc_hw_info *hw = task->hw_info;
-	struct rkvenc_dev *enc = link->enc;
 
-	mpp_err("table->iova=0x%08x\n", table->iova);
+	mpp_err("table->iova=%llx\n", table->iova);
 	/* set class data addr valid */
 	hdr = (struct rkvenc_link_header *)table->vaddr;
 	hdr->node_cfg.node_int = 1;
@@ -834,27 +833,12 @@ static int rkvenc_link_fill_table(struct rkvenc_link_dev *link,
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	{
 		u32 dvbm_cfg = task->reg[RKVENC_CLASS_CTL].data[24];
+		struct rkvenc_dev *enc = link->enc;
+
 		di = link->class_off[RKVENC_CLASS_PIC] / sizeof(u32);
-
 		if (dvbm_cfg) {
-			tb_reg[di++] = enc->ybuf_top;
-			tb_reg[di++] = enc->cbuf_top;
-			tb_reg[di++] = enc->ybuf_bot;
-			tb_reg[di++] = enc->cbuf_bot;
-			// mpp_write(mpp, 0x270, enc->ybuf_top);
-			// mpp_write(mpp, 0x274, enc->cbuf_top);
-			// mpp_write(mpp, 0x278, enc->ybuf_bot);
-			// mpp_write(mpp, 0x27c, enc->cbuf_bot);
-
-			// if (jpeg_cfg) {
-			// 	mpp_write(mpp, 0x410, enc->ybuf_bot);
-			// 	mpp_write(mpp, 0x414, enc->cbuf_bot);
-			// 	mpp_write(mpp, 0x418, enc->ybuf_top);
-			// 	mpp_write(mpp, 0x41c, enc->cbuf_top);
-			// }
 			enc->dvbm_en = dvbm_cfg;
 			rk_dvbm_link(enc->port);
-
 		}
 	}
 #endif
@@ -973,7 +957,6 @@ static int rkvenc_run_start_link(struct mpp_dev *mpp,
 	/* set interrupt enable */
 	// mpp_write_relaxed(mpp, hw->int_mask_base, 0x3FF);
 	/* set link start addr */
-	mpp_err("task->table->iova=0x%08x\n", task->table->iova);
 	mpp_write(mpp, hw->link_addr_base, task->table->iova);
 
 	return 0;
@@ -1946,7 +1929,6 @@ static int rkvenc_link_alloc_table(struct rkvenc_dev *enc,
 			ret = -ENOMEM;
 			goto err_free_node;
 		}
-		mpp_err("i=%d, table->iova=%x\n", i, table->iova);
 		hdr = (struct rkvenc_link_header *)table->vaddr;
 		// hdr->base_cfg.lkt_addr = table->iova + link->class_off[RKVENC_CLASS_BASE];
 		hdr->pic_cfg.lkt_addr = table->iova + link->class_off[RKVENC_CLASS_PIC];
@@ -1965,7 +1947,6 @@ static int rkvenc_link_alloc_table(struct rkvenc_dev *enc,
 			hdr = (struct rkvenc_link_header *)prev->vaddr;
 			hdr->next_node.valid = 1;
 			hdr->next_node.next_addr = table->iova;
-			mpp_err("i=%d, prev->iova=%x\n", i, prev->iova);
 		}
 		list_add_tail(&table->link, &link->unused_list);
 		mutex_unlock(&link->list_mutex);

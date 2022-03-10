@@ -236,20 +236,17 @@ int vcodec_thread_set_callback(struct vcodec_threads *thds,
 int vcodec_thread_start(struct vcodec_threads *thds)
 {
 	int ret = 0;
-	unsigned long lock_flags = 0;
 
 	if (check_vcodec_threads(thds, "start"))
 		return -EINVAL;
 
 	thread_dbg_flow("enter start with change %x\n", thds->change);
 
-	// spin_lock_irqsave(&thds->lock, lock_flags);
 	if (thds->status != VCODEC_THREADS_INVALID
 	    && thds->status != VCODEC_THREADS_READY) {
 		pr_err("%p can not start at status %s", thds,
 		       state_to_str(thds->status));
 
-		// spin_unlock_irqrestore(&thds->lock, lock_flags);
 		return -EINVAL;
 	}
 
@@ -272,7 +269,6 @@ int vcodec_thread_start(struct vcodec_threads *thds)
 
 	thds->status = VCODEC_THREADS_RUNNING;
 
-	// spin_unlock_irqrestore(&thds->lock, lock_flags);
 	thread_dbg_flow("leave start\n");
 
 	return ret;
