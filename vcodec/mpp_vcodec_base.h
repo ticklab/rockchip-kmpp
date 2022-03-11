@@ -56,6 +56,7 @@ struct mpp_chan {
 	struct list_head stream_done;
 	struct list_head stream_remove;
 	atomic_t stream_count;
+	atomic_t str_out_cnt;
 };
 
 struct stream_packet {

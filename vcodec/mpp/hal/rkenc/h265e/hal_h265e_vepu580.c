@@ -1761,14 +1761,14 @@ void vepu580_h265_set_hw_address(H265eV580HalContext * ctx,
 	}
 
 	regs->reg0175_adr_bsbs =
-	    mpp_dev_get_iova_address(ctx->dev, enc_task->output, 0);
+	    mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, enc_task->output->start_offset);
 	/* TODO: stream size relative with syntax */
 
 	regs->reg0172_bsbt_addr = regs->reg0175_adr_bsbs;
 	regs->reg0173_bsbb_addr = regs->reg0175_adr_bsbs;
 	regs->reg0174_bsbr_addr = regs->reg0175_adr_bsbs;
 
-	regs->reg0172_bsbt_addr += mpp_buffer_get_size(task->output) - 1;
+	regs->reg0172_bsbt_addr += task->output->size - 1;
 	regs->reg0175_adr_bsbs =
 	    regs->reg0175_adr_bsbs + mpp_packet_get_length(task->packet);
 	regs->reg0204_pic_ofst.pic_ofst_y = mpp_frame_get_offset_y(task->frame);
@@ -2345,7 +2345,8 @@ MPP_RET hal_h265e_v580_wait(void *hal, HalEncTask * task)
 			  elem->hw_status);
 
 	mpp_dev_release_iova_address(ctx->dev, task->input);
-	mpp_dev_release_iova_address(ctx->dev, task->output);
+	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
+    mpp_buffer_flush_for_cpu(task->output->buf);
 	hal_h265e_leave();
 	return ret;
 }

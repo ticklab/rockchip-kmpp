@@ -384,7 +384,8 @@ struct mpp_frame_infos{
     RK_U64  pts;
     RK_S32  jpeg_chan_id;
     void    *osd_buf;
-    RK_U32  res[10];
+    RK_S32  mpi_buf_id;
+    RK_U32  res[9];
 };
 /*
  * HDR parameter

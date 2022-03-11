@@ -10,11 +10,13 @@
 #define MODULE_TAG "mpp_buffer"
 
 #include <linux/string.h>
+#include <linux/dma-buf.h>
 
 #include "mpp_log.h"
 #include "mpp_mem.h"
 #include "mpp_buffer.h"
 #include "rk_export_func.h"
+#include "mpp_frame.h"
 
 struct MppBufferImpl {
 	MppBufferInfo info;
@@ -24,16 +26,16 @@ struct MppBufferImpl {
 	RK_S32 ref_count;
 };
 
-MPP_RET mpp_buffer_import_with_tag(MppBufferGroup group, MppBufferInfo * info,
-				   MppBuffer * buffer, const char *tag,
+MPP_RET mpp_buffer_import_with_tag(MppBufferGroup group, MppBufferInfo *info,
+				   MppBuffer *buffer, const char *tag,
 				   const char *caller)
 {
 	MPP_RET ret = MPP_OK;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
-    if (!mpibuf_fn){
-        mpp_err_f("mpibuf_ops get fail");
-        return MPP_NOK;
-    }
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return MPP_NOK;
+	}
 
 	if (NULL == info) {
 		mpp_err("mpp_buffer_commit invalid input: info NULL from %s\n",
@@ -51,8 +53,7 @@ MPP_RET mpp_buffer_import_with_tag(MppBufferGroup group, MppBufferInfo * info,
 		buf->mpi_buf = (struct mpi_buf *)buf->info.hnd;
 
 		if (mpibuf_fn->buf_get_dmabuf)
-			buf->dmabuf =
-			    mpibuf_fn->buf_get_dmabuf(buf->mpi_buf);
+			buf->dmabuf = mpibuf_fn->buf_get_dmabuf(buf->mpi_buf);
 
 		if (mpibuf_fn->buf_ref)
 			mpibuf_fn->buf_ref(buf->mpi_buf);
@@ -67,22 +68,22 @@ struct mpi_buf *mpi_buf_alloc_with_tag(size_t size, const char *tag,
 				       const char *caller)
 {
 	struct mpi_buf *buf = NULL;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
-    if (!mpibuf_fn){
-        mpp_err_f("mpibuf_ops get fail");
-        return NULL;
-    }
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return NULL;
+	}
 	if (mpibuf_fn->buf_alloc)
 		buf = mpibuf_fn->buf_alloc(size);
 
 	return buf;
 }
 
-MPP_RET mpi_buf_ref_with_tag(struct mpi_buf * buf, const char *tag,
-			      const char *caller)
+MPP_RET mpi_buf_ref_with_tag(struct mpi_buf *buf, const char *tag,
+			     const char *caller)
 {
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
-	if (!mpibuf_fn){
+	if (!mpibuf_fn) {
 		mpp_err_f("mpibuf_ops get fail");
 		return MPP_NOK;
 	}
@@ -93,12 +94,11 @@ MPP_RET mpi_buf_ref_with_tag(struct mpi_buf * buf, const char *tag,
 	return MPP_OK;
 }
 
-
-MPP_RET mpi_buf_unref_with_tag(struct mpi_buf * buf, const char *tag,
-			      const char *caller)
+MPP_RET mpi_buf_unref_with_tag(struct mpi_buf *buf, const char *tag,
+			       const char *caller)
 {
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
-	if (!mpibuf_fn){
+	if (!mpibuf_fn) {
 		mpp_err_f("mpibuf_ops get fail");
 		return MPP_NOK;
 	}
@@ -111,41 +111,40 @@ MPP_RET mpi_buf_unref_with_tag(struct mpi_buf * buf, const char *tag,
 
 struct dma_buf *mpi_buf_get_dma_with_caller(MpiBuf buffer, const char *caller)
 {
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 	struct dma_buf *dmabuf = NULL;
 
-    if (!mpibuf_fn){
-        mpp_err_f("mpibuf_ops get fail");
-        return NULL;
-    }
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return NULL;
+	}
 
-    if (!buffer){
-        return NULL;
-    }
+	if (!buffer) {
+		return NULL;
+	}
 
 	if (mpibuf_fn->buf_get_dmabuf)
-	    dmabuf = mpibuf_fn->buf_get_dmabuf(buffer);
+		dmabuf = mpibuf_fn->buf_get_dmabuf(buffer);
 
-    return dmabuf;
+	return dmabuf;
 }
 
-MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer * buffer,
+MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer *buffer,
 				size_t size, const char *tag,
 				const char *caller)
 {
 	struct mpi_buf *mpi_buf = NULL;
 	struct MppBufferImpl *buf_impl = NULL;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 
-    if (!mpibuf_fn){
-        mpp_err_f("mpibuf_ops get fail");
-        return MPP_NOK;
-    }
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return MPP_NOK;
+	}
 	buf_impl = mpp_calloc(struct MppBufferImpl, 1);
 	if (NULL == buf_impl) {
-		mpp_err
-		    ("buf impl malloc fail : group %p buffer %p size %u from %s\n",
-		     group, buffer, (RK_U32) size, caller);
+		mpp_err("buf impl malloc fail : group %p buffer %p size %u from %s\n",
+			group, buffer, (RK_U32)size, caller);
 		return MPP_ERR_UNKNOW;
 	}
 
@@ -153,9 +152,8 @@ MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer * buffer,
 		mpi_buf = mpibuf_fn->buf_alloc(size);
 
 	if (NULL == mpi_buf || 0 == size) {
-		mpp_err
-		    ("mpp_buffer_get invalid input: group %p buffer %p size %u from %s\n",
-		     group, buffer, (RK_U32) size, caller);
+		mpp_err("mpp_buffer_get invalid input: group %p buffer %p size %u from %s\n",
+			group, buffer, (RK_U32)size, caller);
 		return MPP_ERR_UNKNOW;
 	}
 	if (mpibuf_fn->buf_get_dmabuf)
@@ -173,12 +171,12 @@ MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer * buffer,
 MPP_RET mpp_buffer_put_with_caller(MppBuffer buffer, const char *caller)
 {
 	struct MppBufferImpl *buf_impl = (struct MppBufferImpl *)buffer;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 
-    if (!mpibuf_fn){
-        mpp_err_f("mpibuf_ops get fail");
-        return MPP_NOK;
-    }
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return MPP_NOK;
+	}
 
 	if (NULL == buf_impl) {
 		mpp_err("mpp_buffer_put invalid input: buffer NULL from %s\n",
@@ -203,9 +201,8 @@ MPP_RET mpp_buffer_inc_ref_with_caller(MppBuffer buffer, const char *caller)
 	struct MppBufferImpl *buf_impl = (struct MppBufferImpl *)buffer;
 
 	if (NULL == buf_impl) {
-		mpp_err
-		    ("mpp_buffer_inc_ref invalid input: buffer NULL from %s\n",
-		     caller);
+		mpp_err("mpp_buffer_inc_ref invalid input: buffer NULL from %s\n",
+			caller);
 		return MPP_ERR_UNKNOW;
 	}
 	buf_impl->ref_count++;
@@ -217,17 +214,16 @@ MPP_RET mpp_buffer_read_with_caller(MppBuffer buffer, size_t offset, void *data,
 {
 	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
 	void *src = NULL;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 
-    if (!mpibuf_fn){
-        mpp_err_f("mpibuf_ops get fail");
-        return MPP_NOK;
-    }
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return MPP_NOK;
+	}
 
 	if (NULL == p || NULL == data) {
-		mpp_err
-		    ("mpp_buffer_read invalid input: buffer %p data %p from %s\n",
-		     buffer, data, caller);
+		mpp_err("mpp_buffer_read invalid input: buffer %p data %p from %s\n",
+			buffer, data, caller);
 		return MPP_ERR_UNKNOW;
 	}
 
@@ -251,17 +247,16 @@ MPP_RET mpp_buffer_write_with_caller(MppBuffer buffer, size_t offset,
 {
 	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
 	void *dst = NULL;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 
-    if (!mpibuf_fn){
-        mpp_err_f("mpibuf_ops get fail");
-        return MPP_NOK;
-    }
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return MPP_NOK;
+	}
 
 	if (NULL == p || NULL == data) {
-		mpp_err
-		    ("mpp_buffer_write invalid input: buffer %p data %p from %s\n",
-		     buffer, data, caller);
+		mpp_err("mpp_buffer_write invalid input: buffer %p data %p from %s\n",
+			buffer, data, caller);
 		return MPP_ERR_UNKNOW;
 	}
 
@@ -285,12 +280,12 @@ MPP_RET mpp_buffer_write_with_caller(MppBuffer buffer, size_t offset,
 void *mpp_buffer_get_ptr_with_caller(MppBuffer buffer, const char *caller)
 {
 	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 
-    if (!mpibuf_fn){
-        mpp_err_f("mpibuf_ops get fail");
-        return NULL;
-    }
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return NULL;
+	}
 	if (NULL == p) {
 		mpp_err("mpp_buffer_get_ptr invalid NULL input from %s\n",
 			caller);
@@ -312,17 +307,23 @@ int mpp_buffer_get_fd_with_caller(MppBuffer buffer, const char *caller)
 {
 	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
 	int fd = -1;
+	mpp_log("p->info.fd %d", p->info.fd);
+	if (p->info.fd > 0) {
+		return p->info.fd;
+	}
 	if (NULL == p) {
 		mpp_err("mpp_buffer_get_fd invalid NULL input from %s\n",
 			caller);
 		return -1;
 	}
-
+	fd = dma_buf_fd(p->dmabuf, 0);
 	mpp_assert(fd >= 0);
 	if (fd < 0)
 		mpp_err("mpp_buffer_get_fd buffer %p fd %d from %s\n", buffer,
 			fd, caller);
 
+	mpp_log("dma_buf_fd fd %d", fd);
+	p->info.fd = fd;
 	return fd;
 }
 
@@ -410,20 +411,19 @@ MPP_RET mpp_buffer_set_offset_with_caller(MppBuffer buffer, size_t offset,
 	return MPP_OK;
 }
 
-MPP_RET mpp_buffer_info_get_with_caller(MppBuffer buffer, MppBufferInfo * info,
+MPP_RET mpp_buffer_info_get_with_caller(MppBuffer buffer, MppBufferInfo *info,
 					const char *caller)
 {
 	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 
-    if (!mpibuf_fn){
-      mpp_err_f("mpibuf_ops get fail");
-      return MPP_NOK;
-    }
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return MPP_NOK;
+	}
 	if (NULL == buffer || NULL == info) {
-		mpp_err
-		    ("mpp_buffer_info_get invalid input buffer %p info %p from %s\n",
-		     buffer, info, caller);
+		mpp_err("mpp_buffer_info_get invalid input buffer %p info %p from %s\n",
+			buffer, info, caller);
 		return MPP_ERR_UNKNOW;
 	}
 
@@ -431,6 +431,45 @@ MPP_RET mpp_buffer_info_get_with_caller(MppBuffer buffer, MppBufferInfo * info,
 		p->info.ptr = mpibuf_fn->buf_map(p->mpi_buf);
 
 	*info = p->info;
+	return MPP_OK;
+}
+
+MPP_RET mpp_buffer_flush_for_cpu_with_caller(MppBuffer buffer,
+					     const char *caller)
+{
+	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
+	if (NULL == p) {
+		mpp_err("mpp_buffer_set_offset invalid NULL input from %s\n",
+			caller);
+		return MPP_ERR_UNKNOW;
+	}
+	dma_buf_begin_cpu_access(p->dmabuf, DMA_FROM_DEVICE);
 	(void)caller;
 	return MPP_OK;
+}
+
+RK_S32 mpp_buffer_get_mpi_buf_id_with_caller(MppBuffer buffer,
+					     const char *caller)
+{
+	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	struct mpp_frame_infos frm_info;
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return -1;
+	}
+
+	if (NULL == buffer) {
+		mpp_err("mpp_buffer_get_mpi_buf_id invalid input buffer %p from %s\n",
+			buffer, caller);
+		return MPP_ERR_UNKNOW;
+	}
+	memset(&frm_info, 0, sizeof(frm_info));
+	if (mpibuf_fn->get_buf_frm_info)
+		mpibuf_fn->get_buf_frm_info(p->mpi_buf, &frm_info);
+	else {
+		mpp_err("get buf info fail");
+		return -1;
+	}
+	return frm_info.mpi_buf_id;
 }

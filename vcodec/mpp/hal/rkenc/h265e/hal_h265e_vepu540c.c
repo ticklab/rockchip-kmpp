@@ -1204,13 +1204,13 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	}
 
 	regs->reg0174_bsbs_addr =
-	        mpp_dev_get_iova_address(ctx->dev, enc_task->output, 0);
+	        mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, enc_task->output->start_offset);
 	/* TODO: stream size relative with syntax */
 	regs->reg0172_bsbt_addr = regs->reg0174_bsbs_addr;
 	regs->reg0173_bsbb_addr = regs->reg0174_bsbs_addr;
 	regs->reg0175_bsbr_addr = regs->reg0174_bsbs_addr;
 
-	regs->reg0172_bsbt_addr += mpp_buffer_get_size(task->output) - 1;
+	regs->reg0172_bsbt_addr += enc_task->output->size - 1;
 	regs->reg0174_bsbs_addr =
 	        regs->reg0174_bsbs_addr + mpp_packet_get_length(task->packet);
 
@@ -1727,7 +1727,8 @@ static MPP_RET hal_h265e_v540c_wait(void *hal, HalEncTask *task)
 		          elem->hw_status);
 
 	mpp_dev_release_iova_address(ctx->dev, task->input);
-	mpp_dev_release_iova_address(ctx->dev, task->output);
+	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
+    mpp_buffer_flush_for_cpu(task->output->buf);
 	hal_h265e_leave();
 	return ret;
 }
@@ -1815,6 +1816,7 @@ static MPP_RET hal_h265e_v540c_ret_comb_task(void *hal, HalEncTask *task, HalEnc
 	vepu540c_h265_fbk *fb = &ctx->feedback;
 	EncRcTaskInfo *hal_rc_ret = (EncRcTaskInfo *) &jpeg_enc_task->rc_task->info;
 	hal_h265e_enter();
+    mpp_buffer_flush_for_cpu(jpeg_enc_task->output->buf);
 
 	vepu540c_h265_set_feedback(ctx, enc_task);
 	enc_task->hw_length = fb->out_strm_size;

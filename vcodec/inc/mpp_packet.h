@@ -10,7 +10,7 @@
 #ifndef __MPP_PACKET_H__
 #define __MPP_PACKET_H__
 
-//#include "mpp_meta.h"
+#include "mpp_stream_ring_buf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,14 +20,15 @@ extern "C" {
  * MppPacket interface
  *
  * mpp_packet_init = mpp_packet_new + mpp_packet_set_data + mpp_packet_set_size
- * mpp_packet_copy_init = mpp_packet_init + memcpy
  */
 MPP_RET mpp_packet_new(MppPacket *packet);
+
+MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t min_size);
+
 MPP_RET mpp_packet_init(MppPacket *packet, void *data, size_t size);
 MPP_RET mpp_packet_init_with_buffer(MppPacket *packet, MppBuffer buffer);
-MPP_RET mpp_packet_copy_init(MppPacket *packet, const MppPacket src);
 MPP_RET mpp_packet_deinit(MppPacket *packet);
-
+MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet);
 /*
  * data   : ( R/W ) start address of the whole packet memory
  * size   : ( R/W ) total size of the whole packet memory
@@ -61,7 +62,6 @@ RK_U32  mpp_packet_get_temporal_id(const MppPacket packet);
 MPP_RET mpp_packet_set_eos(MppPacket packet);
 MPP_RET mpp_packet_clr_eos(MppPacket packet);
 RK_U32  mpp_packet_get_eos(MppPacket packet);
-MPP_RET mpp_packet_set_extra_data(MppPacket packet);
 
 void        mpp_packet_set_buffer(MppPacket packet, MppBuffer buffer);
 MppBuffer   mpp_packet_get_buffer(const MppPacket packet);
@@ -71,12 +71,6 @@ MppBuffer   mpp_packet_get_buffer(const MppPacket packet);
  */
 MPP_RET mpp_packet_read(MppPacket packet, size_t offset, void *data, size_t size);
 MPP_RET mpp_packet_write(MppPacket packet, size_t offset, void *data, size_t size);
-
-/*
- * meta data access interface
- */
-//RK_S32  mpp_packet_has_meta(const MppPacket packet);
-//MppMeta mpp_packet_get_meta(const MppPacket packet);
 
 /*
  * multi packet sequence interface for slice/split encoding/decoding

@@ -15,10 +15,9 @@
 #include "mpp_err.h"
 #include "mpp_mem.h"
 #include "mpp_packet.h"
-//#include "mpp_mem_pool.h"
 #include "mpp_packet_impl.h"
 #include "mpp_buffer.h"
-//#include "mpp_meta_impl.h"
+#include "mpp_maths.h"
 
 static const char *module_name = MODULE_TAG;
 //static MppMemPool mpp_packet_pool = mpp_mem_pool_init(sizeof(MppPacketImpl));
@@ -51,10 +50,64 @@ MPP_RET mpp_packet_new(MppPacket * packet)
 		mpp_err_f("malloc failed\n");
 		return MPP_ERR_NULL_PTR;
 	}
+
+	INIT_LIST_HEAD(&p->list);
+	kref_init(&p->ref);
+
 	setup_mpp_packet_name(p);
 
 	return MPP_OK;
 }
+
+MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t min_size)
+{
+	MppPacketImpl *p = NULL;
+
+	if (NULL == packet) {
+		mpp_err_f("invalid NULL input\n");
+		return MPP_ERR_NULL_PTR;
+	}
+
+	p = (MppPacketImpl *) mpp_calloc(MppPacketImpl, 1);
+
+	if (NULL == p) {
+		mpp_err_f("malloc failed\n");
+		return MPP_ERR_NULL_PTR;
+	}
+
+	INIT_LIST_HEAD(&p->list);
+	kref_init(&p->ref);
+	if (min_size)
+		min_size = (min_size + SZ_1K) & (SZ_1K - 1);
+
+	if (ring_buf_get_free(pool, &p->buf, 128, min_size, 1)){
+		MPP_FREE(p);
+		mpp_err_f("ring buffer alloc failed \n");
+		return MPP_ERR_MALLOC;
+	}
+
+	p->data = p->pos = p->buf.buf_start;
+	p->size = p->buf.size;
+	p->length = 0;
+	setup_mpp_packet_name(p);
+	p->ring_pool = pool;
+    *packet = p;
+	return MPP_OK;
+}
+
+MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet){
+	MppPacketImpl *p = NULL;
+	p = (MppPacketImpl *) packet;
+
+	if (p->ring_pool){
+		p->buf.use_len = p->length;
+		if(p->length > p->buf.size){
+			mpp_err("ring_buf used may be error");
+		}
+		ring_buf_put_use(p->ring_pool, &p->buf);
+	}
+	return MPP_OK;
+	}
 
 MPP_RET mpp_packet_init(MppPacket * packet, void *data, size_t size)
 {
@@ -70,7 +123,7 @@ MPP_RET mpp_packet_init(MppPacket * packet, void *data, size_t size)
 		mpp_err_f("new packet failed\n");
 		return ret;
 	}
-	p = (MppPacketImpl *) * packet;
+	p = (MppPacketImpl *) *packet;
 	p->data = p->pos = data;
 	p->size = p->length = size;
 
@@ -103,71 +156,6 @@ MPP_RET mpp_packet_init_with_buffer(MppPacket * packet, MppBuffer buffer)
 	return MPP_OK;
 }
 
-MPP_RET mpp_packet_copy_init(MppPacket * packet, const MppPacket src)
-{
-	MppPacketImpl *src_impl = NULL;
-	MPP_RET ret = MPP_OK;
-	MppPacket pkt;
-
-	if (NULL == packet || check_is_mpp_packet(src)) {
-		mpp_err_f("found invalid input %p %p\n", packet, src);
-		return MPP_ERR_UNKNOW;
-	}
-
-	*packet = NULL;
-
-	src_impl = (MppPacketImpl *) src;
-	ret = mpp_packet_new(&pkt);
-	if (ret)
-		return ret;
-
-	/* copy the source data */
-	memcpy(pkt, src_impl, sizeof(*src_impl));
-
-	/* increase reference of meta data */
-//    if (src_impl->meta)
-	//      mpp_meta_inc_ref(src_impl->meta);
-#if 0
-	if (src_impl->buffer) {
-		/* if source packet has buffer just create a new reference to buffer */
-		mpp_buffer_inc_ref(src_impl->buffer);
-	} else
-#endif
-	{
-		/*
-		 * NOTE: only copy valid data
-		 */
-		size_t length = mpp_packet_get_length(src);
-		/*
-		 * due to parser may be read 32 bit interface so we must alloc more size
-		 * then real size to avoid read carsh
-		 */
-		MppPacketImpl *p = NULL;
-		void *pos = mpp_malloc_size(void, length + 256);
-		if (NULL == pos) {
-			mpp_err_f("malloc failed, size %d\n", (RK_U32) length);
-			mpp_packet_deinit(&pkt);
-			return MPP_ERR_MALLOC;
-		}
-
-		p = (MppPacketImpl *) pkt;
-		p->data = p->pos = pos;
-		p->size = p->length = length;
-		p->flag |= MPP_PACKET_FLAG_INTERNAL;
-
-		if (length) {
-			memcpy(pos, src_impl->pos, length);
-			/*
-			 * clean more alloc byte to zero
-			 */
-			memset((RK_U8 *) pos + length, 0, 256);
-		}
-	}
-
-	*packet = pkt;
-	return MPP_OK;
-}
-
 MPP_RET mpp_packet_deinit(MppPacket * packet)
 {
 	MppPacketImpl *p = NULL;
@@ -186,11 +174,11 @@ MPP_RET mpp_packet_deinit(MppPacket * packet)
 	if (p->flag & MPP_PACKET_FLAG_INTERNAL)
 		mpp_free(p->data);
 
-	// if (p->meta)
-	// mpp_meta_put(p->meta);
-
-	// mpp_mem_pool_put(mpp_packet_pool, *packet);
-	mpp_free(*packet);
+	if (p->ring_pool){
+		ring_buf_put_free(p->ring_pool, &p->buf);
+		p->ring_pool = NULL;
+	}
+		mpp_free(*packet);
 	*packet = NULL;
 	return MPP_OK;
 }
@@ -265,16 +253,6 @@ RK_U32 mpp_packet_get_eos(MppPacket packet)
 	return (p->flag & MPP_PACKET_FLAG_EOS) ? (1) : (0);
 }
 
-MPP_RET mpp_packet_set_extra_data(MppPacket packet)
-{
-	MppPacketImpl *p = NULL;
-	if (check_is_mpp_packet(packet))
-		return MPP_ERR_UNKNOW;
-
-	p = (MppPacketImpl *) packet;
-	p->flag |= MPP_PACKET_FLAG_EXTRA_DATA;
-	return MPP_OK;
-}
 
 MPP_RET mpp_packet_reset(MppPacketImpl * packet)
 {
@@ -324,29 +302,6 @@ MppBuffer mpp_packet_get_buffer(const MppPacket packet)
 
 	p = (MppPacketImpl *) packet;
 	return p->buffer;
-}
-
-RK_S32 mpp_packet_has_meta(const MppPacket packet)
-{
-	if (check_is_mpp_packet(packet))
-		return 0;
-
-	//MppPacketImpl *p = (MppPacketImpl *)packet;
-
-	return 0;		//(NULL != p->meta);
-}
-
-MppMeta mpp_packet_get_meta(const MppPacket packet)
-{
-	// MppPacketImpl *p = NULL;
-	if (check_is_mpp_packet(packet))
-		return NULL;
-
-	// MppPacketImpl *p = (MppPacketImpl *)packet;
-	//  if (NULL == p->meta)
-	//    mpp_meta_get(&p->meta);
-
-	return NULL;		//p->meta;
 }
 
 MPP_RET mpp_packet_set_status(MppPacket packet, MppPacketStatus status)

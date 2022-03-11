@@ -63,7 +63,8 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	enc_hal_cfg.type = VPU_CLIENT_BUTT;
 	enc_hal_cfg.dev = NULL;
 	enc_hal_cfg.online = cfg->online;
-
+	p->ring_buf_size = cfg->buf_size;
+	p->max_strm_cnt = cfg->max_strm_cnt;
 	ctrl_cfg.coding = coding;
 	ctrl_cfg.type = VPU_CLIENT_BUTT;
 	ctrl_cfg.cfg = &p->cfg;
@@ -89,19 +90,19 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	rc_init(&p->rc_ctx, coding, NULL);
 
 	/*  ret = hal_info_init(&p->hal_info, MPP_CTX_ENC, coding);
-	   if (ret) {
-	   mpp_err_f("could not init hal info\n");
-	   goto ERR_RET;
-	   } */
+		if (ret) {
+		mpp_err_f("could not init hal info\n");
+		goto ERR_RET;
+		} */
 
 	p->coding = coding;
 	p->impl = impl;
 	p->enc_hal = enc_hal;
 	p->dev = enc_hal_cfg.dev;
-//    p->mpp      = cfg->mpp;
+	//    p->mpp      = cfg->mpp;
 	p->sei_mode = MPP_ENC_SEI_MODE_DISABLE;
-    p->version_info = VCODEC_VERSION;
-    p->version_length = strlen(p->version_info);
+	p->version_info = VCODEC_VERSION;
+	p->version_length = strlen(p->version_info);
 	p->rc_cfg_size = SZ_1K;
 	p->rc_cfg_info = mpp_calloc_size(char, p->rc_cfg_size);
 
@@ -116,16 +117,17 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 
 	/* NOTE: setup configure coding for check */
 	p->cfg.codec.coding = coding;
-//	p->cfg.plt_cfg.plt = &p->cfg.plt_data;
+	//	p->cfg.plt_cfg.plt = &p->cfg.plt_data;
 	mpp_enc_ref_cfg_init(&p->cfg.ref_cfg);
 	ret = mpp_enc_ref_cfg_copy(p->cfg.ref_cfg, mpp_enc_ref_default());
 	ret = mpp_enc_refs_set_cfg(p->refs, mpp_enc_ref_default());
 	sema_init(&p->enc_sem, 1);
 	p->stop_flag = 1;
 	p->rb_userdata.free_cnt = MAX_USRDATA_CNT;
+	p->ring_pool = mpp_calloc(ring_buf_pool, 1);
 	*enc = p;
 	return ret;
-ERR_RET:
+	ERR_RET:
 	mpp_enc_deinit(p);
 	return ret;
 }
@@ -177,7 +179,12 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 		enc->rc_ctx = NULL;
 	}
 
-    mpp_enc_unref_osd_buf(&enc->cfg.osd);
+	if (enc->ring_pool){
+		if (enc->ring_pool->buf){
+			mpp_buffer_put(enc->ring_pool->buf);
+		}
+		MPP_FREE(enc->ring_pool);
+	}
 	mpp_enc_unref_osd_buf(&enc->cur_osd);
 
 	MPP_FREE(enc->rc_cfg_info);

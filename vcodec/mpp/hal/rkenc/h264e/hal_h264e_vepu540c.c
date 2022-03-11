@@ -1216,13 +1216,13 @@ static void setup_vepu540c_io_buf(HalVepu540cRegSet *regs, MppDev dev,
 	MppFrame frm = task->frame;
 	MppPacket pkt = task->packet;
 	MppBuffer buf_in = mpp_frame_get_buffer(frm);
-	MppBuffer buf_out = task->output;
+	ring_buf *buf_out = task->output;
 	MppFrameFormat fmt = mpp_frame_get_fmt(frm);
 	RK_S32 hor_stride = mpp_frame_get_hor_stride(frm);
 	RK_S32 ver_stride = mpp_frame_get_ver_stride(frm);
 	RK_U32 off_in[2] = { 0 };
 	RK_U32 off_out = mpp_packet_get_length(pkt);
-	size_t siz_out = mpp_buffer_get_size(buf_out);
+	size_t siz_out = buf_out->size;
 
 	hal_h264e_dbg_func("enter\n");
 
@@ -1230,7 +1230,7 @@ static void setup_vepu540c_io_buf(HalVepu540cRegSet *regs, MppDev dev,
 	regs->reg_base.adr_src1 = regs->reg_base.adr_src0;
 	regs->reg_base.adr_src2 = regs->reg_base.adr_src0;
 
-	regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out, 0);
+	regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out, buf_out->size);
 	regs->reg_base.bsbr_addr = regs->reg_base.bsbb_addr;
 	regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr;
 	regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr;
@@ -1985,7 +1985,8 @@ static MPP_RET hal_h264e_vepu540c_wait(void *hal, HalEncTask *task)
 	}
 
 	mpp_dev_release_iova_address(ctx->dev, task->input);
-	mpp_dev_release_iova_address(ctx->dev, task->output);
+	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
+    mpp_buffer_flush_for_cpu(task->output->buf);
 	hal_h264e_dbg_func("leave %p\n", hal);
 
 	return ret;
@@ -2068,6 +2069,7 @@ static MPP_RET hal_h264e_vepu540c_ret_comb_task(void *hal, HalEncTask *task, Hal
 	EncRcTaskInfo *rc_info = &jpeg_task->rc_task->info;
 	HalVepu540cRegSet *regs = (HalVepu540cRegSet *)ctx->regs_set;
 
+    mpp_buffer_flush_for_cpu(jpeg_task->output->buf);
 	hal_h264e_dbg_func("enter %p\n", hal);
 	hal_h264e_vepu540c_ret_task(hal, task);
 

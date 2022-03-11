@@ -76,7 +76,7 @@ typedef struct MppEncImpl_t {
 	RK_U32 task_idx;
 	RK_S64 task_pts;
 	MppBuffer frm_buf;
-	MppBuffer pkt_buf;
+	ring_buf  *pkt_buf;
 
 	RK_U32 reset_flag;
 
@@ -113,6 +113,9 @@ typedef struct MppEncImpl_t {
     MppEncROICfg cur_roi;
     MppEncOSDData3 cur_osd;
     MppUserDataRb rb_userdata;
+    ring_buf_pool *ring_pool;
+    RK_U32 ring_buf_size;
+	RK_U32 max_strm_cnt;
 } MppEncImpl;
 
 #ifdef __cplusplus

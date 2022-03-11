@@ -161,8 +161,8 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 	JpegeBits bits = ctx->bits;
 	const RK_U8 *qtable[2] = { NULL };
 	size_t length = mpp_packet_get_length(task->packet);
-	RK_U8 *buf = mpp_buffer_get_ptr(task->output);
-	size_t size = mpp_buffer_get_size(task->output);
+	RK_U8 *buf = mpp_buffer_get_ptr(task->output->buf) + task->output->start_offset;
+	size_t size = task->output->size;
 	JpegeSyntax *syntax = &ctx->syntax;
 	Vepu540cJpegCfg cfg;
 	RK_S32 bitpos;
@@ -422,7 +422,7 @@ MPP_RET hal_jpege_v540c_ret_task(void *hal, HalEncTask * task)
 
 	EncRcTaskInfo *rc_info = &task->rc_task->info;
 	hal_jpege_enter();
-
+    mpp_buffer_flush_for_cpu(task->output->buf);
 	(void)hal;
 	task->length += task->hw_length;
 

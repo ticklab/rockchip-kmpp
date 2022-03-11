@@ -22,6 +22,7 @@
 #include "mpp_vcodec_intf.h"
 #include "mpp_buffer.h"
 #include "rk_export_func.h"
+#include "mpp_packet_impl.h"
 
 RK_U32 mpp_vcodec_debug = 0;
 
@@ -289,6 +290,7 @@ int mpp_vcodec_chan_entry_init(struct mpp_chan *entry, MppCtxType type,
 	entry->coding_type = coding;
 	entry->type = type;
 	atomic_set(&entry->stream_count, 0);
+	atomic_set(&entry->str_out_cnt, 0);
 
 	atomic_set(&entry->runing, 0);
 	atomic_set(&entry->cfg.comb_runing, 0);
@@ -331,36 +333,21 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 	return 0;
 }
 
-struct stream_packet *stream_packet_alloc(void)
-{
-	struct stream_packet *packet = NULL;
-	packet = kzalloc(sizeof(*packet), GFP_KERNEL);
-	if (!packet) {
-		mpp_err("alloc stream packet fail \n");
-		return NULL;
-	}
-
-	INIT_LIST_HEAD(&packet->list);
-	kref_init(&packet->ref);
-	return packet;
-}
-
 void stream_packet_free(struct kref *ref)
 {
-	struct stream_packet *packet =
-	container_of(ref, struct stream_packet, ref);
+	MppPacketImpl *packet =
+	container_of(ref, MppPacketImpl, ref);
 
-	if (packet->src) {
-		mpp_packet_deinit((MppPacket) & packet->src);
+	if (packet) {
+		mpp_packet_deinit((MppPacket)&packet);
 	}
-
-	kfree(packet);
 	return;
 }
 
 void mpp_vcodec_stream_clear(struct mpp_chan *entry)
 {
-	struct stream_packet *packet = NULL, *n;
+
+	MppPacketImpl *packet = NULL, *n;
 
 	mutex_lock(&entry->stream_done_lock);
 	list_for_each_entry_safe(packet, n, &entry->stream_done, list) {

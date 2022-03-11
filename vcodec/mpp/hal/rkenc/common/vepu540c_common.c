@@ -266,8 +266,8 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 
 	vepu540c_jpeg_set_uv_offset(regs, syn, (Vepu541Fmt) fmt->format, task);
 
-	regs->reg0257_adr_bsbb = mpp_dev_get_iova_address(cfg->dev, task->output, 0);
-	regs->reg0256_adr_bsbt = regs->reg0257_adr_bsbb + mpp_buffer_get_size(task->output);
+	regs->reg0257_adr_bsbb = mpp_dev_get_iova_address(cfg->dev, task->output->buf, task->output->start_offset);
+	regs->reg0256_adr_bsbt = regs->reg0257_adr_bsbb + task->output->size - 1;
 	regs->reg0258_adr_bsbr = regs->reg0257_adr_bsbb;
 	regs->reg0259_adr_bsbs = regs->reg0257_adr_bsbb + mpp_packet_get_length(task->packet);
 
@@ -349,23 +349,23 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	regs->reg0288_uvc_cfg.uvc_partition_len = 0;
 	regs->reg0288_uvc_cfg.uvc_skip_len = 0;
 
-       if (cfg->online) {
-#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
-               struct dvbm_addr_cfg dvbm_adr;
+	if (cfg->online) {
+	#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+				struct dvbm_addr_cfg dvbm_adr;
 
-               rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
-               regs->reg0260_adr_vsy_b = dvbm_adr.ybuf_bot;
-               regs->reg0261_adr_vsc_b = dvbm_adr.cbuf_bot;
-               regs->reg0262_adr_vsy_t = dvbm_adr.ybuf_top;
-               regs->reg0263_adr_vsc_t = dvbm_adr.cbuf_top;
-#else
-               regs->reg0260_adr_vsy_b = 0;
-               regs->reg0261_adr_vsc_b = 0;
-               regs->reg0262_adr_vsy_t = 0;
-               regs->reg0263_adr_vsc_t = 0;
-#endif
-               mpp_err("%s online\n", __func__);
-       }
+				rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+				regs->reg0260_adr_vsy_b = dvbm_adr.ybuf_bot;
+				regs->reg0261_adr_vsc_b = dvbm_adr.cbuf_bot;
+				regs->reg0262_adr_vsy_t = dvbm_adr.ybuf_top;
+				regs->reg0263_adr_vsc_t = dvbm_adr.cbuf_top;
+	#else
+				regs->reg0260_adr_vsy_b = 0;
+				regs->reg0261_adr_vsc_b = 0;
+				regs->reg0262_adr_vsy_t = 0;
+				regs->reg0263_adr_vsc_t = 0;
+	#endif
+				mpp_err("%s online\n", __func__);
+		}
 	return MPP_OK;
 }
 

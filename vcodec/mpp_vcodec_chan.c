@@ -20,6 +20,7 @@
 #include "mpp_vcodec_thread.h"
 #include "rk_venc_cfg.h"
 #include "rk_export_func.h"
+#include "mpp_packet_impl.h"
 
 int mpp_vcodec_schedule(void)
 {
@@ -32,6 +33,7 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 	MppCtxType type = attr->type;
 	MppCodingType coding = attr->coding;
 	RK_S32	online = attr->online;
+    RK_U32  buf_size = attr->buf_size;
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	MPP_RET ret = MPP_NOK;
 	RK_U32 init_done = 1;
@@ -58,6 +60,8 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			MppEncInitCfg cfg = {
 				coding,
 				online,
+				buf_size,
+				attr->max_strm_cnt,
 			};
 			if (!num_chan) {
 				struct venc_module *venc =
@@ -203,48 +207,35 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 {
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	RK_U32 count = atomic_read(&chan_entry->stream_count);
-    struct venc_module *venc =  NULL;
+
 	if (count) {
-		struct stream_packet *packet = NULL;
-		MppPacket mpp_packet = NULL;
-		void *ptr_src = NULL;
-		void *ptr = (void *)(unsigned long)enc_packet->u64vir_addr;
+        MppPacketImpl *packet = NULL;
 
         mutex_lock(&chan_entry->stream_done_lock);
 		packet = list_first_entry_or_null(&chan_entry->stream_done,
-						  struct stream_packet, list);
+						  MppPacketImpl, list);
 		mutex_unlock(&chan_entry->stream_done_lock);
 
-//        kref_get(&packet->ref);
 		atomic_dec(&chan_entry->stream_count);
-		mpp_packet = packet->src;
-		ptr_src = mpp_packet_get_pos(mpp_packet);
-		enc_packet->flag = mpp_packet_get_flag(mpp_packet);
-		enc_packet->len = mpp_packet_get_length(mpp_packet);
-		enc_packet->temporal_id = mpp_packet_get_temporal_id(mpp_packet);
-		enc_packet->u64pts = mpp_packet_get_pts(mpp_packet);
+
+		enc_packet->flag = mpp_packet_get_flag(packet);
+		enc_packet->len = mpp_packet_get_length(packet);
+		enc_packet->temporal_id = mpp_packet_get_temporal_id(packet);
+		enc_packet->u64pts = mpp_packet_get_pts(packet);
 		enc_packet->data_num = 1;
-		if (enc_packet->buf_size > enc_packet->len) {
-			if (copy_to_user(ptr, ptr_src, enc_packet->len)) {
-				mpp_err("copy_to_user failed.\n");
-				return -EINVAL;
-			}
-		} else {
-			mpp_err("usr space mem is too small size %d\n",
-				enc_packet->buf_size);
-			return -ENOMEM;
-		}
+        enc_packet->u64priv_data= packet->buf.mpi_buf_id; //get mpp_buffer fd from ring buf
+        enc_packet->offset = packet->buf.start_offset;
+        enc_packet->u64packet_addr = (RK_U64)packet;
+        enc_packet->buf_size = mpp_buffer_get_size(packet->buf.buf);
 
 		mutex_lock(&chan_entry->stream_done_lock);
 		list_del_init(&packet->list);
-		kref_put(&packet->ref, stream_packet_free);
-		//mutex_lock(&chan_entry->stream_remove_lock);
-		//list_move_tail(&packet->list, &chan_entry->stream_remove);
-		//mutex_unlock(&chan_entry->stream_remove_lock);
+		mutex_lock(&chan_entry->stream_remove_lock);
+	    list_move_tail(&packet->list, &chan_entry->stream_remove);
+		mutex_unlock(&chan_entry->stream_remove_lock);
 		mutex_unlock(&chan_entry->stream_done_lock);
 
-        venc = mpp_vcodec_get_enc_module_entry();
-        vcodec_thread_trigger(venc->thd);
+        atomic_inc(&chan_entry->str_out_cnt);
 	}
 	return 0;
 }
@@ -252,7 +243,25 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 			       struct venc_packet *enc_packet)
 {
-	return 0;
+
+	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
+    MppPacketImpl *packet = NULL, *n;
+        struct venc_module *venc =  NULL;
+	mutex_lock(&chan_entry->stream_remove_lock);
+    list_for_each_entry_safe(packet, n,
+						&chan_entry->stream_remove, list) {
+		if ((RK_U64)packet == enc_packet->u64packet_addr) {
+                list_del_init(&packet->list);
+                kref_put(&packet->ref, stream_packet_free);
+                atomic_dec(&chan_entry->str_out_cnt);
+                venc = mpp_vcodec_get_enc_module_entry();
+                vcodec_thread_trigger(venc->thd);
+			break;
+		}
+	}
+    mutex_unlock(&chan_entry->stream_remove_lock);
+
+    return 0;
 }
 
 int mpp_vcodec_chan_push_frm(int chan_id, void *param)
@@ -276,6 +285,7 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 
 	if (mpibuf_fn->dma_buf_import) {
 		dmabuf = dma_buf_get(info->fd);	//add one ref will be free in mpi_buf
+        dma_buf_end_cpu_access(dmabuf, DMA_TO_DEVICE); //flush to device
 		// mpp_log("import dmabuf %p \n", dmabuf);
 		if (IS_ERR(dmabuf)) {
 			mpp_err("dma_buf_get fd %d failed\n", info->fd);

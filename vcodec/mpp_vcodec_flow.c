@@ -22,6 +22,7 @@
 #include "mpp_packet.h"
 #include "rk_export_func.h"
 #include "mpp_vcodec_debug.h"
+#include "mpp_packet_impl.h"
 
 static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 				     struct mpp_frame_infos *frm_info,
@@ -191,17 +192,11 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 void mpp_vcodec_enc_add_packet_list(struct mpp_chan *chan_entry,
 				    MppPacket packet)
 {
-	struct stream_packet *s_packet = NULL;
-	mpp_vcodec_detail("packet size %zu", mpp_packet_get_length(packet));
-	s_packet = stream_packet_alloc();
-	if (!s_packet) {
-		mpp_err("alloc stream packet fail \n");
-		mpp_packet_deinit(&packet);
-		return;
-	}
-	s_packet->src = packet;
+	MppPacketImpl *p = NULL;
+	p = (MppPacketImpl *) packet;
+    mpp_vcodec_detail("packet size %zu", mpp_packet_get_length(packet));
 	mutex_lock(&chan_entry->stream_done_lock);
-	list_add_tail(&s_packet->list, &chan_entry->stream_done);
+	list_add_tail(&p->list, &chan_entry->stream_done);
 	atomic_inc(&chan_entry->stream_count);
 	mutex_unlock(&chan_entry->stream_done_lock);
 	wake_up(&chan_entry->wait);

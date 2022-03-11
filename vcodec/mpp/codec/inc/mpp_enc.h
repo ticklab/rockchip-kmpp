@@ -147,6 +147,8 @@ typedef void *MppEnc;
 typedef struct MppEncInitCfg_t {
 	MppCodingType	coding;
 	RK_S32		online;
+	RK_U32		buf_size;
+	RK_U32      max_strm_cnt;
 } MppEncInitCfg;
 
 #ifdef __cplusplus

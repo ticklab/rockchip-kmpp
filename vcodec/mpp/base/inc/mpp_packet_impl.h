@@ -12,6 +12,9 @@
 #define __MPP_PACKET_IMPL_H__
 
 #include "rk_type.h"
+#include "mpp_stream_ring_buf.h"
+#include <linux/slab.h>
+#include <linux/of_platform.h>
 
 #define MPP_PACKET_FLAG_EOS             (0x00000001)
 #define MPP_PACKET_FLAG_EXTRA_DATA      (0x00000002)
@@ -46,6 +49,9 @@ typedef union MppPacketStatus_t {
 typedef struct MppPacketImpl_t {
 	const char *name;
 
+    struct list_head list;
+	struct kref ref;
+
 	void *data;
 	void *pos;
 	size_t size;
@@ -58,8 +64,10 @@ typedef struct MppPacketImpl_t {
 	RK_U32 flag;
     RK_U32 temporal_id;
 
-	MppBuffer buffer;
-	//  MppMeta         meta;
+    MppBuffer buffer;
+
+	ring_buf  buf;
+    ring_buf_pool *ring_pool;
 } MppPacketImpl;
 
 #ifdef __cplusplus

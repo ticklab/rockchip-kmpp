@@ -110,10 +110,14 @@ typedef void* MpiBuf;
 
 
 struct vcodec_attr{
-    MppCtxType		type;
-    MppCodingType	coding;
-    RK_S32		chan_id;
-    RK_S32		online;
+	MppCtxType		type;
+	MppCodingType	coding;
+	RK_S32		chan_id;
+	RK_S32		online;
+	RK_U32		buf_size;
+	RK_U32		max_strm_cnt;
+	RK_U32		shared_buf_en;
+	RK_U32		res[8];
 };
 
 struct venc_pack_info {
@@ -124,8 +128,8 @@ struct venc_pack_info {
 };
 
 struct venc_packet{
-    RK_U64               u64phy_addr;
-    RK_U64               u64vir_addr;
+    RK_S64               u64priv_data;  //map mpi_id
+    RK_U64               u64packet_addr; //packet address in kernel space
     RK_U32               len;
     RK_U32               buf_size;
 
