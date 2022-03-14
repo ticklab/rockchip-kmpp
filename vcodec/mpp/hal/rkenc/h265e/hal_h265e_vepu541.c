@@ -1052,7 +1052,7 @@ static MPP_RET vepu541_h265_set_pp_regs(H265eV541RegSet * regs,
 		   regs->src_fmt.src_cfmt == VEPU541_FMT_YUV420SP) ?
 	    stridey : stridey / 2;
 
-	if (regs->src_fmt.src_cfmt < VEPU541_FMT_NONE) {
+	if (regs->src_fmt.src_cfmt < VEPU541_FMT_ARGB1555) {
 		regs->src_udfy.wght_r2y = 66;
 		regs->src_udfy.wght_g2y = 129;
 		regs->src_udfy.wght_b2y = 25;

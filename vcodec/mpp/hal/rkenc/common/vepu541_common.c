@@ -30,7 +30,7 @@ static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_YUV420SP_10BIT */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -48,7 +48,7 @@ static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_YUV422SP_10BIT */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -84,7 +84,7 @@ static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_YUV422SP_VU */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -129,7 +129,7 @@ static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_YUV400 */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540_FMT_YUV400,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -138,7 +138,7 @@ static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_YUV440SP */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -147,7 +147,7 @@ static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_YUV411SP */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -156,7 +156,27 @@ static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_YUV444SP */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_YUV444SP,
+	 .alpha_swap = 0,
+	 .rbuv_swap = 0,
+	 .src_range = 0,
+	 .src_endian = 0,
+	 .weight = zeros,
+	 .offset = zeros,
+	 },
+
+     {			/* MPP_FMT_YUV444P */
+	 .format = VEPU540C_FMT_YUV444P,
+	 .alpha_swap = 0,
+	 .rbuv_swap = 0,
+	 .src_range = 0,
+	 .src_endian = 0,
+	 .weight = zeros,
+	 .offset = zeros,
+	 },
+
+     {         /* MPP_FMT_AYUV2BPP */
+	 .format = VEPU540C_FMT_AYUV2BPP,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -186,7 +206,7 @@ static VepuFmtCfg vepu541_rgb_cfg[MPP_FMT_RGB_BUTT - MPP_FRAME_FMT_RGB] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_RGB555 */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -195,7 +215,7 @@ static VepuFmtCfg vepu541_rgb_cfg[MPP_FMT_RGB_BUTT - MPP_FRAME_FMT_RGB] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_BGR555 */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -204,7 +224,7 @@ static VepuFmtCfg vepu541_rgb_cfg[MPP_FMT_RGB_BUTT - MPP_FRAME_FMT_RGB] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_RGB444 */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -213,7 +233,7 @@ static VepuFmtCfg vepu541_rgb_cfg[MPP_FMT_RGB_BUTT - MPP_FRAME_FMT_RGB] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_BGR444 */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -240,7 +260,7 @@ static VepuFmtCfg vepu541_rgb_cfg[MPP_FMT_RGB_BUTT - MPP_FRAME_FMT_RGB] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_RGB101010 */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -249,7 +269,7 @@ static VepuFmtCfg vepu541_rgb_cfg[MPP_FMT_RGB_BUTT - MPP_FRAME_FMT_RGB] = {
 	 .offset = zeros,
 	 },
 	{			/* MPP_FMT_BGR101010 */
-	 .format = VEPU541_FMT_NONE,
+	 .format = VEPU540C_FMT_BUTT,
 	 .alpha_swap = 0,
 	 .rbuv_swap = 0,
 	 .src_range = 0,
@@ -293,6 +313,25 @@ static VepuFmtCfg vepu541_rgb_cfg[MPP_FMT_RGB_BUTT - MPP_FRAME_FMT_RGB] = {
 	 .weight = zeros,
 	 .offset = zeros,
 	 },
+
+     {			/* MPP_FMT_ARGB4444 */
+	 .format = VEPU540C_FMT_ARGB4444,
+	 .alpha_swap = 0,
+	 .rbuv_swap = 1,
+	 .src_endian = 0,
+	 .src_range = 0,
+	 .weight = zeros,
+	 .offset = zeros,
+	 },
+	 {			/* MPP_FMT_ARGB1555 */
+	 .format = VEPU541_FMT_ARGB1555,
+	 .alpha_swap = 0,
+	 .rbuv_swap = 1,
+	 .src_endian = 0,
+	 .src_range = 0,
+	 .weight = zeros,
+	 .offset = zeros,
+	 },
 };
 
 MPP_RET vepu541_set_fmt(VepuFmtCfg * cfg, MppFrameFormat format)
@@ -308,14 +347,14 @@ MPP_RET vepu541_set_fmt(VepuFmtCfg * cfg, MppFrameFormat format)
 		fmt = &vepu541_rgb_cfg[format - MPP_FRAME_FMT_RGB];
 	} else {
 		memset(cfg, 0, sizeof(*cfg));
-		cfg->format = VEPU541_FMT_NONE;
+		cfg->format = VEPU540C_FMT_BUTT;
 	}
 
-	if (fmt && fmt->format != VEPU541_FMT_NONE) {
+	if (fmt && fmt->format != VEPU540C_FMT_BUTT) {
 		memcpy(cfg, fmt, sizeof(*cfg));
 	} else {
 		mpp_err_f("unsupport frame format %x\n", format);
-		cfg->format = VEPU541_FMT_NONE;
+		cfg->format = VEPU540C_FMT_BUTT;
 		ret = MPP_NOK;
 	}
 

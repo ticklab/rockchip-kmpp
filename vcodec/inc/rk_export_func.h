@@ -11,7 +11,24 @@
 
 struct dma_buf;
 struct mpi_obj;
-struct mpp_frame_infos;
+
+struct mpp_frame_infos{
+    RK_U32  width;
+    RK_U32  height;
+    RK_U32  hor_stride;
+    RK_U32  ver_stride;
+    RK_U32  hor_stride_pixel;
+    RK_U32  offset_x;
+    RK_U32  offset_y;
+    RK_U32  fmt;
+    RK_U32  fd;
+    RK_U64  pts;
+    RK_S32  jpeg_chan_id;
+    void    *osd_buf;
+    RK_S32  mpi_buf_id;
+    RK_U32  res[9];
+};
+
 struct vcodec_mpibuf_fn
 {
     struct mpi_buf *(*buf_alloc)(size_t size);

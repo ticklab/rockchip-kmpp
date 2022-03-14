@@ -854,7 +854,7 @@ static MPP_RET vepu540c_h265_set_pp_regs(H265eV540cRegSet *regs,
 	           reg_base->reg0198_src_fmt.src_cfmt == VEPU541_FMT_YUV420SP) ?
 	          stridey : stridey / 2;
 
-	if (reg_base->reg0198_src_fmt.src_cfmt < VEPU541_FMT_NONE) {
+	if (reg_base->reg0198_src_fmt.src_cfmt < VEPU541_FMT_ARGB1555) {
 		reg_base->reg0199_src_udfy.csc_wgt_r2y = 66;
 		reg_base->reg0199_src_udfy.csc_wgt_g2y = 129;
 		reg_base->reg0199_src_udfy.csc_wgt_b2y = 25;

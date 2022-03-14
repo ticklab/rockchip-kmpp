@@ -116,11 +116,13 @@ MPP_RET vepu540c_set_osd(Vepu540cOsdCfg * cfg)
 	num = osd->num_region;
 	for (i = 0; i < num; i++, tmp++) {
 		vepu540c_osd_com *reg = (vepu540c_osd_com *) & regs->osd_cfg[i];
-
+        VepuFmtCfg fmt_cfg;
+	    MppFrameFormat fmt = tmp->fmt;
+	    vepu541_set_fmt(&fmt_cfg, fmt);
 		reg->cfg0.osd_en = tmp->enable;
 		reg->cfg0.osd_range_trns_en = tmp->range_trns_en;
 		reg->cfg0.osd_range_trns_sel = tmp->range_trns_sel;
-		reg->cfg0.osd_fmt = tmp->fmt;
+		reg->cfg0.osd_fmt = fmt_cfg.format;
 		reg->cfg0.osd_rbuv_swap = tmp->rbuv_swap;
 		reg->cfg1.osd_lt_xcrd = tmp->lt_x;
 		reg->cfg1.osd_lt_ycrd = tmp->lt_y;
@@ -307,7 +309,7 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 		   regs->reg0274_src_fmt.src_cfmt == VEPU541_FMT_YUV420SP) ?
 	    stridey : stridey / 2;
 
-	if (regs->reg0274_src_fmt.src_cfmt < VEPU541_FMT_NONE) {
+	if (regs->reg0274_src_fmt.src_cfmt < VEPU541_FMT_ARGB1555) {
 		regs->reg0275_src_udfy.csc_wgt_r2y = 66;
 		regs->reg0275_src_udfy.csc_wgt_g2y = 129;
 		regs->reg0275_src_udfy.csc_wgt_b2y = 25;
