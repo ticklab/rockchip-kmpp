@@ -608,7 +608,10 @@ static MPP_RET h264e_proc_dpb(void *ctx, HalEncTask *task)
     // update frame usage
     frms->seq_idx = curr->seq_idx;
     frms->curr_idx = curr->slot_idx;
+    frms->curr_is_lt = curr->status.is_lt_ref;
+    frms->curr_is_non_ref = curr->status.is_non_ref;
     frms->refr_idx = (refr) ? refr->slot_idx : curr->slot_idx;
+    frms->refr_is_lt = (refr) ? refr->status.is_lt_ref : curr->status.is_lt_ref;
 
     for (i = 0; i < (RK_S32)MPP_ARRAY_ELEMS(frms->usage); i++)
         frms->usage[i] = dpb->frames[i].on_used;

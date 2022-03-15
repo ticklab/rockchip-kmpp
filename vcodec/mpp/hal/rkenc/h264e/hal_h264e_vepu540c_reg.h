@@ -321,7 +321,7 @@ typedef struct Vepu540cBaseCfg_t {
 	RK_U32 rfpt_b_addr;
 
 	/* 0x000002dc reg183 */
-	RK_U32 adr_rfpb_b;
+	RK_U32 rfpb_b_addr;
 
 	/* 0x000002e0 reg184 */
 	RK_U32 adr_smear_rd;

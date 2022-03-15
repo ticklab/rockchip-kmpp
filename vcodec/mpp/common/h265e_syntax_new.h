@@ -14,6 +14,7 @@
 
 typedef struct H265PicEntry_t {
 	RK_U8 slot_idx;
+	RK_U8 is_lt;
 } H265ePicEntry;
 
 typedef struct H265ePicParams_t {

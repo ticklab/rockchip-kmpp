@@ -28,6 +28,34 @@
 
 #define VEPU540C_MAX_ROI_NUM         	8
 
+#define REF_BODY_SIZE(w, h)			MPP_ALIGN((((w) * (h) * 3 / 2) + 48 * (w)), 64)
+#define REF_WRAP_BODY_EXT_SIZE(w)		MPP_ALIGN((240 * (w)), 64)
+#define REF_HEADER_SIZE(w, h)			MPP_ALIGN((((w) * (h) / 64) + (w) / 2), 64)
+#define REF_WRAP_HEADER_EXT_SIZE(w)		MPP_ALIGN((3 * (w)), 64)
+
+typedef enum ref_type_e {
+	ST_REF_TO_ST,
+	ST_REF_TO_LT,
+	LT_REF_TO_ST,
+	LT_REF_TO_LT,
+} RefType;
+
+typedef struct wrap_info {
+	RK_U32 bottom;
+	RK_U32 top;
+	RK_U32 cur_off;
+	RK_U32 pre_off;
+	RK_U32 size;
+	RK_U32 total_size;
+} WrapInfo;
+
+typedef struct wrap_buf_info {
+	WrapInfo hdr_lt;
+	WrapInfo hdr;
+	WrapInfo body_lt;
+	WrapInfo body;
+} WrapBufInfo;
+
 typedef struct Vepu540cOnline_t {
 	/* 0x00000270 reg156 */
 	RK_U32 reg0156_adr_vsy_t;

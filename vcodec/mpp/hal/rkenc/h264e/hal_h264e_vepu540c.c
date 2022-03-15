@@ -36,6 +36,12 @@ typedef struct vepu540c_h264e_reg_ctx_t {
 	RK_U32 used;
 } Vepu540cH264eRegCtx;
 
+const static RefType ref_type_map[2][2] = {
+			/* ref_lt = 0	ref_lt = 1 */
+	/* cur_lt = 0 */{ST_REF_TO_ST, ST_REF_TO_LT},
+	/* cur_lt = 1 */{LT_REF_TO_ST, LT_REF_TO_LT},
+};
+
 typedef struct HalH264eVepu540cCtx_t {
 	MppEncCfgSet *cfg;
 
@@ -46,12 +52,16 @@ typedef struct HalH264eVepu540cCtx_t {
 	HalBufs hw_recn;
 	RK_S32 pixel_buf_fbc_hdr_size;
 	RK_S32 pixel_buf_fbc_bdy_size;
+	RK_S32 pixel_buf_fbc_bdy_offset;
 	RK_S32 pixel_buf_size;
 	RK_S32 thumb_buf_size;
 	RK_S32 max_buf_cnt;
+	/* recn and ref buffer offset */
+	RK_U32                  recn_ref_wrap;
+	MppBuffer               ren_ref_buf;
+	WrapBufInfo		wrap_infos;
 
 	/* external line buffer over 4K */
-	MppBufferGroup ext_line_buf_grp;
 	RK_S32 ext_line_buf_size;
 
 	MppBuffer p_extra_buf;
@@ -80,7 +90,6 @@ typedef struct HalH264eVepu540cCtx_t {
 
 	MppBuffer ext_line_buf;
 	RK_S32	online;
-    RK_S32  ref_shared_en;
 } HalH264eVepu540cCtx;
 
 static RK_U32 dump_l1_reg = 0;
@@ -122,11 +131,6 @@ static MPP_RET hal_h264e_vepu540c_deinit(void *hal)
 		p->ext_line_buf = NULL;
 	}
 
-	/*if (p->ext_line_buf_grp) {
-	   mpp_buffer_group_put(p->ext_line_buf_grp);
-	   p->ext_line_buf_grp = NULL;
-	   } */
-
 	if (p->hw_recn) {
 		hal_bufs_deinit(p->hw_recn);
 		p->hw_recn = NULL;
@@ -151,7 +155,7 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 
 	p->cfg = cfg->cfg;
 	p->online = cfg->online;
-    p->ref_shared_en = cfg->ref_buf_shared;
+    	p->recn_ref_wrap = cfg->ref_buf_shared;
 	/* update output to MppEnc */
 	cfg->type = VPU_CLIENT_RKVENC;
 	ret = mpp_dev_init(&cfg->dev, cfg->type);
@@ -191,13 +195,237 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 		mpp_err("HalVepu540cRegSet alloc fail");
 		return MPP_ERR_MALLOC;
 	}
-
 DONE:
 	if (ret)
 		hal_h264e_vepu540c_deinit(hal);
 
 	hal_h264e_dbg_func("leave %p\n", p);
 	return ret;
+}
+
+static void get_wrap_buf(HalH264eVepu540cCtx *ctx, RK_S32 max_lt_cnt)
+{
+	MppEncCfgSet *cfg = ctx->cfg;
+	MppEncPrepCfg *prep = &cfg->prep;
+	RK_S32 alignment = 64;
+	RK_S32 aligned_w = MPP_ALIGN(prep->width, alignment);
+	RK_S32 aligned_h = MPP_ALIGN(prep->height, alignment);
+	RK_U32 total_wrap_size;
+	WrapInfo *body = &ctx->wrap_infos.body;
+	WrapInfo *hdr = &ctx->wrap_infos.hdr;
+
+	body->size = REF_BODY_SIZE(aligned_w, aligned_h);
+	body->total_size = body->size + REF_WRAP_BODY_EXT_SIZE(aligned_w);
+	hdr->size = REF_HEADER_SIZE(aligned_w, aligned_h);
+	hdr->total_size = hdr->size + REF_WRAP_HEADER_EXT_SIZE(aligned_w);
+	total_wrap_size = body->total_size + hdr->total_size;
+
+	if (max_lt_cnt > 0) {
+		WrapInfo *body_lt = &ctx->wrap_infos.body_lt;
+		WrapInfo *hdr_lt = &ctx->wrap_infos.hdr_lt;
+
+		body_lt->size = body->size;
+		body_lt->total_size = body->total_size;
+
+		hdr_lt->size = hdr->size;
+		hdr_lt->total_size = hdr->total_size;
+
+		total_wrap_size += (body_lt->total_size + hdr_lt->total_size);
+	}
+
+	/*
+	 * bottom                      top
+	 * ┌──────────────────────────►
+	 * │
+	 * ├──────┬───────┬──────┬─────┐
+	 * │hdr_lt│  hdr  │bdy_lt│ bdy │
+	 * └──────┴───────┴──────┴─────┘
+	 */
+
+	if (max_lt_cnt > 0) {
+		WrapInfo *body_lt = &ctx->wrap_infos.body_lt;
+		WrapInfo *hdr_lt = &ctx->wrap_infos.hdr_lt;
+
+		hdr_lt->bottom = 0;
+		hdr_lt->top = hdr_lt->bottom + hdr_lt->total_size;
+		hdr_lt->cur_off = hdr_lt->bottom;
+
+		hdr->bottom = hdr_lt->top;
+		hdr->top = hdr->bottom + hdr->total_size;
+		hdr->cur_off = hdr->bottom;
+
+		body_lt->bottom = hdr->top;
+		body_lt->top = body_lt->bottom + body_lt->total_size;
+		body_lt->cur_off = body_lt->bottom;
+
+		body->bottom = body_lt->top;
+		body->top = body->bottom + body->total_size;
+		body->cur_off = body->bottom;
+	} else {
+		hdr->bottom = 0;
+		hdr->top = hdr->bottom + hdr->total_size;
+		hdr->cur_off = hdr->bottom;
+
+		body->bottom = hdr->top;
+		body->top = body->bottom + body->total_size;
+		body->cur_off = body->bottom;
+	}
+	if (ctx->ren_ref_buf)
+		mpp_buffer_put(ctx->ren_ref_buf);
+	mpp_buffer_get(NULL, &ctx->ren_ref_buf, total_wrap_size);
+}
+
+static void setup_recn_refr_wrap(HalH264eVepu540cCtx *ctx, HalVepu540cRegSet *regs)
+{
+	MppDev dev = ctx->dev;
+	H264eFrmInfo *frms = ctx->frms;
+	RK_U32 recn_ref_wrap = ctx->recn_ref_wrap;
+	RK_U32 ref_iova;
+	RK_U32 cur_is_lt = frms->curr_is_lt;
+	RK_U32 refr_is_lt = frms->refr_is_lt;
+	RK_U32 cur_is_non_ref = frms->curr_is_non_ref;
+	RK_U32 rfpw_h_off;
+	RK_U32 rfpw_b_off;
+	RK_U32 rfpr_h_off;
+	RK_U32 rfpr_b_off;
+	RK_U32 rfp_h_bot;
+	RK_U32 rfp_b_bot;
+	RK_U32 rfp_h_top;
+	RK_U32 rfp_b_top;
+	WrapInfo *bdy_lt = &ctx->wrap_infos.body_lt;
+	WrapInfo *hdr_lt = &ctx->wrap_infos.hdr_lt;
+	WrapInfo *bdy = &ctx->wrap_infos.body;
+	WrapInfo *hdr = &ctx->wrap_infos.hdr;
+
+	if (recn_ref_wrap)
+		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 0);
+
+	if (frms->curr_idx == 0 && frms->refr_idx == 0) {
+		if (cur_is_lt) {
+			rfpr_h_off = hdr_lt->cur_off;
+			rfpr_b_off = bdy_lt->cur_off;
+			rfpw_h_off = hdr_lt->cur_off;
+			rfpw_b_off = bdy_lt->cur_off;
+
+			rfp_h_bot = hdr->bottom < hdr_lt->bottom ? hdr->bottom : hdr_lt->bottom;
+			rfp_h_top = hdr->top > hdr_lt->top ? hdr->top : hdr_lt->top;
+			rfp_b_bot = bdy->bottom < bdy_lt->bottom ? bdy->bottom : bdy_lt->bottom;
+			rfp_b_top = bdy->top > bdy_lt->top ? bdy->top : bdy_lt->top;
+		} else {
+			rfpr_h_off = hdr->cur_off;
+			rfpr_b_off = bdy->cur_off;
+			rfpw_h_off = hdr->cur_off;
+			rfpw_b_off = bdy->cur_off;
+
+			rfp_h_bot = hdr->bottom;
+			rfp_h_top = hdr->top;
+			rfp_b_bot = bdy->bottom;
+			rfp_b_top = bdy->top;
+		}
+	} else {
+		RefType type = ref_type_map[cur_is_lt][refr_is_lt];
+
+		hal_h264e_dbg_wrap("ref type %d\n", type);
+		switch (type) {
+		case ST_REF_TO_ST: {
+			/* refr */
+			rfpr_h_off = hdr->pre_off;
+			rfpr_b_off = bdy->pre_off;
+			/* recn */
+			rfpw_h_off = hdr->cur_off;
+			rfpw_b_off = bdy->cur_off;
+
+			rfp_h_bot = hdr->bottom;
+			rfp_h_top = hdr->top;
+			rfp_b_bot = bdy->bottom;
+			rfp_b_top = bdy->top;
+		} break;
+		case ST_REF_TO_LT: {
+			/* refr */
+			rfpr_h_off = hdr_lt->cur_off;
+			rfpr_b_off = bdy_lt->cur_off;
+			/* recn */
+			hdr->cur_off = hdr->bottom;
+			bdy->cur_off = bdy->bottom;
+			rfpw_h_off = hdr->cur_off;
+			rfpw_b_off = bdy->cur_off;
+
+			rfp_h_bot = hdr->bottom < hdr_lt->bottom ? hdr->bottom : hdr_lt->bottom;
+			rfp_h_top = hdr->top > hdr_lt->top ? hdr->top : hdr_lt->top;
+			rfp_b_bot = bdy->bottom < bdy_lt->bottom ? bdy->bottom : bdy_lt->bottom;
+			rfp_b_top = bdy->top > bdy_lt->top ? bdy->top : bdy_lt->top;
+		} break;
+		case LT_REF_TO_ST: {
+			/* not support this case */
+			mpp_err("WARNING: not support lt ref to st when buf is wrap");
+		} break;
+		case LT_REF_TO_LT: {
+			WrapInfo tmp;
+			/* the case is hard to implement */
+			rfpr_h_off = hdr_lt->cur_off;
+			rfpr_b_off = bdy_lt->cur_off;
+
+			hdr->cur_off = hdr->bottom;
+			bdy->cur_off = bdy->bottom;
+			rfpw_h_off = hdr->cur_off;
+			rfpw_b_off = bdy->cur_off;
+
+			rfp_h_bot = hdr->bottom < hdr_lt->bottom ? hdr->bottom : hdr_lt->bottom;
+			rfp_h_top = hdr->top > hdr_lt->top ? hdr->top : hdr_lt->top;
+			rfp_b_bot = bdy->bottom < bdy_lt->bottom ? bdy->bottom : bdy_lt->bottom;
+			rfp_b_top = bdy->top > bdy_lt->top ? bdy->top : bdy_lt->top;
+
+			/* swap */
+			memcpy(&tmp, hdr, sizeof(WrapInfo));
+			memcpy(hdr, hdr_lt, sizeof(WrapInfo));
+			memcpy(hdr_lt, &tmp, sizeof(WrapInfo));
+
+			memcpy(&tmp, bdy, sizeof(WrapInfo));
+			memcpy(bdy, bdy_lt, sizeof(WrapInfo));
+			memcpy(bdy_lt, &tmp, sizeof(WrapInfo));
+
+		} break;
+		default: {
+		} break;
+		}
+	}
+
+
+	regs->reg_base.rfpw_h_addr = ref_iova + rfpw_h_off;
+	regs->reg_base.rfpw_b_addr = ref_iova + rfpw_b_off;
+
+	regs->reg_base.rfpr_h_addr = ref_iova + rfpr_h_off;
+	regs->reg_base.rfpr_b_addr = ref_iova + rfpr_b_off;
+
+	regs->reg_base.rfpt_h_addr = ref_iova + rfp_h_top;
+	regs->reg_base.rfpb_h_addr = ref_iova + rfp_h_bot;
+	regs->reg_base.rfpt_b_addr = ref_iova + rfp_b_top;
+	regs->reg_base.rfpb_b_addr = ref_iova + rfp_b_bot;
+	regs->reg_base.enc_pic.cur_frm_ref = !cur_is_non_ref;
+
+	if (recn_ref_wrap) {
+		RK_U32 cur_hdr_off;
+		RK_U32 cur_bdy_off;
+
+		hal_h264e_dbg_wrap("cur_is_ref %d\n", !cur_is_non_ref);
+		hal_h264e_dbg_wrap("hdr[size %d top %d bot %d cur %d pre %d]\n",
+				   hdr->size, hdr->top, hdr->bottom, hdr->cur_off, hdr->pre_off);
+		hal_h264e_dbg_wrap("bdy [size %d top %d bot %d cur %d pre %d]\n",
+				   bdy->size, bdy->top, bdy->bottom, bdy->cur_off, bdy->pre_off);
+		if (!cur_is_non_ref) {
+			hdr->pre_off = hdr->cur_off;
+			cur_hdr_off = hdr->pre_off + hdr->size;
+			cur_hdr_off = cur_hdr_off >= hdr->top ?
+				      (cur_hdr_off - hdr->top + hdr->bottom) : cur_hdr_off;
+			hdr->cur_off = cur_hdr_off;
+
+			bdy->pre_off = bdy->cur_off;
+			cur_bdy_off = bdy->pre_off + bdy->size;
+			cur_bdy_off = cur_bdy_off >= bdy->top ?
+				      (cur_bdy_off - bdy->top + bdy->bottom) : cur_bdy_off;
+			bdy->cur_off = cur_bdy_off;
+		}
+	}
 }
 
 static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
@@ -207,34 +435,30 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 	RK_S32 alignment = 64;
 	RK_S32 aligned_w = MPP_ALIGN(prep->width, alignment);
 	RK_S32 aligned_h = MPP_ALIGN(prep->height, alignment);
-	RK_S32 pixel_buf_fbc_hdr_size =
-	        MPP_ALIGN(aligned_w * aligned_h / 64, SZ_8K);
+	RK_S32 pixel_buf_fbc_hdr_size = MPP_ALIGN(aligned_w * aligned_h / 64, SZ_8K);
 	RK_S32 pixel_buf_fbc_bdy_size = aligned_w * aligned_h * 3 / 2;
 	RK_S32 pixel_buf_size = pixel_buf_fbc_hdr_size + pixel_buf_fbc_bdy_size;
-	RK_S32 thumb_buf_size =
-	        MPP_ALIGN(aligned_w / 64 * aligned_h / 64 * 256, SZ_8K);
+	RK_S32 thumb_buf_size = MPP_ALIGN(aligned_w / 64 * aligned_h / 64 * 256, SZ_8K);
 	RK_S32 old_max_cnt = ctx->max_buf_cnt;
 	RK_S32 new_max_cnt = 2;
 	MppEncRefCfg ref_cfg = cfg->ref_cfg;
+	RK_S32 max_lt_cnt;
 
 	if (ref_cfg) {
 		MppEncCpbInfo *info = mpp_enc_ref_cfg_get_cpb_info(ref_cfg);
 		if (new_max_cnt < MPP_MAX(new_max_cnt, info->dpb_size + 1))
 			new_max_cnt = MPP_MAX(new_max_cnt, info->dpb_size + 1);
+		max_lt_cnt = info->max_lt_cnt;
 	}
 
 	if (aligned_w > SZ_4K) {
 		/* 480 bytes for each ctu above 3072 */
 		RK_S32 ext_line_buf_size = (aligned_w - 3 * SZ_1K) / 64 * 480;
 
-		// if (NULL == ctx->ext_line_buf_grp)
-		//mpp_buffer_group_get_internal(&ctx->ext_line_buf_grp, MPP_BUFFER_TYPE_ION);
 		if (ext_line_buf_size != ctx->ext_line_buf_size) {
 			mpp_buffer_put(ctx->ext_line_buf);
 			ctx->ext_line_buf = NULL;
-			// mpp_buffer_group_clear(ctx->ext_line_buf_grp);
 		}
-		// mpp_assert(ctx->ext_line_buf_grp);
 
 		if (NULL == ctx->ext_line_buf)
 			mpp_buffer_get(NULL, &ctx->ext_line_buf,
@@ -246,12 +470,6 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 			mpp_buffer_put(ctx->ext_line_buf);
 			ctx->ext_line_buf = NULL;
 		}
-
-		if (ctx->ext_line_buf_grp) {
-			// mpp_buffer_group_clear(ctx->ext_line_buf_grp);
-			// mpp_buffer_group_put(ctx->ext_line_buf_grp);
-			ctx->ext_line_buf_grp = NULL;
-		}
 		ctx->ext_line_buf_size = 0;
 	}
 
@@ -260,22 +478,29 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 	    (ctx->pixel_buf_size != pixel_buf_size) ||
 	    (ctx->thumb_buf_size != thumb_buf_size) ||
 	    (new_max_cnt > old_max_cnt)) {
-		size_t sizes[2];
 
 		hal_h264e_dbg_detail("frame size %d -> %d max count %d -> %d\n",
 		                     ctx->pixel_buf_size, pixel_buf_size,
 		                     old_max_cnt, new_max_cnt);
 
-		/* pixel buffer */
-		sizes[0] = pixel_buf_size;
-		/* thumb buffer */
-		sizes[1] = thumb_buf_size;
 		new_max_cnt = MPP_MAX(new_max_cnt, old_max_cnt);
-
-		hal_bufs_setup(ctx->hw_recn, new_max_cnt, 2, sizes);
 
 		ctx->pixel_buf_fbc_hdr_size = pixel_buf_fbc_hdr_size;
 		ctx->pixel_buf_fbc_bdy_size = pixel_buf_fbc_bdy_size;
+
+		if (ctx->recn_ref_wrap) {
+			size_t sizes[1] = {thumb_buf_size};
+
+			hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
+			get_wrap_buf(ctx, max_lt_cnt);
+		} else {
+			size_t sizes[2] = {thumb_buf_size, pixel_buf_size};
+
+			hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
+			ctx->pixel_buf_fbc_bdy_offset = pixel_buf_fbc_hdr_size;
+			ctx->pixel_buf_size = pixel_buf_size;
+		}
+
 		ctx->pixel_buf_size = pixel_buf_size;
 		ctx->thumb_buf_size = thumb_buf_size;
 		ctx->max_buf_cnt = new_max_cnt;
@@ -1244,11 +1469,6 @@ static void setup_vepu540c_io_buf(HalVepu540cRegSet *regs, MppDev dev,
 	regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr;
 	regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr;
 
-	regs->reg_base.rfpt_h_addr = 0xffffffff;
-	regs->reg_base.rfpb_h_addr = 0;
-	regs->reg_base.rfpt_b_addr = 0xffffffff;
-	regs->reg_base.adr_rfpb_b  = 0;
-
 	if (MPP_FRAME_FMT_IS_FBC(fmt)) {
 		off_in[0] = mpp_frame_get_fbc_offset(frm);;
 		off_in[1] = 0;
@@ -1307,46 +1527,57 @@ static void setup_vepu540c_io_buf(HalVepu540cRegSet *regs, MppDev dev,
 static void setup_vepu540c_recn_refr(HalH264eVepu540cCtx *ctx,
                                      HalVepu540cRegSet *regs)
 {
-
 	MppDev dev = ctx->dev;
 	H264eFrmInfo *frms = ctx->frms;
 	HalBufs bufs = ctx->hw_recn;
 	RK_S32 fbc_hdr_size = ctx->pixel_buf_fbc_hdr_size;
-
+	RK_U32 recn_ref_wrap = ctx->recn_ref_wrap;
 	HalBuf *curr = hal_bufs_get_buf(bufs, frms->curr_idx);
 	HalBuf *refr = hal_bufs_get_buf(bufs, frms->refr_idx);
 
 	hal_h264e_dbg_func("enter\n");
 
 	if (curr && curr->cnt) {
-		MppBuffer buf_pixel = curr->buf[0];
-		MppBuffer buf_thumb = curr->buf[1];
+		MppBuffer buf_thumb = curr->buf[0];
 
-		mpp_assert(buf_pixel);
 		mpp_assert(buf_thumb);
+		regs->reg_base.dspw_addr = mpp_dev_get_iova_address(dev, buf_thumb, 0);
+		if (!recn_ref_wrap) {
+			MppBuffer buf_pixel = curr->buf[1];
 
-		regs->reg_base.rfpw_h_addr =
-		        mpp_dev_get_iova_address(dev, buf_pixel, 0);
-		regs->reg_base.rfpw_b_addr =
-		        regs->reg_base.rfpw_h_addr + fbc_hdr_size;
-		regs->reg_base.dspw_addr =
-		        mpp_dev_get_iova_address(dev, buf_thumb, 0);
+			mpp_assert(buf_pixel);
+			regs->reg_base.rfpw_h_addr =
+					mpp_dev_get_iova_address(dev, buf_pixel, 0);
+			regs->reg_base.rfpw_b_addr =
+					regs->reg_base.rfpw_h_addr + fbc_hdr_size;
+			regs->reg_base.dspw_addr =
+					mpp_dev_get_iova_address(dev, buf_thumb, 0);
+		}
 	}
 
 	if (refr && refr->cnt) {
-		MppBuffer buf_pixel = refr->buf[0];
-		MppBuffer buf_thumb = refr->buf[1];
+		MppBuffer buf_thumb = refr->buf[0];
 
-		mpp_assert(buf_pixel);
 		mpp_assert(buf_thumb);
+		regs->reg_base.dspr_addr = mpp_dev_get_iova_address(dev, buf_thumb, 0);
+		if (!recn_ref_wrap) {
+			MppBuffer buf_pixel = refr->buf[1];
 
-		regs->reg_base.rfpr_h_addr =
-		        mpp_dev_get_iova_address(dev, buf_pixel, 0);
-		regs->reg_base.rfpr_b_addr =
-		        regs->reg_base.rfpr_h_addr + fbc_hdr_size;
-		regs->reg_base.dspr_addr =
-		        mpp_dev_get_iova_address(dev, buf_thumb, 0);
+			mpp_assert(buf_pixel);
+			regs->reg_base.rfpr_h_addr =
+				mpp_dev_get_iova_address(dev, buf_pixel, 0);
+			regs->reg_base.rfpr_b_addr =
+				regs->reg_base.rfpr_h_addr + fbc_hdr_size;
+		}
+	}
 
+	if (ctx->recn_ref_wrap) {
+		setup_recn_refr_wrap(ctx, regs);
+	} else {
+		regs->reg_base.rfpt_h_addr = 0xffffffff;
+		regs->reg_base.rfpb_h_addr = 0;
+		regs->reg_base.rfpt_b_addr = 0xffffffff;
+		regs->reg_base.rfpb_b_addr  = 0;
 	}
 
 	hal_h264e_dbg_func("leave\n");
@@ -1719,8 +1950,7 @@ static void setup_vepu540c_ext_line_buf(HalVepu540cRegSet *regs,
 	if (ctx->ext_line_buf) {
 
 		regs->reg_base.ebuft_addr =
-		        mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf,
-		                                 0) + ctx->ext_line_buf_size;
+		        mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf, 0) + ctx->ext_line_buf_size;
 		regs->reg_base.ebufb_addr =
 		        mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf, 0);
 
@@ -1968,21 +2198,21 @@ static MPP_RET hal_h264e_vepu540c_status_check(void *hal)
 		hal_h264e_dbg_detail("safe clear finsh");
 
 	if (regs_set->reg_ctl.int_sta.vbsf_oflw_sta)
-					mpp_err_f("bit stream overflow");
+		mpp_err_f("bit stream overflow");
 
 	if (regs_set->reg_ctl.int_sta.vbuf_lens_sta) {
-			mpp_err_f("bus write full");
-			return MPP_NOK;
+		mpp_err_f("bus write full");
+		return MPP_NOK;
 	}
 
 	if (regs_set->reg_ctl.int_sta.enc_err_sta) {
-			mpp_err_f("bus error");
-			return MPP_NOK;
+		mpp_err_f("bus error");
+		return MPP_NOK;
 	}
 
 	if (regs_set->reg_ctl.int_sta.wdg_sta){
-			mpp_err_f("wdg timeout");
-			return MPP_NOK;
+		mpp_err_f("wdg timeout");
+		return MPP_NOK;
 	}
 
 	return MPP_OK;
@@ -2002,7 +2232,7 @@ static MPP_RET hal_h264e_vepu540c_wait(void *hal, HalEncTask *task)
 
 	mpp_dev_release_iova_address(ctx->dev, task->input);
 	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
-    mpp_buffer_flush_for_cpu(task->output->buf);
+    	mpp_buffer_flush_for_cpu(task->output->buf);
 	hal_h264e_dbg_func("leave %p\n", hal);
 
 	return ret;
