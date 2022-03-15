@@ -63,6 +63,7 @@ enum MPP_DEVICE_TYPE {
 	MPP_DEVICE_VEPU1	= 17, /* 0x00020000 */
 	MPP_DEVICE_VEPU2	= 18, /* 0x00040000 */
 	MPP_DEVICE_VEPU22	= 24, /* 0x01000000 */
+	MPP_DEVICE_RKVENC_PP	= 25, /* 0x02000000 */
 
 	MPP_DEVICE_IEP2		= 28, /* 0x10000000 */
 	MPP_DEVICE_BUTT,
@@ -87,6 +88,7 @@ enum MPP_DRIVER_TYPE {
 	MPP_DRIVER_RKVENC2,
 	MPP_DRIVER_RKVENC540C,
 	MPP_DRIVER_AV1DEC,
+	MPP_DRIVER_VEPU_PP,
 	MPP_DRIVER_BUTT,
 };
 
@@ -847,6 +849,7 @@ extern struct platform_driver rockchip_rkvenc2_driver;
 extern struct platform_driver rockchip_rkvenc540c_driver;
 extern struct platform_driver rockchip_av1dec_driver;
 extern struct platform_driver rockchip_av1_iommu_driver;
+extern struct platform_driver rockchip_vepu_pp_driver;
 
 extern struct platform_device *av1dec_device_create(void);
 extern int av1dec_driver_register(struct platform_driver *drv);

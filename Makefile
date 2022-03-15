@@ -30,6 +30,7 @@ VCODEC_REVISION   := $(subst ",\\\",$(VCODEC_REVISION_0))
 
 include $(TOP)/mpp/Makefile
 include $(TOP)/vcodec/Makefile
+include $(TOP)/vproc/Makefile
 
 DIRS := $(shell find . -maxdepth 5 -type d)
 

@@ -31,13 +31,14 @@
 
 #define HAS_RKVENC580	IS_ENABLED(RKVEPU580_ENABLE)
 #define HAS_RKVENC540C	IS_ENABLED(RKVEPU540C_ENABLE)
+#define HAS_RKVENC540C_PP	IS_ENABLED(RKVEPU540C_PP_ENABLE)
 
 #define MPP_REGISTER_DRIVER(srv, flag, X, x) {\
 	if (flag)\
 		mpp_add_driver(srv, MPP_DRIVER_##X, &rockchip_##x##_driver, "grf_"#x);\
 	}
 
-unsigned int mpp_dev_debug;
+unsigned int mpp_dev_debug = 0x0;
 module_param(mpp_dev_debug, uint, 0644);
 MODULE_PARM_DESC(mpp_dev_debug, "bit switch for mpp debug information");
 
@@ -361,9 +362,9 @@ static int mpp_service_probe(struct platform_device *pdev)
 	mpp_procfs_init(srv);
 
 	/* register sub drivers */
-
 	MPP_REGISTER_DRIVER(srv, HAS_RKVENC580, RKVENC2, rkvenc2);
 	MPP_REGISTER_DRIVER(srv, HAS_RKVENC540C, RKVENC540C, rkvenc540c);
+	MPP_REGISTER_DRIVER(srv, HAS_RKVENC540C_PP, VEPU_PP, vepu_pp);
 
 	dev_info(dev, "probe success\n");
 	g_srv = srv;
