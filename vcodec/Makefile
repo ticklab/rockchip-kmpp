@@ -2,6 +2,8 @@
 
 OSAL_DIR := $(TOP)/vcodec/osal
 
+VCODEC_TEST_ENABLE = n
+
 include $(TOP)/vcodec/mpp/base/base_make.cfg
 include $(TOP)/vcodec/mpp/codec/codec_make.cfg
 include $(TOP)/vcodec/mpp/hal/hal_make.cfg
@@ -13,9 +15,14 @@ mpp_vcodec-objs := vcodec/mpp_vcodec_base.o \
 		   vcodec/mpp_vcodec_event.o \
 		   vcodec/mpp_vcodec_flow.o \
 		   vcodec/mpp_vcodec_thread.o \
-		   vcodec/mpp_vcodec_driver.o \
-		   vcodec/mpp_vcodec_test.o
-	
+		   vcodec/mpp_vcodec_driver.o 
+
+mpp_vcodec-$(VCODEC_TEST_ENABLE) += vcodec/mpp/base/mpp_trie.o \
+				    vcodec/mpp/base/mpp_enc_cfg.o \
+				    vcodec/mpp/base/mpp_cfg.o \
+				    vcodec/mpp_vcodec_test.o 
+
+
 mpp_vcodec-objs += vcodec/osal/mpp_log.o \
 		   vcodec/osal/mpp_mem.o \
 		   vcodec/osal/mpp_maths.o \
