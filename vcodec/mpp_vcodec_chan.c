@@ -282,6 +282,7 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 			return -1;
 		}
 		buf = mpibuf_fn->dma_buf_import(dmabuf, info);
+		dma_buf_put(dmabuf);
 	}
 
 	if (NULL != buf) {

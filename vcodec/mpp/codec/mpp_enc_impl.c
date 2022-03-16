@@ -708,6 +708,7 @@ MPP_RET mpp_enc_proc_export_osd_buf(MppEncOSDData3 *osd)
 			if (!IS_ERR(dmabuf)) {
 				buf = mpibuf_fn->dma_buf_import(dmabuf, &info);
 				rgn->osd_buf.buf = buf;
+				dma_buf_put(dmabuf);
 			} else
 				mpp_err("osd buf dma_buf_get fd %d failed\n",
 				rgn->osd_buf.fd);
@@ -719,6 +720,7 @@ MPP_RET mpp_enc_proc_export_osd_buf(MppEncOSDData3 *osd)
 			if (!IS_ERR(dmabuf)) {
 				buf = mpibuf_fn->dma_buf_import(dmabuf, &info);
 				rgn->inv_cfg.inv_buf.buf = buf;
+				dma_buf_put(dmabuf);
 			} else
 				mpp_err("osd inv buf dma_buf_get fd %d failed\n",
 					rgn->inv_cfg.inv_buf.fd);
