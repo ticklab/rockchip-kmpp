@@ -603,12 +603,7 @@ static int rkvenc_extract_task_msg(struct mpp_session *session,
 			for (j = 0; j < hw->reg_class; j++) {
 				if (!req_over_class(req, task, j))
 					continue;
-				mpp_err("found write_calss %d\n", j);
-				ret = rkvenc_alloc_class_msg(task, j);
-				if (ret) {
-					mpp_err("alloc class msg %d fail.\n", j);
-					goto fail;
-				}
+
 				wreq = &task->w_reqs[task->w_req_cnt];
 				rkvenc_update_req(task, j, req, wreq);
 				data = rkvenc_get_class_reg(task, wreq->offset);
@@ -634,11 +629,6 @@ static int rkvenc_extract_task_msg(struct mpp_session *session,
 				if (!req_over_class(req, task, j))
 					continue;
 
-				ret = rkvenc_alloc_class_msg(task, j);
-				if (ret) {
-					mpp_err("alloc class msg reg %d fail.\n", j);
-					goto fail;
-				}
 				rreq = &task->r_reqs[task->r_req_cnt];
 				rkvenc_update_req(task, j, req, rreq);
 				task->reg[j].valid = 1;
@@ -688,20 +678,31 @@ static int rkvenc_task_get_format(struct mpp_dev *mpp,
 	return 0;
 }
 
+static void *task_init(struct rkvenc_task *task){
+	int i = 0;
+	for(i = 0; i < RKVENC_CLASS_BUTT; i++){
+		task->reg[i].valid = 0;
+	}
+	task->irq_status = 0;
+	task->w_req_cnt = 0;
+	task->r_req_cnt = 0;
+	return 0;
+}
+
 static void *rkvenc_alloc_task(struct mpp_session *session,
 			       struct mpp_task_msgs *msgs)
 {
 	int ret;
-	struct rkvenc_task *task;
+	struct rkvenc_task *task = (struct rkvenc_task *) session->task;
 	struct mpp_task *mpp_task;
 	struct mpp_dev *mpp = session->mpp;
 
 	mpp_debug_enter();
 
-	task = kzalloc(sizeof(*task), GFP_KERNEL);
 	if (!task)
 		return NULL;
 
+	task_init(task);
 	mpp_task = &task->mpp_task;
 	mpp_task_init(session, mpp_task);
 	mpp_task->hw_info = mpp->var->hw_info;
@@ -1514,11 +1515,10 @@ static int rkvenc_result(struct mpp_dev *mpp,
 
 static int rkvenc_free_task(struct mpp_session *session, struct mpp_task *mpp_task)
 {
-	struct rkvenc_task *task = to_rkvenc_task(mpp_task);
 
 	mpp_task_finalize(session, mpp_task);
-	rkvenc_free_class_msg(task);
-	kfree(task);
+	//rkvenc_free_class_msg(task);
+	//kfree(task);
 
 	return 0;
 }
@@ -1567,6 +1567,12 @@ static int rkvenc_control(struct mpp_session *session, struct mpp_request *req)
 
 static int rkvenc_free_session(struct mpp_session *session)
 {
+	if (session && session->task) {
+		struct rkvenc_task *task = (struct rkvenc_task *)session->task;
+
+		rkvenc_free_class_msg(task);
+		kfree(task);
+	}
 	if (session && session->priv) {
 		kfree(session->priv);
 		session->priv = NULL;
@@ -1578,12 +1584,16 @@ static int rkvenc_free_session(struct mpp_session *session)
 static int rkvenc_init_session(struct mpp_session *session)
 {
 	struct rkvenc2_session_priv *priv;
+	struct mpp_dev *mpp = NULL;
+	struct rkvenc_task *task = NULL;
+	int j = 0, ret = 0;
 
 	if (!session) {
 		mpp_err("session is null\n");
 		return -EINVAL;
 	}
 
+	mpp = session->mpp;
 	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
 	if (!priv)
 		return -ENOMEM;
@@ -1591,7 +1601,31 @@ static int rkvenc_init_session(struct mpp_session *session)
 	init_rwsem(&priv->rw_sem);
 	session->priv = priv;
 
+	task = kzalloc(sizeof(*task), GFP_KERNEL);
+	if (!task)
+		goto fail;
+
+	task->hw_info = to_rkvenc_info(mpp->var->hw_info);
+	{
+		struct rkvenc_hw_info *hw = task->hw_info;
+
+		for (j = 0; j < hw->reg_class; j++) {
+			ret = rkvenc_alloc_class_msg(task, j);
+			if (ret)
+				goto fail;
+		}
+	}
+	session->task = task;
 	return 0;
+
+fail:
+	if (session->priv)
+		kfree(session->priv);
+	if (task) {
+		rkvenc_free_class_msg(task);
+		kfree(task);
+	}
+	return -ENOMEM;
 }
 
 #ifdef CONFIG_ROCKCHIP_MPP_PROC_FS

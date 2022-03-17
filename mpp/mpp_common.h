@@ -384,6 +384,8 @@ struct mpp_session {
 	struct list_head session_link;
 	/* private data */
 	void *priv;
+	/*task */
+	void *task;
 	u32 chn_id;
 	u32 k_space;
 	/*
