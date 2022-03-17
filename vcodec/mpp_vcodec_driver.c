@@ -289,7 +289,7 @@ struct vcodec_dev {
 	dev_t dev_id;
 	struct cdev vco_cdev;
 	struct device *child_dev;
-#ifdef CONFIG_ROCKCHIP_MPP_PROC_FS
+#ifdef CONFIG_PROC_FS
 	struct proc_dir_entry *procfs;
 	struct proc_dir_entry *vdec_procfs;
 	struct proc_dir_entry *venc_procfs;
@@ -299,7 +299,7 @@ struct vcodec_dev {
 #define MPP_ENC_NAME	"enc"
 #define MPP_DEC_NAME	"dec"
 
-#ifdef CONFIG_ROCKCHIP_MPP_PROC_FS
+#ifdef CONFIG_PROC_FS
 static int vcodec_procfs_remove(struct vcodec_dev *vdev)
 {
 	if (vdev->procfs) {

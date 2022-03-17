@@ -245,7 +245,7 @@ struct rkvenc_dev {
 	struct mpp_clk_info hclk_info;
 	struct mpp_clk_info core_clk_info;
 	u32 default_max_load;
-#ifdef CONFIG_ROCKCHIP_MPP_PROC_FS
+#ifdef CONFIG_PROC_FS
 	struct proc_dir_entry *procfs;
 #endif
 	struct reset_control *rst_a;
@@ -1628,7 +1628,7 @@ fail:
 	return -ENOMEM;
 }
 
-#ifdef CONFIG_ROCKCHIP_MPP_PROC_FS
+#ifdef CONFIG_PROC_FS
 static int rkvenc_procfs_remove(struct mpp_dev *mpp)
 {
 	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);

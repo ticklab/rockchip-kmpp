@@ -68,7 +68,7 @@ struct mpp_bat_msg {
 	__s32 ret;
 };
 
-#ifdef CONFIG_ROCKCHIP_MPP_PROC_FS
+#ifdef CONFIG_PROC_FS
 const char *mpp_device_name[MPP_DEVICE_BUTT] = {
 	[MPP_DEVICE_VDPU1]		= "VDPU1",
 	[MPP_DEVICE_VDPU2]		= "VDPU2",
@@ -2513,7 +2513,7 @@ int mpp_clk_set_rate(struct mpp_clk_info *clk_info,
 	return 0;
 }
 
-#ifdef CONFIG_ROCKCHIP_MPP_PROC_FS
+#ifdef CONFIG_PROC_FS
 static int fops_show_u32(struct seq_file *file, void *v)
 {
 	u32 *val = file->private;
