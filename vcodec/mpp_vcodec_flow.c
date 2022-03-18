@@ -97,7 +97,7 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 	spin_unlock_irqrestore(&chan_entry->chan_lock, lock_flag);
 
 	if (atomic_read(&chan_entry->runing) > 0) {
-		mpp_err("cur chnl %d state is wating irq", chan_id);
+		mpp_vcodec_detail("cur chnl %d state is wating irq", chan_id);
 		return MPP_OK;
 	}
 
