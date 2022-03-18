@@ -2232,7 +2232,6 @@ static MPP_RET hal_h264e_vepu540c_wait(void *hal, HalEncTask *task)
 
 	mpp_dev_release_iova_address(ctx->dev, task->input);
 	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
-    	mpp_buffer_flush_for_cpu(task->output->buf);
 	hal_h264e_dbg_func("leave %p\n", hal);
 
 	return ret;
@@ -2323,7 +2322,6 @@ static MPP_RET hal_h264e_vepu540c_ret_comb_task(void *hal, HalEncTask *task, Hal
 	HalVepu540cRegSet *regs = (HalVepu540cRegSet *)ctx->regs_set;
 	MPP_RET ret = MPP_OK;
 
-    mpp_buffer_flush_for_cpu(jpeg_task->output->buf);
 	hal_h264e_dbg_func("enter %p\n", hal);
 	ret = hal_h264e_vepu540c_ret_task(hal, task);
 

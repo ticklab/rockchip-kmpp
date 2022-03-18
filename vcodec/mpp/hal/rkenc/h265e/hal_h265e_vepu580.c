@@ -2356,7 +2356,6 @@ MPP_RET hal_h265e_v580_wait(void *hal, HalEncTask * task)
 
 	mpp_dev_release_iova_address(ctx->dev, task->input);
 	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
-    mpp_buffer_flush_for_cpu(task->output->buf);
 	hal_h265e_leave();
 	return ret;
 }

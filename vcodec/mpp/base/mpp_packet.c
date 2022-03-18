@@ -98,16 +98,19 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet){
 	MppPacketImpl *p = NULL;
 	p = (MppPacketImpl *) packet;
+	p->buf.use_len = p->length;
 
 	if (p->ring_pool){
-		p->buf.use_len = p->length;
 		if(p->length > p->buf.size){
 			mpp_err("ring_buf used may be error");
 		}
 		ring_buf_put_use(p->ring_pool, &p->buf);
 	}
-	return MPP_OK;
-	}
+	if(p->buf.buf)
+        	mpp_buffer_flush_for_cpu(&p->buf);
+
+    return MPP_OK;
+}
 
 MPP_RET mpp_packet_init(MppPacket * packet, void *data, size_t size)
 {

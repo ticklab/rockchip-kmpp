@@ -434,16 +434,16 @@ MPP_RET mpp_buffer_info_get_with_caller(MppBuffer buffer, MppBufferInfo *info,
 	return MPP_OK;
 }
 
-MPP_RET mpp_buffer_flush_for_cpu_with_caller(MppBuffer buffer,
+MPP_RET mpp_buffer_flush_for_cpu_with_caller(ring_buf *buf,
 					     const char *caller)
 {
-	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
+	struct MppBufferImpl *p = (struct MppBufferImpl *)buf->buf;
 	if (NULL == p) {
 		mpp_err("mpp_buffer_set_offset invalid NULL input from %s\n",
 			caller);
 		return MPP_ERR_UNKNOW;
 	}
-	dma_buf_begin_cpu_access(p->dmabuf, DMA_FROM_DEVICE);
+	dma_buf_begin_cpu_access_partial(p->dmabuf, DMA_FROM_DEVICE, buf->start_offset, buf->use_len);
 	(void)caller;
 	return MPP_OK;
 }

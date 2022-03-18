@@ -422,7 +422,6 @@ MPP_RET hal_jpege_v540c_ret_task(void *hal, HalEncTask * task)
 
 	EncRcTaskInfo *rc_info = &task->rc_task->info;
 	hal_jpege_enter();
-    mpp_buffer_flush_for_cpu(task->output->buf);
 	(void)hal;
 	task->length += task->hw_length;
 

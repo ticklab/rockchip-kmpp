@@ -2003,7 +2003,6 @@ static MPP_RET hal_h265e_v540c_wait(void *hal, HalEncTask *task)
 
 	mpp_dev_release_iova_address(ctx->dev, task->input);
 	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
-    mpp_buffer_flush_for_cpu(task->output->buf);
 	hal_h265e_leave();
 	return ret;
 }
@@ -2099,7 +2098,6 @@ static MPP_RET hal_h265e_v540c_ret_comb_task(void *hal, HalEncTask *task, HalEnc
 	MPP_RET ret = MPP_OK;
 
 	hal_h265e_enter();
-    mpp_buffer_flush_for_cpu(jpeg_enc_task->output->buf);
 
 	ret = vepu540c_h265_set_feedback(ctx, enc_task);
 	enc_task->hw_length = fb->out_strm_size;
