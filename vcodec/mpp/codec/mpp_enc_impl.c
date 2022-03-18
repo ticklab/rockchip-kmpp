@@ -1708,6 +1708,12 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 		hal_task->hw_length = 0;
 		status->rc_reenc = 1;
 
+		if (enc->online || enc->ref_buf_shared){
+			enc_dbg_detail("shared status can't reenc drop request idr\n");
+			ret = MPP_NOK;
+			goto TASK_DONE;
+		}
+
 		enc_dbg_detail("task %d reenc %d times %d\n", frm->seq_idx,
 			       frm->reencode, frm->reencode_times);
 
@@ -1737,15 +1743,22 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 	frm_cfg->force_flag = 0;
 
 TASK_DONE:
-	*packet = enc->packet;
 
 	//mpp_stopwatch_record(hal_task->stopwatch, "encode task done");
-
-	/* setup output packet and meta data */
-	mpp_packet_set_length(enc->packet, hal_task->length);
-	mpp_packet_ring_buf_put_used(enc->packet);
-	mpp_packet_set_flag(enc->packet, frm->is_intra); //set as key frame
-	mpp_packet_set_temporal_id(enc->packet, frm->temporal_id);
+	if (ret){
+		enc->frame_force_drop++;
+		enc->frm_cfg.force_flag |= ENC_FORCE_IDR;
+		enc->hdr_status.val = 0;
+		mpp_packet_ring_buf_put_used(enc->packet);
+		mpp_packet_deinit(&enc->packet);
+	} else {
+		/* setup output packet and meta data */
+		mpp_packet_set_length(enc->packet, hal_task->length);
+		mpp_packet_ring_buf_put_used(enc->packet);
+		mpp_packet_set_flag(enc->packet, frm->is_intra); //set as key frame
+		mpp_packet_set_temporal_id(enc->packet, frm->temporal_id);
+	}
+	*packet = enc->packet;
 	/*
 	 * First return output packet.
 	 * Then enqueue task back to input port.

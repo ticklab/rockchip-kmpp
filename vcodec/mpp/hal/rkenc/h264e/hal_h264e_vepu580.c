@@ -1982,20 +1982,30 @@ static MPP_RET hal_h264e_vepu580_status_check(void *hal)
 	if (regs_set->reg_ctl.int_sta.sclr_done_sta)
 		hal_h264e_dbg_detail("safe clear finsh");
 
-	if (regs_set->reg_ctl.int_sta.bsf_oflw_sta)
+	if (regs_set->reg_ctl.int_sta.bsf_oflw_sta){
 		mpp_err_f("bit stream overflow");
+		return MPP_NOK;
+	}
 
-	if (regs_set->reg_ctl.int_sta.brsp_otsd_sta)
+	if (regs_set->reg_ctl.int_sta.brsp_otsd_sta) {
 		mpp_err_f("bus write full");
+		return MPP_NOK;
+	}
 
-	if (regs_set->reg_ctl.int_sta.wbus_err_sta)
+	if (regs_set->reg_ctl.int_sta.wbus_err_sta) {
 		mpp_err_f("bus write error");
+		return MPP_NOK;
+	}
 
-	if (regs_set->reg_ctl.int_sta.rbus_err_sta)
+	if (regs_set->reg_ctl.int_sta.rbus_err_sta) {
 		mpp_err_f("bus read error");
+		return MPP_NOK;
+	}
 
-	if (regs_set->reg_ctl.int_sta.wdg_sta)
+	if (regs_set->reg_ctl.int_sta.wdg_sta) {
 		mpp_err_f("wdg timeout");
+		return MPP_NOK;
+	}
 
 	return MPP_OK;
 }
@@ -2011,9 +2021,6 @@ static MPP_RET hal_h264e_vepu580_wait(void *hal, HalEncTask * task)
 	if (ret) {
 		mpp_err_f("poll cmd failed %d\n", ret);
 		ret = MPP_ERR_VPUHW;
-	} else {
-		hal_h264e_vepu580_status_check(hal);
-		task->hw_length += ctx->regs_set.reg_st.bs_lgth_l32;
 	}
 
 	mpp_dev_release_iova_address(ctx->dev, task->input);
@@ -2031,9 +2038,16 @@ static MPP_RET hal_h264e_vepu580_ret_task(void *hal, HalEncTask * task)
 	RK_U32 mb_w = ctx->sps->pic_width_in_mbs;
 	RK_U32 mb_h = ctx->sps->pic_height_in_mbs;
 	RK_U32 mbs = mb_w * mb_h;
+	MPP_RET ret = MPP_OK;
 
 	hal_h264e_dbg_func("enter %p\n", hal);
 
+	ret = hal_h264e_vepu580_status_check(hal);
+	if (ret){
+		return ret;
+	}
+
+	task->hw_length += ctx->regs_set.reg_st.bs_lgth_l32;
 	// update total hardware length
 	task->length += task->hw_length;
 
@@ -2060,7 +2074,7 @@ static MPP_RET hal_h264e_vepu580_ret_task(void *hal, HalEncTask * task)
 
 	hal_h264e_dbg_func("leave %p\n", hal);
 
-	return MPP_OK;
+	return ret;
 }
 
 const MppEncHalApi hal_h264e_vepu580 = {

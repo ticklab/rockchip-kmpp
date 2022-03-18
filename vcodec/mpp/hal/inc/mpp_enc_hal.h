@@ -20,6 +20,7 @@ typedef struct MppEncHalCfg_t {
 	MppCodingType coding;
 	MppEncCfgSet *cfg;
 	RK_S32	online;
+	RK_U32  ref_buf_shared;
 
 	// output from enc_impl
 	MppClientType type;

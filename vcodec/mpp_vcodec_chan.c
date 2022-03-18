@@ -62,6 +62,7 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 				online,
 				buf_size,
 				attr->max_strm_cnt,
+				attr->shared_buf_en
 			};
 			if (!num_chan) {
 				struct venc_module *venc =

@@ -253,18 +253,10 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	pic_width_align8 = (syn->width + 7) & (~7);
 	pic_height_align8 = (syn->height + 7) & (~7);
 
-	if (task->online) {
-		;
-		//to be done
-		/* regs->reg0260_adr_vsy_b;
-		   regs->reg0261_adr_vsc_b;
-		   regs->reg0262_adr_vsy_t;
-		   regs->reg0263_adr_vsc_t; */
-	} else {
-		regs->reg0264_adr_src0 = mpp_dev_get_iova_address(cfg->dev, task->input, 0);
-		regs->reg0265_adr_src1 = regs->reg0264_adr_src0;
-		regs->reg0266_adr_src2 = regs->reg0264_adr_src0;
-	}
+
+	regs->reg0264_adr_src0 = mpp_dev_get_iova_address(cfg->dev, task->input, 0);
+	regs->reg0265_adr_src1 = regs->reg0264_adr_src0;
+	regs->reg0266_adr_src2 = regs->reg0264_adr_src0;
 
 	vepu540c_jpeg_set_uv_offset(regs, syn, (Vepu541Fmt) fmt->format, task);
 

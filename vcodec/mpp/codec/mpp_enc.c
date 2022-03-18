@@ -63,6 +63,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	enc_hal_cfg.type = VPU_CLIENT_BUTT;
 	enc_hal_cfg.dev = NULL;
 	enc_hal_cfg.online = cfg->online;
+	enc_hal_cfg.ref_buf_shared = cfg->ref_buf_shared;
 	p->ring_buf_size = cfg->buf_size;
 	p->max_strm_cnt = cfg->max_strm_cnt;
 	ctrl_cfg.coding = coding;
@@ -125,6 +126,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	p->stop_flag = 1;
 	p->rb_userdata.free_cnt = MAX_USRDATA_CNT;
 	p->ring_pool = mpp_calloc(ring_buf_pool, 1);
+	p->online = cfg->online;
 	*enc = p;
 	return ret;
 	ERR_RET:

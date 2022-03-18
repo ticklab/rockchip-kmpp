@@ -57,6 +57,7 @@ typedef struct MppEncImpl_t {
 	RK_S64 time_end;
 	RK_S64 init_time;
 	RK_S32 frame_count;
+	RK_S32 frame_force_drop;
 	RK_S32 hal_info_updated;
 
 	/*
@@ -108,13 +109,15 @@ typedef struct MppEncImpl_t {
 	RK_U32   real_fps;
 	RK_U32   stop_flag;
 	RK_U32   hw_run;
+	RK_U32   online;
+	RK_U32   ref_buf_shared;
 	struct semaphore enc_sem;
 	struct mpi_buf_pool *strm_pool;
-    MppEncROICfg cur_roi;
-    MppEncOSDData3 cur_osd;
-    MppUserDataRb rb_userdata;
-    ring_buf_pool *ring_pool;
-    RK_U32 ring_buf_size;
+	MppEncROICfg cur_roi;
+	MppEncOSDData3 cur_osd;
+	MppUserDataRb rb_userdata;
+	ring_buf_pool *ring_pool;
+	RK_U32 ring_buf_size;
 	RK_U32 max_strm_cnt;
 } MppEncImpl;
 

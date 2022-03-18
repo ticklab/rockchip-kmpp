@@ -80,6 +80,7 @@ typedef struct HalH264eVepu540cCtx_t {
 
 	MppBuffer ext_line_buf;
 	RK_S32	online;
+    RK_S32  ref_shared_en;
 } HalH264eVepu540cCtx;
 
 static RK_U32 dump_l1_reg = 0;
@@ -150,6 +151,7 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 
 	p->cfg = cfg->cfg;
 	p->online = cfg->online;
+    p->ref_shared_en = cfg->ref_buf_shared;
 	/* update output to MppEnc */
 	cfg->type = VPU_CLIENT_RKVENC;
 	ret = mpp_dev_init(&cfg->dev, cfg->type);
@@ -1966,16 +1968,22 @@ static MPP_RET hal_h264e_vepu540c_status_check(void *hal)
 		hal_h264e_dbg_detail("safe clear finsh");
 
 	if (regs_set->reg_ctl.int_sta.vbsf_oflw_sta)
-		mpp_err_f("bit stream overflow");
+					mpp_err_f("bit stream overflow");
 
-	if (regs_set->reg_ctl.int_sta.vbuf_lens_sta)
-		mpp_err_f("bus write full");
+	if (regs_set->reg_ctl.int_sta.vbuf_lens_sta) {
+			mpp_err_f("bus write full");
+			return MPP_NOK;
+	}
 
-	if (regs_set->reg_ctl.int_sta.enc_err_sta)
-		mpp_err_f("bus error");
+	if (regs_set->reg_ctl.int_sta.enc_err_sta) {
+			mpp_err_f("bus error");
+			return MPP_NOK;
+	}
 
-	if (regs_set->reg_ctl.int_sta.wdg_sta)
-		mpp_err_f("wdg timeout");
+	if (regs_set->reg_ctl.int_sta.wdg_sta){
+			mpp_err_f("wdg timeout");
+			return MPP_NOK;
+	}
 
 	return MPP_OK;
 }
@@ -2007,9 +2015,15 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 	RK_U32 mb_w = ctx->sps->pic_width_in_mbs;
 	RK_U32 mb_h = ctx->sps->pic_height_in_mbs;
 	RK_U32 mbs = mb_w * mb_h;
+	MPP_RET ret = 0;
+
 	HalVepu540cRegSet *regs_set = (HalVepu540cRegSet *) ctx->regs_set;
 	hal_h264e_dbg_func("enter %p\n", hal);
-	hal_h264e_vepu540c_status_check(hal);
+
+	ret = hal_h264e_vepu540c_status_check(hal);
+	if (ret){
+		return ret;
+	}
 	task->hw_length += regs_set->reg_st.bs_lgth_l32;
 
 	// update total hardware length
@@ -2077,10 +2091,11 @@ static MPP_RET hal_h264e_vepu540c_ret_comb_task(void *hal, HalEncTask *task, Hal
 	HalH264eVepu540cCtx *ctx = (HalH264eVepu540cCtx *) hal;
 	EncRcTaskInfo *rc_info = &jpeg_task->rc_task->info;
 	HalVepu540cRegSet *regs = (HalVepu540cRegSet *)ctx->regs_set;
+	MPP_RET ret = MPP_OK;
 
     mpp_buffer_flush_for_cpu(jpeg_task->output->buf);
 	hal_h264e_dbg_func("enter %p\n", hal);
-	hal_h264e_vepu540c_ret_task(hal, task);
+	ret = hal_h264e_vepu540c_ret_task(hal, task);
 
 	jpeg_task->hw_length += regs->reg_st.jpeg_head_bits_l32;
 	// update total hardware length
@@ -2089,7 +2104,7 @@ static MPP_RET hal_h264e_vepu540c_ret_comb_task(void *hal, HalEncTask *task, Hal
 	rc_info->bit_real = jpeg_task->hw_length * 8;
 
 	hal_h264e_dbg_func("leave %p\n", hal);
-	return MPP_OK;
+	return ret;
 }
 
 const MppEncHalApi hal_h264e_vepu540c = {
