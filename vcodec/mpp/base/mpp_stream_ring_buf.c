@@ -170,7 +170,7 @@ MPP_RET ring_buf_get_free(ring_buf_pool *ctx, ring_buf *buf, RK_U32 align,
 			buf->buf = ctx->buf;
 
 			buf->size = r_pos - w_pos - align_offset;
-			return MPP_NOK;
+			return MPP_OK;
 		}
 
 		/* w_pos  > r_pos*/
@@ -182,7 +182,7 @@ MPP_RET ring_buf_get_free(ring_buf_pool *ctx, ring_buf *buf, RK_U32 align,
 			/*jumb to start pos*/
 			w_pos = 0;
 			if (min_size + w_pos + align_offset >= r_pos) {
-				return MPP_OK;
+				return MPP_NOK;
 			}
 			align_w_pos = w_pos + align_offset;
 
@@ -190,7 +190,7 @@ MPP_RET ring_buf_get_free(ring_buf_pool *ctx, ring_buf *buf, RK_U32 align,
 			buf->start_offset = align_w_pos;
 			buf->buf_start = ctx->buf_base + buf->start_offset;
 			buf->size = r_pos - align_w_pos;
-			return MPP_NOK;
+			return MPP_OK;
 		}
 		align_offset = align - (w_pos & (align - 1));
 		align_w_pos = w_pos + align_offset;
