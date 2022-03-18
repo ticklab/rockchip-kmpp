@@ -209,9 +209,9 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 	RK_U32 count = atomic_read(&chan_entry->stream_count);
 
 	if (count) {
-        MppPacketImpl *packet = NULL;
+        	MppPacketImpl *packet = NULL;
 
-        mutex_lock(&chan_entry->stream_done_lock);
+        	mutex_lock(&chan_entry->stream_done_lock);
 		packet = list_first_entry_or_null(&chan_entry->stream_done,
 						  MppPacketImpl, list);
 		mutex_unlock(&chan_entry->stream_done_lock);
@@ -223,19 +223,19 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 		enc_packet->temporal_id = mpp_packet_get_temporal_id(packet);
 		enc_packet->u64pts = mpp_packet_get_pts(packet);
 		enc_packet->data_num = 1;
-        enc_packet->u64priv_data= packet->buf.mpi_buf_id; //get mpp_buffer fd from ring buf
-        enc_packet->offset = packet->buf.start_offset;
-        enc_packet->u64packet_addr = (RK_U64)packet;
-        enc_packet->buf_size = mpp_buffer_get_size(packet->buf.buf);
+		enc_packet->u64priv_data= packet->buf.mpi_buf_id; //get mpp_buffer fd from ring buf
+		enc_packet->offset = packet->buf.start_offset;
+		enc_packet->u64packet_addr = (uintptr_t )packet;
+		enc_packet->buf_size = mpp_buffer_get_size(packet->buf.buf);
 
 		mutex_lock(&chan_entry->stream_done_lock);
 		list_del_init(&packet->list);
 		mutex_lock(&chan_entry->stream_remove_lock);
-	    list_move_tail(&packet->list, &chan_entry->stream_remove);
+	    	list_move_tail(&packet->list, &chan_entry->stream_remove);
 		mutex_unlock(&chan_entry->stream_remove_lock);
 		mutex_unlock(&chan_entry->stream_done_lock);
 
-        atomic_inc(&chan_entry->str_out_cnt);
+        	atomic_inc(&chan_entry->str_out_cnt);
 	}
 	return 0;
 }
@@ -245,21 +245,21 @@ int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 {
 
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
-    MppPacketImpl *packet = NULL, *n;
+    	MppPacketImpl *packet = NULL, *n;
         struct venc_module *venc =  NULL;
+
 	mutex_lock(&chan_entry->stream_remove_lock);
-    list_for_each_entry_safe(packet, n,
-						&chan_entry->stream_remove, list) {
-		if ((RK_U64)packet == enc_packet->u64packet_addr) {
-                list_del_init(&packet->list);
-                kref_put(&packet->ref, stream_packet_free);
-                atomic_dec(&chan_entry->str_out_cnt);
-                venc = mpp_vcodec_get_enc_module_entry();
-                vcodec_thread_trigger(venc->thd);
+    	list_for_each_entry_safe(packet, n, &chan_entry->stream_remove, list) {
+		if ((uintptr_t)packet == enc_packet->u64packet_addr) {
+			list_del_init(&packet->list);
+			kref_put(&packet->ref, stream_packet_free);
+			atomic_dec(&chan_entry->str_out_cnt);
+			venc = mpp_vcodec_get_enc_module_entry();
+			vcodec_thread_trigger(venc->thd);
 			break;
 		}
 	}
-    mutex_unlock(&chan_entry->stream_remove_lock);
+    	mutex_unlock(&chan_entry->stream_remove_lock);
 
     return 0;
 }
