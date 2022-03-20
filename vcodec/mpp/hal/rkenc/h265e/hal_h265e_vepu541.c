@@ -1388,7 +1388,7 @@ void vepu54x_h265_set_hw_address(H265eV541HalContext * ctx,
 
 	hal_h265e_enter();
 	regs->adr_srcy_hevc =
-	    mpp_dev_get_iova_address(ctx->dev, enc_task->input, 0);
+	    mpp_dev_get_iova_address(ctx->dev, enc_task->input, 70);
 	regs->adr_srcu_hevc = regs->adr_srcy_hevc;
 	regs->adr_srcv_hevc = regs->adr_srcy_hevc;
 	vepu541_h265_uv_address(regs, syn, (Vepu541Fmt) fmt->format, task);
@@ -1397,22 +1397,22 @@ void vepu54x_h265_set_hw_address(H265eV541HalContext * ctx,
 	ref_buf = hal_bufs_get_buf(ctx->dpb_bufs, syn->sp.ref_pic.slot_idx);
 	if (!syn->sp.non_reference_flag) {
 		regs->rfpw_h_addr_hevc =
-		    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[0], 0);
+		    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[0], 74);
 		regs->rfpw_b_addr_hevc =
 		    regs->rfpw_h_addr_hevc + ctx->fbc_header_len;
 	}
 
 	regs->dspw_addr_hevc =
-	    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[1], 0);
+	    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[1], 80);
 	regs->cmvw_addr_hevc =
-	    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[2], 0);
+	    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[2], 78);
 	regs->rfpr_h_addr_hevc =
-	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[0], 0);
+	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[0], 76);
 	regs->rfpr_b_addr_hevc = regs->rfpr_h_addr_hevc + ctx->fbc_header_len;
 	regs->dspr_addr_hevc =
-	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[1], 0);
+	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[1], 81);
 	regs->cmvr_addr_hevc =
-	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[2], 0);
+	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[2], 79);
 
 #if 0
 	if (syn->pp.tiles_enabled_flag) {
@@ -1440,14 +1440,14 @@ void vepu54x_h265_set_hw_address(H265eV541HalContext * ctx,
 	if (mv_info_buf) {
 		regs->enc_pic.mei_stor = 1;
 		regs->meiw_addr_hevc =
-		    mpp_dev_get_iova_address(ctx->dev, mv_info_buf, 0);
+		    mpp_dev_get_iova_address(ctx->dev, mv_info_buf, 82);
 	} else {
 		regs->enc_pic.mei_stor = 0;
 		regs->meiw_addr_hevc = 0;
 	}
 
 	regs->bsbb_addr_hevc =
-	    mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, enc_task->output->start_offset);
+	    mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, 84) + enc_task->output->start_offset;
 	/* TODO: stream size relative with syntax */
 	regs->bsbt_addr_hevc =
 	    regs->bsbb_addr_hevc + task->output->size - 1;
@@ -1683,7 +1683,7 @@ MPP_RET hal_h265e_v540_start(void *hal, HalEncTask * enc_task)
 			offset += stream_len;
 			hw_regs->bsbb_addr_hevc =
 			    mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf,
-						     enc_task->output->start_offset);
+						     84) + enc_task->output->start_offset;
 			hw_regs->bsbw_addr_hevc =
 			    hw_regs->bsbb_addr_hevc + offset;
 		}

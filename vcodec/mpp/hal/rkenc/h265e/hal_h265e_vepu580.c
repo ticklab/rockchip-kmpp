@@ -1249,25 +1249,25 @@ static MPP_RET vepu580_h265_set_roi_regs(H265eV580HalContext * ctx,
 
 		regs->reg0192_enc_pic.roi_en = 1;
 		regs->reg0178_roi_addr =
-		    mpp_dev_get_iova_address(ctx->dev, cfg->base_cfg_buf, 0);
+		    mpp_dev_get_iova_address(ctx->dev, cfg->base_cfg_buf, 178);
 		if (cfg->roi_qp_en) {
 			regs->reg0179_roi_qp_addr =
 			    mpp_dev_get_iova_address(ctx->dev, cfg->qp_cfg_buf,
-						     0);
+						     179);
 			regs->reg0228_roi_en.roi_qp_en = 1;
 		}
 
 		if (cfg->roi_amv_en) {
 			regs->reg0180_roi_amv_addr =
 			    mpp_dev_get_iova_address(ctx->dev, cfg->amv_cfg_buf,
-						     0);
+						     180);
 			regs->reg0228_roi_en.roi_amv_en = 1;
 		}
 
 		if (cfg->roi_mv_en) {
 			regs->reg0181_roi_mv_addr =
 			    mpp_dev_get_iova_address(ctx->dev, cfg->mv_cfg_buf,
-						     0);
+						     181);
 			regs->reg0228_roi_en.roi_mv_en = 1;
 		}
 	}
@@ -1701,7 +1701,7 @@ void vepu580_h265_set_hw_address(H265eV580HalContext * ctx,
 	hal_h265e_enter();
 
 	regs->reg0160_adr_src0 =
-	    mpp_dev_get_iova_address(ctx->dev, enc_task->input, 0);
+	    mpp_dev_get_iova_address(ctx->dev, enc_task->input, 160);
 	regs->reg0161_adr_src1 = regs->reg0160_adr_src0;
 	regs->reg0162_adr_src2 = regs->reg0160_adr_src0;
 
@@ -1712,22 +1712,22 @@ void vepu580_h265_set_hw_address(H265eV580HalContext * ctx,
 
 	if (!syn->sp.non_reference_flag) {
 		regs->reg0163_rfpw_h_addr =
-		    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[0], 0);
+		    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[0], 163);
 		regs->reg0164_rfpw_b_addr =
 		    regs->reg0163_rfpw_h_addr + ctx->fbc_header_len;
 	}
 	regs->reg0165_rfpr_h_addr =
-	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[0], 0);
+	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[0], 165);
 	regs->reg0166_rfpr_b_addr =
 	    regs->reg0165_rfpr_h_addr + ctx->fbc_header_len;
 	regs->reg0167_cmvw_addr =
-	    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[2], 0);
+	    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[2], 167);
 	regs->reg0168_cmvr_addr =
-	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[2], 0);
+	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[2], 168);
 	regs->reg0169_dspw_addr =
-	    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[1], 0);
+	    mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[1], 169);
 	regs->reg0170_dspr_addr =
-	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[1], 0);
+	    mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[1], 170);
 
 	if (syn->pp.tiles_enabled_flag) {
 		//  if (NULL == ctx->tile_grp)
@@ -1746,9 +1746,9 @@ void vepu580_h265_set_hw_address(H265eV580HalContext * ctx,
 		}
 
 		regs->reg0176_lpfw_addr =
-		    mpp_dev_get_iova_address(ctx->dev, ctx->hw_tile_buf[0], 0);
+		    mpp_dev_get_iova_address(ctx->dev, ctx->hw_tile_buf[0], 176);
 		regs->reg0177_lpfr_addr =
-		    mpp_dev_get_iova_address(ctx->dev, ctx->hw_tile_buf[1], 0);
+		    mpp_dev_get_iova_address(ctx->dev, ctx->hw_tile_buf[1], 177);
 	}
 
 	if (mv_info_buf) {
@@ -1761,7 +1761,7 @@ void vepu580_h265_set_hw_address(H265eV580HalContext * ctx,
 	}
 
 	regs->reg0175_adr_bsbs =
-	    mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, enc_task->output->start_offset);
+	    mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, 175) + enc_task->output->start_offset;
 	/* TODO: stream size relative with syntax */
 
 	regs->reg0172_bsbt_addr = regs->reg0175_adr_bsbs;

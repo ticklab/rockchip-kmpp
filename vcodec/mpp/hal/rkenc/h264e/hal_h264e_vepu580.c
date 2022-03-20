@@ -1197,11 +1197,11 @@ static void setup_vepu580_io_buf(HalVepu580RegSet * regs, MppDev dev,
 
 	hal_h264e_dbg_func("enter\n");
 
-	regs->reg_base.adr_src0 = mpp_dev_get_iova_address(dev, buf_in, 0);
+	regs->reg_base.adr_src0 = mpp_dev_get_iova_address(dev, buf_in, 160);
 	regs->reg_base.adr_src1 = regs->reg_base.adr_src0;
 	regs->reg_base.adr_src2 = regs->reg_base.adr_src0;
 
-	regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out->buf, buf_out->start_offset);
+	regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out->buf, 173) + buf_out->start_offset;
 	regs->reg_base.bsbr_addr = regs->reg_base.bsbb_addr;
 	regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr;
 	regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr;
@@ -1272,26 +1272,26 @@ static void setup_vepu580_roi(HalVepu580RegSet * regs, HalH264eVepu580Ctx * ctx)
 
 		regs->reg_base.enc_pic.roi_en = 1;
 		regs->reg_base.roi_addr =
-		    mpp_dev_get_iova_address(ctx->dev, cfg->base_cfg_buf, 0);
+		    mpp_dev_get_iova_address(ctx->dev, cfg->base_cfg_buf, 178);
 
 		if (cfg->roi_qp_en) {
 			regs->reg_base.roi_qp_addr =
 			    mpp_dev_get_iova_address(ctx->dev, cfg->qp_cfg_buf,
-						     0);
+						     179);
 			regs->reg_base.roi_en.roi_qp_en = 1;
 		}
 
 		if (cfg->roi_amv_en) {
 			regs->reg_base.qoi_amv_addr =
 			    mpp_dev_get_iova_address(ctx->dev, cfg->amv_cfg_buf,
-						     0);
+						     180);
 			regs->reg_base.roi_en.roi_amv_en = 1;
 		}
 
 		if (cfg->roi_mv_en) {
 			regs->reg_base.qoi_mv_addr =
 			    mpp_dev_get_iova_address(ctx->dev, cfg->mv_cfg_buf,
-						     0);
+						     181);
 			regs->reg_base.roi_en.roi_mv_en = 1;
 		}
 	}
@@ -1316,13 +1316,13 @@ static void setup_vepu580_recn_refr(HalVepu580RegSet * regs, MppDev dev,
 		mpp_assert(buf_thumb);
 
 		regs->reg_base.rfpw_h_addr =
-		    mpp_dev_get_iova_address(dev, buf_pixel, 0);
+		    mpp_dev_get_iova_address(dev, buf_pixel, 163);
 
 		regs->reg_base.rfpw_b_addr =
 		    regs->reg_base.rfpw_h_addr + fbc_hdr_size;
 
 		regs->reg_base.dspw_addr =
-		    mpp_dev_get_iova_address(dev, buf_thumb, 0);
+		    mpp_dev_get_iova_address(dev, buf_thumb, 169);
 	}
 
 	if (refr && refr->cnt) {
@@ -1333,11 +1333,11 @@ static void setup_vepu580_recn_refr(HalVepu580RegSet * regs, MppDev dev,
 		mpp_assert(buf_thumb);
 
 		regs->reg_base.rfpr_h_addr =
-		    mpp_dev_get_iova_address(dev, buf_pixel, 0);
+		    mpp_dev_get_iova_address(dev, buf_pixel, 165);
 		regs->reg_base.rfpr_b_addr =
 		    regs->reg_base.rfpr_h_addr + fbc_hdr_size;
 		regs->reg_base.dspr_addr =
-		    mpp_dev_get_iova_address(dev, buf_thumb, 0);
+		    mpp_dev_get_iova_address(dev, buf_thumb, 170);
 
 	}
 
@@ -1770,12 +1770,11 @@ static void setup_vepu580_ext_line_buf(HalVepu580RegSet * regs,
 				       HalH264eVepu580Ctx * ctx)
 {
 	if (ctx->ext_line_buf) {
-
-		regs->reg_base.ebuft_addr =
-		    mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf,
-					     0) + ctx->ext_line_buf_size;
 		regs->reg_base.ebufb_addr =
-		    mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf, 0);
+		    mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf, 183);
+
+        regs->reg_base.ebuft_addr =
+		    regs->reg_base.ebufb_addr + ctx->ext_line_buf_size;
 
 	} else {
 		regs->reg_base.ebufb_addr = 0;

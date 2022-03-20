@@ -100,7 +100,7 @@ extern "C" {
 	MPP_RET mpp_dev_set_reg_offset(MppDev dev, RK_S32 index, RK_U32 offset);
 
 	RK_U32 mpp_dev_get_iova_address(MppDev ctx, MppBuffer mpp_buf,
-					RK_U32 offset);
+					RK_U32 reg_idx);
 	RK_U32 mpp_dev_release_iova_address(MppDev ctx, MppBuffer mpp_buf);
 
     RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf,

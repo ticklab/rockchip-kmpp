@@ -298,7 +298,7 @@ static void setup_recn_refr_wrap(HalH264eVepu540cCtx *ctx, HalVepu540cRegSet *re
 	WrapInfo *hdr = &ctx->wrap_infos.hdr;
 
 	if (recn_ref_wrap)
-		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 0);
+		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 163);
 
 	if (frms->curr_idx == 0 && frms->refr_idx == 0) {
 		if (cur_is_lt) {
@@ -1460,11 +1460,11 @@ static void setup_vepu540c_io_buf(HalVepu540cRegSet *regs, MppDev dev,
 
 	hal_h264e_dbg_func("enter\n");
 
-	regs->reg_base.adr_src0 = mpp_dev_get_iova_address(dev, buf_in, 0);
+	regs->reg_base.adr_src0 = mpp_dev_get_iova_address(dev, buf_in, 160);
 	regs->reg_base.adr_src1 = regs->reg_base.adr_src0;
 	regs->reg_base.adr_src2 = regs->reg_base.adr_src0;
 
-	regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out->buf, buf_out->start_offset);
+	regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out->buf, 173) + buf_out->start_offset;
 	regs->reg_base.bsbr_addr = regs->reg_base.bsbb_addr;
 	regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr;
 	regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr;
@@ -1541,17 +1541,17 @@ static void setup_vepu540c_recn_refr(HalH264eVepu540cCtx *ctx,
 		MppBuffer buf_thumb = curr->buf[0];
 
 		mpp_assert(buf_thumb);
-		regs->reg_base.dspw_addr = mpp_dev_get_iova_address(dev, buf_thumb, 0);
+		regs->reg_base.dspw_addr = mpp_dev_get_iova_address(dev, buf_thumb, 169);
 		if (!recn_ref_wrap) {
 			MppBuffer buf_pixel = curr->buf[1];
 
 			mpp_assert(buf_pixel);
 			regs->reg_base.rfpw_h_addr =
-					mpp_dev_get_iova_address(dev, buf_pixel, 0);
+					mpp_dev_get_iova_address(dev, buf_pixel, 163);
 			regs->reg_base.rfpw_b_addr =
 					regs->reg_base.rfpw_h_addr + fbc_hdr_size;
 			regs->reg_base.dspw_addr =
-					mpp_dev_get_iova_address(dev, buf_thumb, 0);
+					mpp_dev_get_iova_address(dev, buf_thumb, 169);
 		}
 	}
 
@@ -1559,13 +1559,13 @@ static void setup_vepu540c_recn_refr(HalH264eVepu540cCtx *ctx,
 		MppBuffer buf_thumb = refr->buf[0];
 
 		mpp_assert(buf_thumb);
-		regs->reg_base.dspr_addr = mpp_dev_get_iova_address(dev, buf_thumb, 0);
+		regs->reg_base.dspr_addr = mpp_dev_get_iova_address(dev, buf_thumb, 170);
 		if (!recn_ref_wrap) {
 			MppBuffer buf_pixel = refr->buf[1];
 
 			mpp_assert(buf_pixel);
 			regs->reg_base.rfpr_h_addr =
-				mpp_dev_get_iova_address(dev, buf_pixel, 0);
+				mpp_dev_get_iova_address(dev, buf_pixel, 165);
 			regs->reg_base.rfpr_b_addr =
 				regs->reg_base.rfpr_h_addr + fbc_hdr_size;
 		}
@@ -1949,10 +1949,11 @@ static void setup_vepu540c_ext_line_buf(HalVepu540cRegSet *regs,
 {
 	if (ctx->ext_line_buf) {
 
-		regs->reg_base.ebuft_addr =
-		        mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf, 0) + ctx->ext_line_buf_size;
 		regs->reg_base.ebufb_addr =
-		        mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf, 0);
+		        mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf, 179);
+
+		regs->reg_base.ebuft_addr =
+		        regs->reg_base.ebufb_addr + ctx->ext_line_buf_size;
 
 	} else {
 		regs->reg_base.ebufb_addr = 0;
@@ -2014,7 +2015,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	setup_vepu540c_recn_refr(ctx, regs);
 
 	regs->reg_base.meiw_addr =
-	        task->mv_info ? mpp_dev_get_iova_address(ctx->dev, task->mv_info, 0) : 0;
+	        task->mv_info ? mpp_dev_get_iova_address(ctx->dev, task->mv_info, 171) : 0;
 
 	regs->reg_base.pic_ofst.pic_ofst_y =
 	        mpp_frame_get_offset_y(task->frame);

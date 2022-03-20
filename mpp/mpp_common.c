@@ -2694,7 +2694,7 @@ static int mpp_chnl_add_req(struct mpp_session *session,  void *reqs)
 	return 0;
 }
 
-static u32 mpp_chnl_get_iova_addr(struct mpp_session *session,  struct dma_buf *buf, u32 offset)
+static u32 mpp_chnl_get_iova_addr(struct mpp_session *session,  struct dma_buf *buf, u32 reg_idx)
 {
 	struct mpp_dev *mpp = NULL;
 	struct mpp_dma_buffer *buffer = NULL;
@@ -2705,11 +2705,11 @@ static u32 mpp_chnl_get_iova_addr(struct mpp_session *session,  struct dma_buf *
 		session->dma, buf);
 	mpp_iommu_up_read(mpp->iommu_info);
 	if (IS_ERR_OR_NULL(buffer)) {
-		mpp_err("can not import dma buf %p\n", buf);
+		mpp_err("can not import dma buf %p reg_idx %d\n", buf, reg_idx);
 		return -EINVAL;
 	}
 	//mpp_err("dmabuf %p buffer->iova %x len %ld \n", buf, (u32)buffer->iova, buffer->size);
-    	return (u32)buffer->iova + offset;
+    	return (u32)buffer->iova;
 }
 
 static void mpp_chnl_release_iova_addr(struct mpp_session *session,  struct dma_buf *buf)
@@ -2726,7 +2726,7 @@ struct vcodec_mppdev_svr_fn
 	int (*chnl_release)(struct mpp_session *session);
 	int (*chnl_add_req)(struct mpp_session *session,  void *reqs);
 	unsigned int (*chnl_get_iova_addr)(struct mpp_session *session,
-			struct dma_buf *buf, unsigned int offset);
+			struct dma_buf *buf, unsigned int reg_idx);
 	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
 };
 

@@ -236,7 +236,7 @@ static void setup_recn_refr_wrap(H265eV540cHalContext *ctx, hevc_vepu540c_base *
 	RK_U32 rfp_b_top;
 
 	if (recn_ref_wrap)
-		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 0);
+		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 163);
 
 	if (syn->sp.recon_pic.slot_idx == 0 && syn->sp.ref_pic.slot_idx == 0) {
 		if (cur_is_lt) {
@@ -914,43 +914,6 @@ vepu540c_h265_uv_address(hevc_vepu540c_base *reg_base, H265eSyntax_new *syn,
 	return ret;
 }
 
-#if 0
-static MPP_RET vepu540c_h265_set_roi_regs(H265eV540cHalContext *ctx,
-                                          hevc_vepu540c_base *regs)
-{
-	/* memset register on start so do not clear registers again here */
-	if (ctx->roi_data) {
-		/* roi setup */
-		MppEncROICfg2 *cfg = (MppEncROICfg2 *) ctx->roi_data;
-
-		regs->reg0192_enc_pic.roi_en = 1;
-		regs->reg0178_roi_addr =
-		        mpp_dev_get_iova_address(ctx->dev, cfg->base_cfg_buf, 0);
-		if (cfg->roi_qp_en) {
-			regs->reg0179_roi_qp_addr =
-			        mpp_dev_get_iova_address(ctx->dev, cfg->qp_cfg_buf,
-			                                 0);
-			regs->reg0228_roi_en.roi_qp_en = 1;
-		}
-
-		if (cfg->roi_amv_en) {
-			regs->reg0180_roi_amv_addr =
-			        mpp_dev_get_iova_address(ctx->dev, cfg->amv_cfg_buf,
-			                                 0);
-			regs->reg0228_roi_en.roi_amv_en = 1;
-		}
-
-		if (cfg->roi_mv_en) {
-			regs->reg0181_roi_mv_addr =
-			        mpp_dev_get_iova_address(ctx->dev, cfg->mv_cfg_buf,
-			                                 0);
-			regs->reg0228_roi_en.roi_mv_en = 1;
-		}
-	}
-
-	return MPP_OK;
-}
-#endif
 
 static MPP_RET vepu540c_h265_set_rc_regs(H265eV540cHalContext *ctx,
                                          H265eV540cRegSet *regs,
@@ -1402,7 +1365,7 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	hal_h265e_enter();
 
 	regs->reg0160_adr_src0 =
-	        mpp_dev_get_iova_address(ctx->dev, enc_task->input, 0);
+	        mpp_dev_get_iova_address(ctx->dev, enc_task->input, 160);
 	regs->reg0161_adr_src1 = regs->reg0160_adr_src0;
 	regs->reg0162_adr_src2 = regs->reg0160_adr_src0;
 
@@ -1416,12 +1379,12 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	} else {
 		if (!syn->sp.non_reference_flag) {
 			regs->reg0163_rfpw_h_addr =
-				mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[2], 0);
+				mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[2], 163);
 			regs->reg0164_rfpw_b_addr =
 				regs->reg0163_rfpw_h_addr + ctx->fbc_header_len;
 		}
 		regs->reg0165_rfpr_h_addr =
-			mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[2], 0);
+			mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[2], 165);
 		regs->reg0166_rfpr_b_addr =
 			regs->reg0165_rfpr_h_addr + ctx->fbc_header_len;
 		regs->reg0180_adr_rfpt_h = 0xffffffff;
@@ -1431,13 +1394,13 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	}
 
 	regs->reg0167_cmvw_addr =
-	        mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[1], 0);
+	        mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[1], 167);
 	regs->reg0168_cmvr_addr =
-	        mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[1], 0);
+	        mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[1], 168);
 	regs->reg0169_dspw_addr =
-	        mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[0], 0);
+	        mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[0], 169);
 	regs->reg0170_dspr_addr =
-	        mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[0], 0);
+	        mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[0],170);
 
 	if (syn->pp.tiles_enabled_flag) {
 		if (NULL == ctx->hw_tile_buf[0]) {
@@ -1451,22 +1414,22 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 		}
 
 		regs->reg0176_lpfw_addr =
-		        mpp_dev_get_iova_address(ctx->dev, ctx->hw_tile_buf[0], 0);
+		        mpp_dev_get_iova_address(ctx->dev, ctx->hw_tile_buf[0], 176);
 		regs->reg0177_lpfr_addr =
-		        mpp_dev_get_iova_address(ctx->dev, ctx->hw_tile_buf[1], 0);
+		        mpp_dev_get_iova_address(ctx->dev, ctx->hw_tile_buf[1], 177);
 	}
 
 	if (mv_info_buf) {
 		regs->reg0192_enc_pic.mei_stor = 1;
 		regs->reg0171_meiw_addr =
-		        mpp_dev_get_iova_address(ctx->dev, mv_info_buf, 0);
+		        mpp_dev_get_iova_address(ctx->dev, mv_info_buf, 11);
 	} else {
 		regs->reg0192_enc_pic.mei_stor = 0;
 		regs->reg0171_meiw_addr = 0;
 	}
 
 	regs->reg0174_bsbs_addr =
-	        mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, enc_task->output->start_offset);
+	        mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, 174) + enc_task->output->start_offset;
 	/* TODO: stream size relative with syntax */
 	regs->reg0172_bsbt_addr = regs->reg0174_bsbs_addr;
 	regs->reg0173_bsbb_addr = regs->reg0174_bsbs_addr;
