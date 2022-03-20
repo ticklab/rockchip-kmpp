@@ -781,7 +781,7 @@ typedef struct Vepu540cOsdCom_t {
 	RK_U8 lut[8];		//vuy0 vuy1 alpha01
 	struct {
 		RK_U32 osd_qp_adj_sel:1;
-		RK_U32 osd_qp:7;
+		RK_S32 osd_qp:7;
 		RK_U32 osd_qp_max:6;
 		RK_U32 osd_qp_min:6;
 		RK_U32 osd_qp_prj:5;
