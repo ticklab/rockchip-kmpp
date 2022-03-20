@@ -1447,7 +1447,7 @@ void vepu54x_h265_set_hw_address(H265eV541HalContext * ctx,
 	}
 
 	regs->bsbb_addr_hevc =
-	    mpp_dev_get_iova_address(ctx->dev, enc_task->output->size, enc_task->output->start_offset);
+	    mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, enc_task->output->start_offset);
 	/* TODO: stream size relative with syntax */
 	regs->bsbt_addr_hevc =
 	    regs->bsbb_addr_hevc + task->output->size - 1;
