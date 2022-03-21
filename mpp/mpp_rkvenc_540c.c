@@ -785,7 +785,7 @@ static int rkvenc_link_fill_table(struct rkvenc_link_dev *link,
 	u32 *tb_reg = (u32 *)table->vaddr;
 	struct rkvenc_hw_info *hw = task->hw_info;
 
-	mpp_err("table->iova=%pad \n", &table->iova);
+	//mpp_err("table->iova=%pad \n", &table->iova);
 	/* set class data addr valid */
 	hdr = (struct rkvenc_link_header *)table->vaddr;
 	hdr->node_cfg.node_int = 1;
@@ -799,20 +799,20 @@ static int rkvenc_link_fill_table(struct rkvenc_link_dev *link,
 	hdr->status_cfg.valid = task->reg[RKVENC_CLASS_ST].valid;
 	hdr->next_node.valid = 1;
 	// mpp_err("hdr->base_cfg.valid=%d\n", hdr->base_cfg.valid);
-	mpp_err("hdr->pic_cfg.valid=%d\n", hdr->pic_cfg.valid);
-	mpp_err("hdr->rc_cfg.valid=%d\n", hdr->rc_cfg.valid);
-	mpp_err("hdr->param_cfg.valid=%d\n", hdr->param_cfg.valid);
-	mpp_err("hdr->sqi_cfg.valid=%d\n", hdr->sqi_cfg.valid);
-	mpp_err("hdr->scal_cfg.valid=%d\n", hdr->scal_cfg.valid);
-	mpp_err("hdr->osd_cfg.valid=%d\n", hdr->osd_cfg.valid);
-	mpp_err("hdr->status_cfg.valid=%d\n", hdr->status_cfg.valid);
-	mpp_err("hdr->next_node.valid=%d\n", hdr->next_node.valid);
+	// mpp_err("hdr->pic_cfg.valid=%d\n", hdr->pic_cfg.valid);
+	// mpp_err("hdr->rc_cfg.valid=%d\n", hdr->rc_cfg.valid);
+	// mpp_err("hdr->param_cfg.valid=%d\n", hdr->param_cfg.valid);
+	// mpp_err("hdr->sqi_cfg.valid=%d\n", hdr->sqi_cfg.valid);
+	// mpp_err("hdr->scal_cfg.valid=%d\n", hdr->scal_cfg.valid);
+	// mpp_err("hdr->osd_cfg.valid=%d\n", hdr->osd_cfg.valid);
+	// mpp_err("hdr->status_cfg.valid=%d\n", hdr->status_cfg.valid);
+	// mpp_err("hdr->next_node.valid=%d\n", hdr->next_node.valid);
 
 	/* set register data */
 	for (i = 0; i < hw->reg_class; i++) {
 		msg = &hw->reg_msg[i];
-		mpp_err("class=%d, link_len=%d, reg_valid=%d, reg_size=%d\n",
-			i, msg->link_len, task->reg[i].valid, task->reg[i].size);
+		//mpp_err("class=%d, link_len=%d, reg_valid=%d, reg_size=%d\n",
+		//	i, msg->link_len, task->reg[i].valid, task->reg[i].size);
 		if (!msg->link_len || !task->reg[i].valid)
 			continue;
 		off = link->class_off[i];
@@ -822,8 +822,8 @@ static int rkvenc_link_fill_table(struct rkvenc_link_dev *link,
 
 		di = off / sizeof(u32);
 		si = (s - msg->base_s) / sizeof(u32);
-		mpp_err("off=%d, s=%08x, e=%08x, len=%d, di=%d, si=%d, size=%d\n",
-			off, s, e, len, di, si, task->reg[i].size);
+		//mpp_err("off=%d, s=%08x, e=%08x, len=%d, di=%d, si=%d, size=%d\n",
+		//	off, s, e, len, di, si, task->reg[i].size);
 		memcpy(&tb_reg[di], &task->reg[i].data[si], len);
 	}
 	/* memset status regs for read */
@@ -887,7 +887,7 @@ static void *rkvenc_prepare(struct mpp_dev *mpp,
 		mutex_lock(&link->list_mutex);
 		table = list_first_entry_or_null(&link->unused_list,
 						 struct mpp_dma_buffer, link);
-		mpp_err("table=%px\n", table);
+		//mpp_err("table=%px\n", table);
 		if (table) {
 			rkvenc_link_fill_table(link, task, table);
 			// mutex_lock(&link->list_mutex);
@@ -911,7 +911,7 @@ static void *rkvenc_prepare(struct mpp_dev *mpp,
 		mutex_lock(&link->list_mutex);
 		table = list_first_entry_or_null(&link->unused_list,
 						 struct mpp_dma_buffer, link);
-		mpp_err("table=%px\n", table);
+		//mpp_err("table=%px\n", table);
 		if (table) {
 			rkvenc_link_fill_table(link, task, table);
 			// mutex_lock(&link->list_mutex);
@@ -946,7 +946,7 @@ static int rkvenc_run_start_link(struct mpp_dev *mpp,
 	s = base_s / sizeof(u32);
 	e = base_e / sizeof(u32);
 	regs = (u32 *)task->reg[RKVENC_CLASS_CTL].data;
-	mpp_err("s=%d, e=%d\n", s, e);
+	//mpp_err("s=%d, e=%d\n", s, e);
 	for (j = s; j <= e; j++) {
 		if (j == hw->hw.reg_en)
 			continue;
@@ -972,7 +972,7 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 	mpp_debug_enter();
 
 	atomic_set(&enc->on_work, 1);
-	dev_info(mpp->dev, "link_run=%d mode %d\n", enc->link_run, enc->link_mode);
+	//dev_info(mpp->dev, "link_run=%d mode %d\n", enc->link_run, enc->link_mode);
 	switch (enc->link_mode) {
 	case RKVENC_MODE_ONEFRAME: {
 		u32 i, j;
@@ -988,15 +988,15 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 
 			req = &task->w_reqs[i];
 			ret = rkvenc_get_class_msg(task, req->offset, &msg);
-			mpp_err("req->offset=%d, msg.offset=%d, req->size=%d, ret=%d\n",
-					req->offset, msg.offset, req->size, ret);
+			//mpp_err("req->offset=%d, msg.offset=%d, req->size=%d, ret=%d\n",
+			//		req->offset, msg.offset, req->size, ret);
 			if (ret)
 				return -EINVAL;
 
 			s = (req->offset - msg.offset) / sizeof(u32);
 			e = s + req->size / sizeof(u32);
 			regs = (u32 *)msg.data;
-			mpp_err("s=%d, e=%d\n", s, e);
+			//mpp_err("s=%d, e=%d\n", s, e);
 			for (j = s; j < e; j++) {
 				off = msg.offset + j * sizeof(u32);
 				if (off == hw->enc_start_base) {
@@ -1014,7 +1014,7 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 		mpp->cur_task = mpp_task;
 
 		/* Flush the register before the start the device */
-		mpp_err("enc_start_val=%08x\n", enc_start_val);
+		//mpp_err("enc_start_val=%08x\n", enc_start_val);
 		wmb();
 		if (enc->link_run)
 			mpp_write(mpp, hw->enc_start_base, enc_start_val);
@@ -1037,10 +1037,10 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 	} break;
 	case RKVENC_MODE_LINK_ADD: {
 		u32 link_status = mpp_read(mpp, hw->link_status_base);
-		struct rkvenc_link_status *status = (struct rkvenc_link_status *)&link_status;
+		//struct rkvenc_link_status *status = (struct rkvenc_link_status *)&link_status;
 
-		mpp_err("num_cfg_done=%d, num_cfg=%d, num_int=%d, num_enc_done=%d\n",
-			status->cfg_done_num, status->cfg_num, status->int_num, status->enc_num);
+		//mpp_err("num_cfg_done=%d, num_cfg=%d, num_int=%d, num_enc_done=%d\n",
+		//	status->cfg_done_num, status->cfg_num, status->int_num, status->enc_num);
 		if (!link_status) {
 			atomic_set(&enc->link_task_cnt, 0);
 			rkvenc_run_start_link(mpp, task);
@@ -1101,7 +1101,7 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 	mpp_debug_enter();
 
 	mpp->irq_status = mpp_read(mpp, hw->int_sta_base);
-	pr_info("irq_status: %s %08x\n", __func__, (u32)mpp->irq_status);
+	//pr_info("irq_status: %s %08x\n", __func__, (u32)mpp->irq_status);
 	if (!mpp->irq_status)
 		return IRQ_NONE;
 	mpp_write(mpp, hw->int_mask_base, 0x100);
@@ -1131,13 +1131,13 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 			size = pkt_num * 1024 - enc->out_offset;
 
 		if ((test_bit(4, &mpp->irq_status) && size > 0) || (size == enc->out_buf_top_off)) {
-			pr_info("buf overflow pkt_num %d\n", pkt_num);
+			//pr_info("buf overflow pkt_num %d\n", pkt_num);
 			size -= 1024;
 		}
-		pr_info("pkt_num %d size %d pre %d offset %d max %d\n",
-			pkt_num, size, enc->out_buf_pre_off, enc->out_offset,
-			enc->out_buf_top_off);
-		pr_info("w : r = 0x%08x : 0x%08x\n", mpp_read(mpp, 0x402c), mpp_read(mpp, 0x2bc));
+		//pr_info("pkt_num %d size %d pre %d offset %d max %d\n",
+		//	pkt_num, size, enc->out_buf_pre_off, enc->out_offset,
+		//	enc->out_buf_top_off);
+		//pr_info("w : r = 0x%08x : 0x%08x\n", mpp_read(mpp, 0x402c), mpp_read(mpp, 0x2bc));
 		if (size > 0) {
 			if ((enc->out_buf_pre_off + size) >= enc->out_buf_top_off) {
 				u32 size1 = enc->out_buf_top_off - enc->out_buf_pre_off;
@@ -1170,8 +1170,8 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 			// } else
 				mpp_write(mpp, 0x2bc, enc->out_buf->iova + enc->out_buf_pre_off + 0xd);
 		}
-		pr_info("st_snum 0x%08x si_len 0x%08x size 0x%08x\n", st_snum,
-			mpp_read(mpp, 0x4038), mpp_read(mpp, 0x4000));
+		//pr_info("st_snum 0x%08x si_len 0x%08x size 0x%08x\n", st_snum,
+		//	mpp_read(mpp, 0x4038), mpp_read(mpp, 0x4000));
 		if (!test_bit(0, &mpp->irq_status))
 			return IRQ_NONE;
 	}
@@ -1205,13 +1205,13 @@ static int rkvenc_link_isr(struct mpp_dev *mpp,
 	struct rkvenc_link_status *status;
 	struct rkvenc_hw_info *hw = enc->hw_info;
 
-	u32 node_iova = mpp_read_relaxed(mpp, hw->link_node_base);
-	u32 irq_status = mpp_read_relaxed(mpp, hw->int_sta_base);
+	//u32 node_iova = mpp_read_relaxed(mpp, hw->link_node_base);
+	//u32 irq_status = mpp_read_relaxed(mpp, hw->int_sta_base);
 	u32 link_status = mpp_read_relaxed(mpp, hw->link_status_base);
 
 	status = (struct rkvenc_link_status *)&link_status;
-	mpp_err("node_iova=%08x, mpp->irq_status=%08x, irq_status=%08x, num_cfg_done=%d, num_cfg=%d, num_int=%d, num_enc_done=%d\n",
-		node_iova, (u32)mpp->irq_status, irq_status, status->cfg_done_num, status->cfg_num, status->int_num, status->enc_num);
+	//mpp_err("node_iova=%08x, mpp->irq_status=%08x, irq_status=%08x, num_cfg_done=%d, num_cfg=%d, num_int=%d, num_enc_done=%d\n",
+	//	node_iova, (u32)mpp->irq_status, irq_status, status->cfg_done_num, status->cfg_num, status->int_num, status->enc_num);
 
 	/* deal with the task done */
 	// mutex_lock(&mpp->queue->running_lock);
@@ -1222,11 +1222,11 @@ static int rkvenc_link_isr(struct mpp_dev *mpp,
 
 		task = to_rkvenc_task(mpp_task);
 		task_diff = (task->task_no + 256 - status->enc_num) % 256;
-		mpp_err("task->task_no=%d, enc_num=%d, task_diff=%d\n", task->task_no, status->enc_num, task_diff);
+		//mpp_err("task->task_no=%d, enc_num=%d, task_diff=%d\n", task->task_no, status->enc_num, task_diff);
 		if (task_diff > 0)
 			break;
 
-		mpp_err("cancle_delayed_work %px\n", mpp_task);
+		//mpp_err("cancle_delayed_work %px\n", mpp_task);
 		cancel_delayed_work(&mpp_task->timeout_work);
 		mpp_time_diff(mpp_task);
 		/* set task done ready */
@@ -1246,7 +1246,7 @@ static int rkvenc_link_isr(struct mpp_dev *mpp,
 		list_del_init(&mpp_task->queue_link);
 		kref_put(&mpp_task->ref, mpp_free_task);
 	}
-	mpp_err("list_empty=%d\n", list_empty(&mpp->queue->running_list));
+	//mpp_err("list_empty=%d\n", list_empty(&mpp->queue->running_list));
 	if (list_empty(&mpp->queue->running_list) && enc->dvbm_en) {
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 		rk_dvbm_unlink(enc->port);
@@ -1263,10 +1263,10 @@ static int rkvenc_link_isr(struct mpp_dev *mpp,
 			int task_diff;
 
 			task = to_rkvenc_task(mpp_task);
-			mpp_err("cancle_delayed_work %px\n", mpp_task);
+			//mpp_err("cancle_delayed_work %px\n", mpp_task);
 			cancel_delayed_work(&mpp_task->timeout_work);
 			task_diff = (task->task_no + 256 - status->enc_num) % 256;
-			mpp_err("task->task_no=%d, enc_num=%d, task_diff=%d\n", task->task_no, status->enc_num, task_diff);
+			//mpp_err("task->task_no=%d, enc_num=%d, task_diff=%d\n", task->task_no, status->enc_num, task_diff);
 			if (task_diff > 0) {
 				clear_bit(TASK_STATE_HANDLE, &mpp_task->state);
 				clear_bit(TASK_STATE_IRQ, &mpp_task->state);
@@ -1291,7 +1291,7 @@ static int rkvenc_link_isr(struct mpp_dev *mpp,
 		atomic_inc(&mpp->reset_request);
 		mpp_dev_reset(mpp);
 	}
-	mpp_err("list_empty=%d\n", list_empty(&mpp->queue->running_list));
+	//mpp_err("list_empty=%d\n", list_empty(&mpp->queue->running_list));
 #endif
 	// mutex_unlock(&mpp->queue->running_lock);
 
@@ -1407,7 +1407,7 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 			s = (req->offset - msg.offset) / sizeof(u32);
 			e = s + req->size / sizeof(u32);
 			reg = (u32 *)msg.data;
-			mpp_err("msg.offset=%08x, s=%d, e=%d\n", msg.offset, s ,e);
+			//mpp_err("msg.offset=%08x, s=%d, e=%d\n", msg.offset, s ,e);
 			for (j = s; j < e; j++)
 				reg[j] = mpp_read_relaxed(mpp, msg.offset + j * sizeof(u32));
 
@@ -1949,11 +1949,11 @@ static int rkvenc_link_alloc_table(struct rkvenc_dev *enc,
 	for (i = 0; i < hw->reg_class; i++) {
 		if (!hw->reg_msg[i].link_len)
 			continue;
-		mpp_err("class_off[%d]=%08x\n", i, table_size);
+		//mpp_err("class_off[%d]=%08x\n", i, table_size);
 		link->class_off[i] = table_size;
 		table_size += roundup(hw->reg_msg[i].link_len, 128);
 	}
-	mpp_err("table_size=%d, dev_name=%s\n", table_size, dev_name(mpp->dev));
+	//mpp_err("table_size=%d, dev_name=%s\n", table_size, dev_name(mpp->dev));
 	/* alloc and init table node */
 	link->table_num = enc->task_capacity;
 	for (i = 0; i < link->table_num; i++) {
@@ -2022,7 +2022,7 @@ static int rkvenc_link_init(struct platform_device *pdev,
 	}
 	if (enc->task_capacity > 1) {
 		enc->link_mode = RKVENC_MODE_LINK_ADD;
-                dev_info(dev, "%d task capacity link mode detected\n", enc->task_capacity);
+		dev_info(dev, "%d task capacity link mode detected\n", enc->task_capacity);
         } else {
 		enc->task_capacity = 1;
 		enc->link_mode = RKVENC_MODE_LINK_ONEFRAME;
@@ -2043,7 +2043,7 @@ static int rkvenc_link_init(struct platform_device *pdev,
 
 	enc->link = link;
 	link->enc = enc;
-	mpp_err("xxxx link_mode=%d\n", enc->link_mode);
+	//mpp_err("xxxx link_mode=%d\n", enc->link_mode);
 
 	mpp_debug_leave();
 
@@ -2165,8 +2165,8 @@ static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 		enc->cbuf_top = cfg->cbuf_top;
 		enc->cbuf_bot = cfg->cbuf_bot;
 
-		pr_info("%s y/c t: 0x%08x 0x%08x y/c b: 0x%08x 0x%08x\n",
-			__func__, enc->ybuf_top, enc->cbuf_top, enc->ybuf_bot, enc->cbuf_bot);
+		//pr_info("%s y/c t: 0x%08x 0x%08x y/c b: 0x%08x 0x%08x\n",
+		//	__func__, enc->ybuf_top, enc->cbuf_top, enc->ybuf_bot, enc->cbuf_bot);
 	} break;
 	case DVBM_VEPU_REQ_CONNECT : {
 		u32 connect = *(u32*)arg;
