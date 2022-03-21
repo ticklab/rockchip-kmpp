@@ -246,13 +246,8 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	JpegeSyntax *syn = (JpegeSyntax *) task->syntax.data;
 	Vepu540cJpegReg *regs = (Vepu540cJpegReg *) cfg->jpeg_reg_base;
 	VepuFmtCfg *fmt = (VepuFmtCfg *) cfg->input_fmt;
-	RK_U32 pic_width_align8, pic_height_align8;
 	RK_S32 stridey = 0;
 	RK_S32 stridec = 0;
-
-	pic_width_align8 = (syn->width + 7) & (~7);
-	pic_height_align8 = (syn->height + 7) & (~7);
-
 
 	regs->reg0264_adr_src0 = mpp_dev_get_iova_address(cfg->dev, task->input, 264);
 	regs->reg0265_adr_src1 = regs->reg0264_adr_src0;
@@ -265,12 +260,10 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	regs->reg0258_adr_bsbr = regs->reg0257_adr_bsbb;
 	regs->reg0259_adr_bsbs = regs->reg0257_adr_bsbb + mpp_packet_get_length(task->packet);
 
-	regs->reg0272_enc_rsl.pic_wd8_m1 = pic_width_align8 / 8 - 1;
-	regs->reg0273_src_fill.pic_wfill = (syn->width & 0x7)
-	    ? (8 - (syn->width & 0x7)) : 0;
-	regs->reg0272_enc_rsl.pic_hd8_m1 = pic_height_align8 / 8 - 1;
-	regs->reg0273_src_fill.pic_hfill = (syn->height & 0x7)
-	    ? (8 - (syn->height & 0x7)) : 0;
+	regs->reg0272_enc_rsl.pic_wd8_m1 = MPP_ALIGN(syn->width, 16) / 8 - 1;
+	regs->reg0273_src_fill.pic_wfill = MPP_ALIGN(syn->width, 16) - syn->width;
+	regs->reg0272_enc_rsl.pic_hd8_m1 = MPP_ALIGN(syn->height, 16) / 8 - 1;
+	regs->reg0273_src_fill.pic_hfill = MPP_ALIGN(syn->height, 16) - syn->height;
 
 	regs->reg0274_src_fmt.src_cfmt = fmt->format;
 	regs->reg0274_src_fmt.alpha_swap = fmt->alpha_swap;
