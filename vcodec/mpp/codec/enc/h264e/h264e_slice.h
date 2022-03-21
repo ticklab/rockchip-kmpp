@@ -96,6 +96,7 @@ typedef struct H264eSlice_t {
     /* Unchanged parameters  */
     RK_U32      first_mb_in_slice;
     RK_U32      slice_type;
+    RK_U32      last_slice_type;
     RK_U32      pic_parameter_set_id;
     RK_S32      frame_num;
     RK_S32      num_ref_idx_override;
