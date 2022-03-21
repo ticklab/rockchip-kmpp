@@ -871,7 +871,14 @@ static void setup_vepu540c_rdo_cfg(vepu540c_rdo_cfg *reg, H264eSlice *slice)
 	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 6;
 	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = 0;
 	reg->rdo_smear_cfg_comb.rdo_smear_order_state = 0;
-        reg->rdo_smear_cfg_comb.stated_mode = 1;
+
+	if (H264_I_SLICE == slice->slice_type)
+		reg->rdo_smear_cfg_comb.stated_mode = 1;
+	else if (H264_I_SLICE == slice->last_slice_type)
+		reg->rdo_smear_cfg_comb.stated_mode = 0;
+	else
+		reg->rdo_smear_cfg_comb.stated_mode = 2;
+
 	reg->rdo_smear_cfg_comb.online_en = 1;
 	reg->rdo_smear_cfg_comb.smear_stride = 0;
 	reg->rdo_smear_madp_thd0_comb.rdo_smear_madp_cur_thd0 = 0;
