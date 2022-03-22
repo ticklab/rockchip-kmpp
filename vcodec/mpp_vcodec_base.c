@@ -475,22 +475,29 @@ int mpp_vcodec_init(void)
 	return 0;
 }
 
-int mpp_vcodec_deinit(void)
+int mpp_vcodec_unregister_mipdev(void)
 {
-    struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
-	struct venc_module *venc = &g_vcodec_entry.venc;
-    if (!mpidev_fn){
-		mpp_err("mpp_vcodec_deinit get_mpidev_ops fail");
+	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
+
+	if (!mpidev_fn){
 		return -1;
 	}
 
-	if (mpidev_fn->destory_dev && g_vcodec_entry.venc.dev)
+	if (mpidev_fn->destory_dev && g_vcodec_entry.venc.dev) {
 		mpidev_fn->destory_dev(g_vcodec_entry.venc.dev);
+		g_vcodec_entry.venc.dev = NULL;
+    }
+    return 0;
+}
+
+int mpp_vcodec_deinit(void)
+{
+	struct venc_module *venc = &g_vcodec_entry.venc;
 
     if (venc->thd){
-        vcodec_thread_stop(venc->thd);
-        vcodec_thread_destroy(venc->thd);
-        venc->thd = NULL;
+		vcodec_thread_stop(venc->thd);
+		vcodec_thread_destroy(venc->thd);
+		venc->thd = NULL;
     }
 
 	return 0;

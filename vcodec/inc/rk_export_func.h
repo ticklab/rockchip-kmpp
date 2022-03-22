@@ -80,6 +80,7 @@ struct vcodec_mppdev_svr_fn
 struct vcodec_mpidev_fn *get_mpidev_ops(void);
 struct vcodec_mpibuf_fn *get_mpibuf_ops(void);
 extern void vmpi_register_fn2vcocdec (struct vcodec_mpidev_fn *mpidev_fn, struct vcodec_mpibuf_fn *mpibuf_f);
+extern void vmpi_unregister_fn2vcocdec(void);
 
 extern struct vcodec_mppdev_svr_fn *get_mppdev_svr_ops(void);
 

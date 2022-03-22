@@ -462,8 +462,18 @@ void vmpi_register_fn2vcocdec (struct vcodec_mpidev_fn *mpidev_fn, struct vcodec
 	}
 	return;
 }
-
 EXPORT_SYMBOL(vmpi_register_fn2vcocdec);
+
+void vmpi_unregister_fn2vcocdec (void)
+{
+
+    mpp_vcodec_unregister_mipdev();
+    mpidev_ops = NULL;
+	mpibuf_ops = NULL;
+	return;
+}
+EXPORT_SYMBOL(vmpi_unregister_fn2vcocdec);
+
 struct vcodec_mpidev_fn *get_mpidev_ops(void){
 	if (!mpidev_ops){
 		mpp_err("should call vmpi_register_fn2vcocdec \n");

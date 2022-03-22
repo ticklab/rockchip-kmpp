@@ -92,6 +92,7 @@ void enc_chan_update_chan_prior_tab(void);
 MPP_RET enc_chan_update_tab_after_enc(RK_U32 curr_chan);
 void enc_chan_get_high_prior_chan(void);
 int mpp_vcodec_init(void);
+int mpp_vcodec_unregister_mipdev(void);
 int mpp_vcodec_deinit(void);
 int mpp_vcodec_chan_entry_init(struct mpp_chan *entry, MppCtxType type,
 			       MppCodingType coding, void *handle);
