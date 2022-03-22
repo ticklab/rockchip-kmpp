@@ -1504,6 +1504,7 @@ static void calc_cime_parameter(HalVepu540cRegSet *regs)
 		        ((cur_srch_h - ctu_2_h) * base_regs->me_cach.cme_linebuf_w +
 		         ctu_2_h * cur_srch_8_w) / 2;
 		base_regs->me_cach.cime_hgt_rama = cur_srch_h / 2;
+		base_regs->me_cach.fme_prefsu_en = 0;
 	}
 
 }
@@ -1636,8 +1637,8 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 		regs->reg_s3.cime_sqi_cfg.itp_mode = 0;
 		regs->reg_s3.cime_sqi_cfg.move_lambda = 1;
 		regs->reg_s3.cime_sqi_cfg.rime_lvl_mrg = 0;
-		regs->reg_s3.cime_sqi_cfg.rime_prelvl_en = 3;
-		regs->reg_s3.cime_sqi_cfg.rime_prersu_en = 3;
+		regs->reg_s3.cime_sqi_cfg.rime_prelvl_en = 0;
+		regs->reg_s3.cime_sqi_cfg.rime_prersu_en = 0;
 
 		/* 0x1764 */
 		regs->reg_s3.cime_mvd_th.cime_mvd_th0 = 16;
