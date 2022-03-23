@@ -1848,7 +1848,7 @@ int mpp_get_dma_attach_mem_info(struct mpp_session *session,
 		struct mpp_mem_region *mem_region = NULL;
 		iova_address = reg[tbl[i]];
 
-		if (iova_address == 0){
+		if (iova_address == 0 || (int)(iova_address) == -1){
 			continue;
 		}
 		mem_region = mpp_task_get_mem_region(task, iova_address);
