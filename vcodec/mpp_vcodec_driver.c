@@ -163,6 +163,10 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		}
 		break;
 	case VCODEC_CHAN_CONTROL:{
+			if (!req->data){
+				ret = -EFAULT;
+				goto fail;
+			}
 			if (copy_from_user(param, req->data, req->size)) {
 				ret = -EFAULT;
 				goto fail;
@@ -175,6 +179,10 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		}
 		break;
 	case VCODEC_CHAN_IN_FRM_RDY:{
+			if (!req->data){
+				ret = -EFAULT;
+				goto fail;
+			}
 			if (copy_from_user(param, req->data, req->size)) {
 				ret = -EFAULT;
 				goto fail;
@@ -185,7 +193,7 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		}
 		break;
 	case VCODEC_CHAN_OUT_STRM_BUF_RDY:{
-			if (copy_from_user(param, req->data, req->size)) {
+			if (!req->data){
 				ret = -EFAULT;
 				goto fail;
 			}
@@ -199,6 +207,10 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		}
 		break;
     	case VCODEC_CHAN_OUT_STRM_END:{
+			if (!req->data){
+				ret = -EFAULT;
+				goto fail;
+			}
 			if (copy_from_user(param, req->data, req->size)) {
 				ret = -EFAULT;
 				goto fail;
