@@ -55,6 +55,7 @@ typedef struct HalH264eVepu540cCtx_t {
 	RK_S32 pixel_buf_fbc_bdy_offset;
 	RK_S32 pixel_buf_size;
 	RK_S32 thumb_buf_size;
+	RK_S32 smera_size;
 	RK_S32 max_buf_cnt;
 	/* recn and ref buffer offset */
 	RK_U32                  recn_ref_wrap;
@@ -441,6 +442,7 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 	RK_S32 thumb_buf_size = MPP_ALIGN(aligned_w / 64 * aligned_h / 64 * 256, SZ_8K);
 	RK_S32 old_max_cnt = ctx->max_buf_cnt;
 	RK_S32 new_max_cnt = 2;
+	RK_U32 smera_size = 0;
 	MppEncRefCfg ref_cfg = cfg->ref_cfg;
 	RK_S32 max_lt_cnt;
 
@@ -473,10 +475,18 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 		ctx->ext_line_buf_size = 0;
 	}
 
+	if (ctx->online) {
+		smera_size = MPP_ALIGN(aligned_w, 64) / 64 * MPP_ALIGN(aligned_h, 16) / 16;
+		smera_size = (smera_size + 15) / 16;
+	}else{
+		smera_size = MPP_ALIGN(aligned_w, 256) / 256 * MPP_ALIGN(aligned_h, 32) / 32;
+	}
+
 	if ((ctx->pixel_buf_fbc_hdr_size != pixel_buf_fbc_hdr_size) ||
 	    (ctx->pixel_buf_fbc_bdy_size != pixel_buf_fbc_bdy_size) ||
 	    (ctx->pixel_buf_size != pixel_buf_size) ||
 	    (ctx->thumb_buf_size != thumb_buf_size) ||
+		(ctx->smera_size != smera_size) ||
 	    (new_max_cnt > old_max_cnt)) {
 
 		hal_h264e_dbg_detail("frame size %d -> %d max count %d -> %d\n",
@@ -489,12 +499,12 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 		ctx->pixel_buf_fbc_bdy_size = pixel_buf_fbc_bdy_size;
 
 		if (ctx->recn_ref_wrap) {
-			size_t sizes[1] = {thumb_buf_size};
+			size_t sizes[2] = {thumb_buf_size, smera_size};
 
 			hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
 			get_wrap_buf(ctx, max_lt_cnt);
 		} else {
-			size_t sizes[2] = {thumb_buf_size, pixel_buf_size};
+			size_t sizes[3] = {thumb_buf_size, pixel_buf_size, smera_size};
 
 			hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
 			ctx->pixel_buf_fbc_bdy_offset = pixel_buf_fbc_hdr_size;
@@ -503,6 +513,7 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 
 		ctx->pixel_buf_size = pixel_buf_size;
 		ctx->thumb_buf_size = thumb_buf_size;
+		ctx->smera_size = smera_size;
 		ctx->max_buf_cnt = new_max_cnt;
 	}
 }
@@ -1088,10 +1099,12 @@ static void setup_vepu540c_rdo_pred(HalVepu540cRegSet *regs, H264eSps *sps,
 	hal_h264e_dbg_func("leave\n");
 }
 
-static void setup_vepu540c_rdo_cfg(vepu540c_rdo_cfg *reg, H264eSlice *slice)
+static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 {
 	rdo_skip_par *p_rdo_skip = NULL;
 	rdo_noskip_par *p_rdo_noskip = NULL;
+	vepu540c_rdo_cfg *reg = &ctx->regs_set->reg_rdo;
+	H264eSlice *slice = ctx->slice;
 	hal_h264e_dbg_func("enter\n");
 
 	reg->rdo_smear_cfg_comb.rdo_smear_en = 1;
@@ -1106,8 +1119,14 @@ static void setup_vepu540c_rdo_cfg(vepu540c_rdo_cfg *reg, H264eSlice *slice)
 	else
 		reg->rdo_smear_cfg_comb.stated_mode = 2;
 
-	reg->rdo_smear_cfg_comb.online_en = 1;
-	reg->rdo_smear_cfg_comb.smear_stride = 0;
+	if (1) {
+		reg->rdo_smear_cfg_comb.online_en = 1;
+		reg->rdo_smear_cfg_comb.smear_stride = 0;
+	} else {
+		reg->rdo_smear_cfg_comb.online_en = 0;
+		reg->rdo_smear_cfg_comb.smear_stride = (ctx->cfg->prep.width + 255) / 256;
+	}
+
 	reg->rdo_smear_madp_thd0_comb.rdo_smear_madp_cur_thd0 = 0;
 	reg->rdo_smear_madp_thd0_comb.rdo_smear_madp_cur_thd1 = 24;
 	reg->rdo_smear_madp_thd1_comb.rdo_smear_madp_cur_thd2 = 48;
@@ -1539,7 +1558,6 @@ static void setup_vepu540c_recn_refr(HalH264eVepu540cCtx *ctx,
 
 	if (curr && curr->cnt) {
 		MppBuffer buf_thumb = curr->buf[0];
-
 		mpp_assert(buf_thumb);
 		regs->reg_base.dspw_addr = mpp_dev_get_iova_address(dev, buf_thumb, 169);
 		if (!recn_ref_wrap) {
@@ -1573,11 +1591,15 @@ static void setup_vepu540c_recn_refr(HalH264eVepu540cCtx *ctx,
 
 	if (ctx->recn_ref_wrap) {
 		setup_recn_refr_wrap(ctx, regs);
+        regs->reg_base.adr_smear_wr =  mpp_dev_get_iova_address(dev, curr->buf[1], 185);
+        regs->reg_base.adr_smear_rd =  mpp_dev_get_iova_address(dev, refr->buf[1], 184);
 	} else {
 		regs->reg_base.rfpt_h_addr = 0xffffffff;
 		regs->reg_base.rfpb_h_addr = 0;
 		regs->reg_base.rfpt_b_addr = 0xffffffff;
 		regs->reg_base.rfpb_b_addr  = 0;
+        regs->reg_base.adr_smear_wr =  mpp_dev_get_iova_address(dev, curr->buf[2], 185);
+        regs->reg_base.adr_smear_rd =  mpp_dev_get_iova_address(dev, refr->buf[2], 184);
 	}
 
 	hal_h264e_dbg_func("leave\n");
@@ -2008,7 +2030,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 
 	setup_vepu540c_codec(regs, sps, pps, slice);
 	setup_vepu540c_rdo_pred(regs, sps, pps, slice);
-	setup_vepu540c_rdo_cfg(&regs->reg_rdo, slice);
+	setup_vepu540c_rdo_cfg(ctx);
 	setup_vepu540c_scl_cfg(&regs->reg_scl);
 	setup_vepu540c_rc_base(regs, sps, slice, &cfg->hw, task->rc_task);
 	setup_vepu540c_io_buf(regs, ctx->dev, task);

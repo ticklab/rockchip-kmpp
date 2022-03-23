@@ -378,7 +378,7 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 	RK_S32 old_max_cnt = ctx->max_buf_cnt;
 	RK_S32 new_max_cnt = 2;
 	RK_S32 max_lt_cnt;
-
+	RK_S32 smera_size = 0;
 	hal_h265e_enter();
 
 	mb_wd64 = (prep->width + 63) / 64;
@@ -422,30 +422,39 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 		max_lt_cnt = info->max_lt_cnt;
 	}
 
+
+	if (ctx->online) {
+		smera_size = MPP_ALIGN(prep->width, 32) / 32 * MPP_ALIGN(prep->width, 32) / 32;
+		smera_size = (smera_size + 15) / 16;
+    }else{
+		smera_size = MPP_ALIGN(prep->width, 256) / 256 * MPP_ALIGN(prep->width, 32) / 32;
+    }
+
 	if (frame_size > ctx->frame_size || new_max_cnt > old_max_cnt) {
 
 		hal_bufs_deinit(ctx->dpb_bufs);
 		hal_bufs_init(&ctx->dpb_bufs);
 		new_max_cnt = MPP_MAX(new_max_cnt, old_max_cnt);
 		if (ctx->recn_ref_wrap) {
-			size_t size[2] = { 0 };
+			size_t size[3] = { 0 };
 
 			size[0] = (mb_wd64 * mb_h64 << 8);
 			size[1] = MPP_ALIGN(mb_wd64 * mb_h64 * 16 * 4, 256) * 16;
-
+			size[2] = smera_size;
 			hal_h265e_dbg_detail("frame size %d -> %d max count %d -> %d\n",
 					ctx->frame_size, frame_size, old_max_cnt,
 					new_max_cnt);
 			get_wrap_buf(ctx, max_lt_cnt);
 			hal_bufs_setup(ctx->dpb_bufs, new_max_cnt, MPP_ARRAY_ELEMS(size), size);
 		} else {
-			size_t size[3] = { 0 };
+			size_t size[4] = { 0 };
 
 			ctx->fbc_header_len =
 				MPP_ALIGN(((mb_wd64 * mb_h64) << 6), SZ_8K);
 			size[0] = (mb_wd64 * mb_h64 << 8);
 			size[1] = MPP_ALIGN(mb_wd64 * mb_h64 * 16 * 4, 256) * 16;
 			size[2] = ctx->fbc_header_len + ((mb_wd64 * mb_h64) << 12) * 3 / 2;//fbc_h + fbc_b
+			size[3] = smera_size;
 
 			hal_h265e_dbg_detail("frame size %d -> %d max count %d -> %d\n",
 					ctx->frame_size, frame_size, old_max_cnt,
@@ -475,7 +484,6 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 5;
 	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = 0;
 	reg->rdo_smear_cfg_comb.rdo_smear_order_state = 0;
-	reg->rdo_smear_cfg_comb.online_en = 1;
 
 	if (INTRA_FRAME == ctx->frame_type)
 		reg->rdo_smear_cfg_comb.stated_mode = 1;
@@ -484,7 +492,14 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	else
 		reg->rdo_smear_cfg_comb.stated_mode = 2;
 
-	reg->rdo_smear_cfg_comb.smear_stride = 0;
+	if (1) {
+		reg->rdo_smear_cfg_comb.smear_stride = 0;
+		reg->rdo_smear_cfg_comb.online_en = 1;
+    } else {
+		reg->rdo_smear_cfg_comb.smear_stride = (ctx->cfg->prep.width + 255) / 256;
+		reg->rdo_smear_cfg_comb.online_en = 0;
+    }
+
 	reg->rdo_smear_madp_thd0_comb.rdo_smear_madp_cur_thd0 = 0;
 	reg->rdo_smear_madp_thd0_comb.rdo_smear_madp_cur_thd1 = 24;
 	reg->rdo_smear_madp_thd1_comb.rdo_smear_madp_cur_thd2 = 48;
@@ -1376,6 +1391,10 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 
 	if (ctx->recn_ref_wrap) {
 		setup_recn_refr_wrap(ctx, regs, task);
+        regs->reg0185_adr_smr_wr =
+            mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[2], 185);
+        regs->reg0184_adr_smr_rd =
+            mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[2], 184);
 	} else {
 		if (!syn->sp.non_reference_flag) {
 			regs->reg0163_rfpw_h_addr =
@@ -1391,6 +1410,10 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 		regs->reg0181_adr_rfpb_h = 0;
 		regs->reg0182_adr_rfpt_b = 0xffffffff;
 		regs->reg0183_adr_rfpb_b = 0;
+        regs->reg0185_adr_smr_wr =
+            mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[3], 185);
+        regs->reg0184_adr_smr_rd =
+            mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[3], 184);
 	}
 
 	regs->reg0167_cmvw_addr =
