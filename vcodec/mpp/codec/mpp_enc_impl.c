@@ -1365,9 +1365,6 @@ static MPP_RET mpp_enc_reenc_simple(MppEncImpl *enc, EncTask *task)
 	enc_dbg_detail("task %d hal generate reg\n", frm->seq_idx);
 	ENC_RUN_FUNC2(mpp_enc_hal_gen_regs, hal, hal_task, enc, ret);
 
-	enc_dbg_detail("task %d hal start\n", frm->seq_idx);
-	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, NULL, enc, ret);
-
 	enc_dbg_detail("task %d reenc %d times %d\n", frm->seq_idx,
 		       frm->reencode, frm->reencode_times);
 	enc_dbg_func("leave\n");
