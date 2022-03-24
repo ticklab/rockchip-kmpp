@@ -491,7 +491,7 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	if (INTRA_FRAME == ctx->frame_type)
 		reg->rdo_smear_cfg_comb.stated_mode = 1;
 	else if (INTRA_FRAME == ctx->last_frame_type)
-		reg->rdo_smear_cfg_comb.stated_mode = 0;
+		reg->rdo_smear_cfg_comb.stated_mode = 1;
 	else
 		reg->rdo_smear_cfg_comb.stated_mode = 2;
 
@@ -951,11 +951,11 @@ static MPP_RET vepu540c_h265_set_rc_regs(H265eV540cHalContext *ctx,
 	MppEncHwCfg *hw = &cfg->hw;
 	MppEncCodecCfg *codec = &cfg->codec;
 	MppEncH265Cfg *h265 = &codec->h265;
-	RK_S32 mb_wd64 = (syn->pp.pic_width + 63) / 64;
-	RK_S32 mb_h64 = (syn->pp.pic_height + 63) / 64;
+	RK_S32 mb_wd32 = (syn->pp.pic_width + 31) / 32;
+	RK_S32 mb_h32 = (syn->pp.pic_height + 31) / 32;
 
 	RK_U32 ctu_target_bits_mul_16 =
-	        (rc_cfg->bit_target << 4) / (mb_wd64 * mb_h64);
+	        (rc_cfg->bit_target << 4) / (mb_wd32 * mb_h32);
 	RK_U32 ctu_target_bits;
 	RK_S32 negative_bits_thd, positive_bits_thd;
 
@@ -969,7 +969,7 @@ static MPP_RET vepu540c_h265_set_rc_regs(H265eV540cHalContext *ctx,
 		if (ctu_target_bits_mul_16 >= 0x100000) {
 			ctu_target_bits_mul_16 = 0x50000;
 		}
-		ctu_target_bits = (ctu_target_bits_mul_16 * mb_wd64) >> 4;
+		ctu_target_bits = (ctu_target_bits_mul_16 * mb_wd32) >> 4;
 		negative_bits_thd = 0 - 5 * ctu_target_bits / 16;
 		positive_bits_thd = 5 * ctu_target_bits / 16;
 
@@ -978,7 +978,7 @@ static MPP_RET vepu540c_h265_set_rc_regs(H265eV540cHalContext *ctx,
 		reg_base->reg212_rc_cfg.rc_en = 1;
 		reg_base->reg212_rc_cfg.aq_en = 1;
 		reg_base->reg212_rc_cfg.aq_mode = 1;
-		reg_base->reg212_rc_cfg.rc_ctu_num = mb_wd64;
+		reg_base->reg212_rc_cfg.rc_ctu_num = mb_wd32;
 		reg_base->reg213_rc_qp.rc_qp_range =
 		        (ctx->frame_type ==
 		         INTRA_FRAME) ? hw->qp_delta_row_i : hw->qp_delta_row;
