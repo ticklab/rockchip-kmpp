@@ -97,7 +97,7 @@ typedef struct H265eV540cHalContext_t {
 	RK_S32 online;
 	/* recn and ref buffer offset */
 	RK_U32 recn_ref_wrap;
-	MppBuffer ren_ref_buf;
+	MppBuffer recn_ref_buf;
 	WrapBufInfo wrap_infos;
 } H265eV540cHalContext;
 
@@ -207,9 +207,9 @@ static void get_wrap_buf(H265eV540cHalContext *ctx, RK_S32 max_lt_cnt)
 		body->top = body->bottom + body->total_size;
 		body->cur_off = body->bottom;
 	}
-	if (ctx->ren_ref_buf)
-		mpp_buffer_put(ctx->ren_ref_buf);
-	mpp_buffer_get(NULL, &ctx->ren_ref_buf, total_wrap_size);
+	if (ctx->recn_ref_buf)
+		mpp_buffer_put(ctx->recn_ref_buf);
+	mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
 }
 
 static void setup_recn_refr_wrap(H265eV540cHalContext *ctx, hevc_vepu540c_base *regs,
@@ -236,7 +236,7 @@ static void setup_recn_refr_wrap(H265eV540cHalContext *ctx, hevc_vepu540c_base *
 	RK_U32 rfp_b_top;
 
 	if (recn_ref_wrap)
-		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 163);
+		ref_iova = mpp_dev_get_iova_address(dev, ctx->recn_ref_buf, 163);
 
 	if (ctx->frame_type == INTRA_FRAME &&
 	    syn->sp.recon_pic.slot_idx == syn->sp.ref_pic.slot_idx) {
@@ -839,6 +839,11 @@ MPP_RET hal_h265e_v540c_deinit(void *hal)
 	if (ctx->hw_tile_buf[1]) {
 		mpp_buffer_put(ctx->hw_tile_buf[1]);
 		ctx->hw_tile_buf[1] = NULL;
+	}
+
+	if (ctx->recn_ref_buf) {
+		mpp_buffer_put(ctx->recn_ref_buf);
+		ctx->recn_ref_buf = NULL;
 	}
 
 	if (ctx->dev) {

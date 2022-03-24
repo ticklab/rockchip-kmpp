@@ -59,7 +59,7 @@ typedef struct HalH264eVepu540cCtx_t {
 	RK_S32 max_buf_cnt;
 	/* recn and ref buffer offset */
 	RK_U32                  recn_ref_wrap;
-	MppBuffer               ren_ref_buf;
+	MppBuffer               recn_ref_buf;
 	WrapBufInfo		wrap_infos;
 
 	/* external line buffer over 4K */
@@ -136,9 +136,15 @@ static MPP_RET hal_h264e_vepu540c_deinit(void *hal)
 		hal_bufs_deinit(p->hw_recn);
 		p->hw_recn = NULL;
 	}
+
 	if (p->p_extra_buf) {
 		mpp_buffer_put(p->p_extra_buf);
 		p->p_extra_buf = NULL;
+	}
+
+	if (p->recn_ref_buf) {
+		mpp_buffer_put(p->recn_ref_buf);
+		p->recn_ref_buf = NULL;
 	}
 
 	MPP_FREE(p->regs_set);
@@ -271,9 +277,9 @@ static void get_wrap_buf(HalH264eVepu540cCtx *ctx, RK_S32 max_lt_cnt)
 		body->top = body->bottom + body->total_size;
 		body->cur_off = body->bottom;
 	}
-	if (ctx->ren_ref_buf)
-		mpp_buffer_put(ctx->ren_ref_buf);
-	mpp_buffer_get(NULL, &ctx->ren_ref_buf, total_wrap_size);
+	if (ctx->recn_ref_buf)
+		mpp_buffer_put(ctx->recn_ref_buf);
+	mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
 }
 
 static void setup_recn_refr_wrap(HalH264eVepu540cCtx *ctx, HalVepu540cRegSet *regs)
@@ -299,7 +305,7 @@ static void setup_recn_refr_wrap(HalH264eVepu540cCtx *ctx, HalVepu540cRegSet *re
 	WrapInfo *hdr = &ctx->wrap_infos.hdr;
 
 	if (recn_ref_wrap)
-		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 163);
+		ref_iova = mpp_dev_get_iova_address(dev, ctx->recn_ref_buf, 163);
 
 	if (frms->curr_is_idr && frms->curr_idx == frms->refr_idx) {
 		hal_h264e_dbg_wrap("cur is idr  lt %d\n", cur_is_lt);
