@@ -697,7 +697,7 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 			thd[i] = hw->aq_thrd_i[i];
 			step[i] = hw->aq_step_i[i] & 0x3f;
 		}
-		reg_wgt->iprd_lamb_satd_ofst.lambda_satd_offset = 3;
+		reg_wgt->iprd_lamb_satd_ofst.lambda_satd_offset = 11;
 		memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_moda_qp,
 		       sizeof(lamd_moda_qp));
 	} else {
@@ -707,7 +707,7 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 			thd[i] = hw->aq_thrd_p[i];
 			step[i] = hw->aq_step_p[i] & 0x3f;
 		}
-		reg_wgt->iprd_lamb_satd_ofst.lambda_satd_offset = 3;
+		reg_wgt->iprd_lamb_satd_ofst.lambda_satd_offset = 11;
 		memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp,
 		       sizeof(lamd_modb_qp));
 	}
@@ -798,7 +798,7 @@ MPP_RET hal_h265e_v540c_init(void *hal, MppEncHalCfg *cfg)
 
 	ctx->frame_type = INTRA_FRAME;
 
-	{                   /* setup default hardware config */
+	{	/* setup default hardware config */
 		MppEncHwCfg *hw = &cfg->cfg->hw;
 
 		hw->qp_delta_row_i = 2;
@@ -1177,6 +1177,7 @@ static void vepu540c_h265_set_slice_regs(H265eSyntax_new *syn,
 	regs->reg0239_synt_sli0.sli_sao_luma_flg = syn->sp.sli_sao_luma_flg;
 	regs->reg0239_synt_sli0.sli_tmprl_mvp_e = syn->sp.sli_tmprl_mvp_en;
 	regs->reg0192_enc_pic.num_pic_tot_cur = syn->sp.tot_poc_num;
+	regs->reg0248_sao_cfg.sao_lambda_multi = 5;
 
 	regs->reg0239_synt_sli0.pic_out_flg = syn->sp.pic_out_flg;
 	regs->reg0239_synt_sli0.sli_type = syn->sp.slice_type;
@@ -1576,6 +1577,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 
 	reg_rc_roi->klut_ofst.chrm_klut_ofst =
 	        (ctx->frame_type == INTRA_FRAME) ? 0 : 3;
+	reg_rc_roi->klut_ofst.inter_chrm_dist_multi = 4;
 
 	reg_base->reg0216_sli_splt.sli_splt_mode = syn->sp.sli_splt_mode;
 	reg_base->reg0216_sli_splt.sli_splt_cpst = syn->sp.sli_splt_cpst;
@@ -1591,10 +1593,10 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	reg_base->reg0232_rdo_cfg.chrm_spcl = 1;
 	reg_base->reg0232_rdo_cfg.cu_inter_e = 0x00db;
 	reg_base->reg0232_rdo_cfg.cu_intra_e = 0xf;
-        reg_base->reg0232_rdo_cfg.lambda_qp_use_avg_cu16_flag = 1;
-        reg_base->reg0232_rdo_cfg.yuvskip_calc_en = 1;
-        reg_base->reg0232_rdo_cfg.atf_e = 1;
-        reg_base->reg0232_rdo_cfg.atr_e = 1;
+	reg_base->reg0232_rdo_cfg.lambda_qp_use_avg_cu16_flag = 1;
+	reg_base->reg0232_rdo_cfg.yuvskip_calc_en = 1;
+	reg_base->reg0232_rdo_cfg.atf_e = 1;
+	reg_base->reg0232_rdo_cfg.atr_e = 1;
 
 	if (syn->pp.num_long_term_ref_pics_sps) {
 		reg_base->reg0232_rdo_cfg.ltm_col = 0;
@@ -1608,7 +1610,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	reg_base->reg0232_rdo_cfg.scl_lst_sel =
 	        syn->pp.scaling_list_enabled_flag;
 
-        reg_base->reg0233_iprd_csts.rdo_mark_mode = 0;
+	reg_base->reg0233_iprd_csts.rdo_mark_mode = 0;
 
 	{
 		RK_U32 i_nal_type = 0;
