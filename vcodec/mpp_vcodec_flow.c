@@ -23,6 +23,7 @@
 #include "rk_export_func.h"
 #include "mpp_vcodec_debug.h"
 #include "mpp_packet_impl.h"
+#include "mpp_time.h"
 
 static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 				     struct mpp_frame_infos *frm_info,
@@ -79,6 +80,7 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 	struct mpp_frame_infos frm_info;
 	unsigned long lock_flag;
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	RK_U64 cfg_start = 0, cfg_end = 0;
 	if (!chan_entry) {
 		mpp_err_f("chan_entry is NULL");
 		return MPP_NOK;
@@ -150,6 +152,7 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 
 	if (frame != NULL || chan_entry->reenc) {
 		MPP_RET ret = MPP_OK;
+		cfg_start = mpp_time();
 		atomic_inc(&chan_entry->runing);
 		ret = mpp_enc_cfg_reg((MppEnc)chan_entry->handle, frame);
 		if (MPP_OK != ret) {
@@ -181,6 +184,8 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 						 NULL);
 			}
 		}
+		cfg_end = mpp_time();
+        	chan_entry->last_cfg_time = cfg_end - cfg_start;
 	}
 	if (frm_buf)
 		mpp_buffer_put(frm_buf);

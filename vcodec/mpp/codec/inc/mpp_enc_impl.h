@@ -109,6 +109,7 @@ typedef struct MppEncImpl_t {
 	RK_U32   real_fps;
 	RK_U32   stop_flag;
 	RK_U32   hw_run;
+	RK_U32   enc_status;
 	RK_U32   online;
 	RK_U32   ref_buf_shared;
 	struct semaphore enc_sem;
@@ -120,6 +121,17 @@ typedef struct MppEncImpl_t {
 	RK_U32 ring_buf_size;
 	RK_U32 max_strm_cnt;
 } MppEncImpl;
+
+enum enc_status {
+	ENC_STATUS_CFG_IN,
+	ENC_STATUS_CFG_DONE,
+	ENC_STATUS_START_IN,
+	ENC_STATUS_START_DONE,
+	ENC_STATUS_INT_IN,
+	ENC_STATUS_INT_DONE,
+	ENC_STATUS_BUTT,
+};
+
 
 #ifdef __cplusplus
 extern "C" {

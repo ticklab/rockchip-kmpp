@@ -16,6 +16,7 @@
 #include <linux/cdev.h>
 #include <linux/slab.h>
 #include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 
 #include "mpp_vcodec_chan.h"
 #include "mpp_vcodec_base.h"
@@ -340,9 +341,32 @@ static int venc_proc_debug(struct seq_file *seq, void *offset)
 {
 	u32 i = 0;
 	MppCtxType type = MPP_CTX_ENC;
+	struct venc_module *venc = NULL;
+	venc = mpp_vcodec_get_enc_module_entry();
+    if (venc->thd) {
+        seq_puts(
+              seq,
+              "\n--------venc thread status------------------------------------------------------------------------\n");
+
+        seq_printf(seq, "%15s%15s%15s\n", "last_runing", "run_cnt", "que_cnt");
+        seq_printf(seq, "%15lld%15lld%15lld\n", venc->thd->worker->last_us, venc->thd->worker->run_cnt,
+                       venc->thd->queue_cnt);
+    }
+
 	for(i =0; i < MAX_ENC_NUM; i++) {
 		struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(i, type);
 		if(chan_entry->handle){
+            RK_U32 runing = atomic_read(&chan_entry->runing) > 0;
+            RK_U32 comb_run = atomic_read(&chan_entry->cfg.comb_runing) > 0;
+            seq_puts(
+                seq,
+                "\n--------venc chn runing status--------------------------------------------------------------------\n");
+
+            seq_printf(seq, "%8s%8s%10s%16s%10s\n", "ID", "runing", "combo_run", "cfg_consmue", "strm_cnt");
+
+            seq_printf(seq, "%8d%8u%10u%16u%10u\n", i, runing, comb_run, chan_entry->last_cfg_time,
+		atomic_read(&chan_entry->stream_count));
+
 			mpp_enc_proc_debug(seq, chan_entry->handle, i);
 		}
 	}

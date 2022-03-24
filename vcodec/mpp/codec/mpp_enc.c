@@ -289,7 +289,9 @@ MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame)
 		up(&enc->enc_sem);
 		return MPP_NOK;
 	}
+	enc->enc_status = ENC_STATUS_CFG_IN;
 	ret = mpp_enc_impl_reg_cfg(ctx, frame);
+	enc->enc_status = ENC_STATUS_CFG_DONE;
 	up(&enc->enc_sem);
 	enc_dbg_func("%p out\n", enc);
 	return ret;
@@ -311,7 +313,9 @@ MPP_RET mpp_enc_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 		up(&enc->enc_sem);
 		return MPP_NOK;
 	}
+	enc->enc_status = ENC_STATUS_START_IN;
 	ret = mpp_enc_impl_hw_start(ctx, jpeg_ctx);
+	enc->enc_status = ENC_STATUS_START_DONE;
 	if (MPP_OK == ret)
 		enc->hw_run = 1;
 	up(&enc->enc_sem);
@@ -331,8 +335,9 @@ MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet, Mpp
 	}
 
 	enc_dbg_func("%p in\n", enc);
-
+	enc->enc_status = ENC_STATUS_INT_IN;
 	ret = mpp_enc_impl_int(ctx, jpeg_ctx, packet, jpeg_packet);
+	enc->enc_status = ENC_STATUS_INT_DONE;
 	down(&enc->enc_sem);
 	enc->hw_run = 0;
 	up(&enc->enc_sem);

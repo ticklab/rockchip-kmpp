@@ -1785,10 +1785,11 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 		seq,
 		"\n--------venc chn attr 1---------------------------------------------------------------------------\n");
 	seq_printf(seq, "%8s%8s%8s%6s%9s%10s%10s%6s\n", "ID", "Width", "Height",
-		   "Type", "ByFrame", "Sequence", "GopMode", "Prio");
+			"Type", "ByFrame", "Sequence", "GopMode", "Prio");
+
 	seq_printf(seq, "%8d%8u%8u%6s%9s%10u%10s%6d\n", chl_id, cfg->prep.width,
-		   cfg->prep.height, strof_coding_type(cfg->codec.coding), "y",
-		   task->seq_idx, strof_gop_mode(enc->gop_mode), 0);
+			cfg->prep.height, strof_coding_type(cfg->codec.coding), "y",
+			task->seq_idx, strof_gop_mode(enc->gop_mode), 0);
 
 	seq_puts(
 		seq,
@@ -1800,6 +1801,17 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 		   cfg->rc.fps_out_num / cfg->rc.fps_out_denorm,
 		   (RK_U32)enc->init_time, strof_pixel_fmt(cfg->prep.format),
 		   enc->real_fps);
+
+	seq_puts(
+		seq,
+		"\n--------ring buf status---------------------------------------------------------------------------\n");
+
+	seq_printf(seq, "%8s%8s%8s%8s%10s%10s%10s%10s\n", "ID", "w_pos", "r_pos",
+			"usd_len", "total_len", "min_size", "hw_run", "run_pos");
+	seq_printf(seq, "%8d%8d%8d%8d%10d%10d%10d%10d\n", chl_id, enc->ring_pool->w_pos,
+			enc->ring_pool->r_pos, enc->ring_pool->use_len, enc->ring_pool->len
+			,enc->ring_pool->min_buf_size, enc->hw_run, enc->enc_status);
+
 	enc_impl_proc_debug(seq_file, enc->impl, chl_id);
 	rc_proc_show(seq_file, enc->rc_ctx, chl_id);
 }

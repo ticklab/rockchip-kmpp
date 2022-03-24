@@ -57,6 +57,7 @@ struct mpp_chan {
 	struct list_head stream_remove;
 	atomic_t stream_count;
 	atomic_t str_out_cnt;
+	RK_U32 last_cfg_time;
 };
 
 struct stream_packet {
