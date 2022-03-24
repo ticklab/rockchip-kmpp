@@ -238,7 +238,10 @@ static void setup_recn_refr_wrap(H265eV540cHalContext *ctx, hevc_vepu540c_base *
 	if (recn_ref_wrap)
 		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 163);
 
-	if (syn->sp.recon_pic.slot_idx == 0 && syn->sp.ref_pic.slot_idx == 0) {
+	if (ctx->frame_type == INTRA_FRAME &&
+	    syn->sp.recon_pic.slot_idx == syn->sp.ref_pic.slot_idx) {
+
+		hal_h265e_dbg_wrap("cur is idr  lt %d\n", cur_is_lt);
 		if (cur_is_lt) {
 			rfpr_h_off = hdr_lt->cur_off;
 			rfpr_b_off = bdy_lt->cur_off;

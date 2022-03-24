@@ -610,6 +610,7 @@ static MPP_RET h264e_proc_dpb(void *ctx, HalEncTask *task)
     frms->curr_idx = curr->slot_idx;
     frms->curr_is_lt = curr->status.is_lt_ref;
     frms->curr_is_non_ref = curr->status.is_non_ref;
+    frms->curr_is_idr = curr->status.is_idr;
     frms->refr_idx = (refr) ? refr->slot_idx : curr->slot_idx;
     frms->refr_is_lt = (refr) ? refr->status.is_lt_ref : curr->status.is_lt_ref;
 

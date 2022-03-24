@@ -28,10 +28,10 @@
 
 #define VEPU540C_MAX_ROI_NUM         	8
 
-#define REF_BODY_SIZE(w, h)			MPP_ALIGN((((w) * (h) * 3 / 2) + 48 * (w)), 64)
-#define REF_WRAP_BODY_EXT_SIZE(w)		MPP_ALIGN((240 * (w)), 64)
-#define REF_HEADER_SIZE(w, h)			MPP_ALIGN((((w) * (h) / 64) + (w) / 2), 64)
-#define REF_WRAP_HEADER_EXT_SIZE(w)		MPP_ALIGN((3 * (w)), 64)
+#define REF_BODY_SIZE(w, h)			MPP_ALIGN((((w) * (h) * 3 / 2) + 48 * (w)), SZ_4K)
+#define REF_WRAP_BODY_EXT_SIZE(w)		MPP_ALIGN((240 * (w)), SZ_4K)
+#define REF_HEADER_SIZE(w, h)			MPP_ALIGN((((w) * (h) / 64) + (w) / 2), SZ_4K)
+#define REF_WRAP_HEADER_EXT_SIZE(w)		MPP_ALIGN((3 * (w)), SZ_4K)
 
 typedef enum ref_type_e {
 	ST_REF_TO_ST,

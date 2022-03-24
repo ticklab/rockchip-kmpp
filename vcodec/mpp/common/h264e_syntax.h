@@ -64,6 +64,7 @@ typedef struct H264eFrmInfo_s {
     RK_S32      curr_idx;
     RK_S32      curr_is_lt;
     RK_S32      curr_is_non_ref;
+    RK_S32      curr_is_idr;
     RK_S32      refr_idx;
     RK_S32      refr_is_lt;
 

@@ -401,11 +401,11 @@ RK_S32 fill_ref_parameters(const H265eCtx * h, H265eSlicParams * sp)
 	}
 
 	sp->recon_pic.slot_idx = h->dpb->curr->slot_idx;
-	sp->recon_pic.is_lt = h->dpb->curr->is_long_term;
+	sp->recon_pic.is_lt = h->dpb->curr->status.is_lt_ref;
 	ref_frame = slice->ref_pic_list[0][0];
 	if (ref_frame != NULL) {
 		sp->ref_pic.slot_idx = ref_frame->slot_idx;
-		sp->ref_pic.is_lt = ref_frame->is_long_term;
+		sp->ref_pic.is_lt = ref_frame->status.is_lt_ref;
 	} else {
 		sp->ref_pic.slot_idx = h->dpb->curr->slot_idx;
 		sp->ref_pic.is_lt = h->dpb->curr->is_long_term;

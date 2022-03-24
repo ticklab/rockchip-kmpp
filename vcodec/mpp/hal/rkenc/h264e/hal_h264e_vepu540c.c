@@ -301,7 +301,8 @@ static void setup_recn_refr_wrap(HalH264eVepu540cCtx *ctx, HalVepu540cRegSet *re
 	if (recn_ref_wrap)
 		ref_iova = mpp_dev_get_iova_address(dev, ctx->ren_ref_buf, 163);
 
-	if (frms->curr_idx == 0 && frms->refr_idx == 0) {
+	if (frms->curr_is_idr && frms->curr_idx == frms->refr_idx) {
+		hal_h264e_dbg_wrap("cur is idr  lt %d\n", cur_is_lt);
 		if (cur_is_lt) {
 			rfpr_h_off = hdr_lt->cur_off;
 			rfpr_b_off = bdy_lt->cur_off;
