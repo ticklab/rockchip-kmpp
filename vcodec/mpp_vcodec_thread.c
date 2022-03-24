@@ -10,6 +10,9 @@
 #include <linux/slab.h>
 #include <linux/sched/task.h>
 #include <linux/module.h>
+#include <linux/sched/prio.h>
+#include <uapi/linux/sched/types.h>
+
 #include "mpp_vcodec_thread.h"
 
 #define THREAD_DBG_FLOW     (0x00000001)
@@ -89,6 +92,7 @@ static int vcodec_thread_prepare(struct vcodec_threads *thds)
 {
 	int count = thds->cfg.count;
 	vcodec_work_func_t callback = thds->cfg.callback;
+	struct sched_param param = { .sched_priority = MAX_RT_PRIO - 10 };
 	int i;
 
 	if (!count || count > VCODEC_MAX_WORK_THREAD || !callback) {
@@ -115,6 +119,7 @@ static int vcodec_thread_prepare(struct vcodec_threads *thds)
 		thd->kworker_task = kthread_run(kthread_worker_fn, &thd->worker,
 						"vcodec_thread_%d", i);
 		kthread_init_work(&thd->work, vcodec_thread_worker);
+		sched_setscheduler(thd->kworker_task, SCHED_FIFO, &param);
 		thread_dbg_flow("prepare thread %d done\n", i);
 	}
 	thread_dbg_flow("leave prepare\n");
