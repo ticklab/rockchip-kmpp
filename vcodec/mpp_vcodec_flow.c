@@ -168,24 +168,33 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 				if (MPP_OK == ret) {
 					atomic_inc(
 						&chan_entry->cfg.comb_runing);
-					mpp_enc_hw_start(
+					ret = mpp_enc_hw_start(
 						(MppEnc)chan_entry->handle,
 						(MppEnc)comb_chan->handle);
 				} else {
 					atomic_dec(&comb_chan->runing);
 					wake_up(&comb_chan->stop_wait);
-					mpp_enc_hw_start(
-						(MppEnc)chan_entry->handle,
-						NULL);
+					ret = mpp_enc_hw_start(
+						    (MppEnc)chan_entry->handle,
+						    NULL);
 				}
 
 			} else {
-				mpp_enc_hw_start((MppEnc)chan_entry->handle,
+				ret = mpp_enc_hw_start((MppEnc)chan_entry->handle,
 						 NULL);
 			}
 		}
+
+		if (MPP_OK != ret) {
+			atomic_dec(&chan_entry->runing);
+			wake_up(&chan_entry->stop_wait);
+			if (comb_frame) {
+				atomic_dec(&comb_chan->runing);
+				mpp_frame_deinit(&comb_frame);
+			}
+		}
 		cfg_end = mpp_time();
-        	chan_entry->last_cfg_time = cfg_end - cfg_start;
+		chan_entry->last_cfg_time = cfg_end - cfg_start;
 	}
 	if (frm_buf)
 		mpp_buffer_put(frm_buf);
