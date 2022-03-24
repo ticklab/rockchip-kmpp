@@ -16,6 +16,7 @@
 #include "mpp_log.h"
 #include "mpp_err.h"
 #include "mpp_mem.h"
+#include "mpp_maths.h"
 #include "mpp_buffer.h"
 #include "mpp_stream_ring_buf.h"
 
@@ -40,7 +41,9 @@ MPP_RET ring_buf_init(ring_buf_pool *ctx, MppBuffer buf, RK_U32 max_strm_cnt)
 	ctx->buf = buf;
 	ctx->mpi_buf_id = mpp_buffer_get_mpi_buf_id(buf);
 	ctx->init_done = 1;
-	ctx->min_buf_size = (ctx->len / max_strm_cnt + SZ_1K) & (SZ_1K - 1);
+	ctx->min_buf_size = MPP_ALIGN(ctx->len / max_strm_cnt, SZ_1K);
+	ring_buf_dbg("ctx->len = %d, max_strm_cnt = %d, ctx->min_buf_size = %d", ctx->len, 
+	    max_strm_cnt, ctx->min_buf_size);
 	return MPP_OK;
 }
 
@@ -71,14 +74,16 @@ MPP_RET ring_buf_put_use(ring_buf_pool *ctx, ring_buf *buf)
 	if (w_pos >= r_pos) {
 		if ((start_pos < w_pos && start_pos > r_pos) ||
 		    (end_pos >= r_pos && end_pos < w_pos)) {
-			mpp_err("INVALID param: r_pos=%x, w_pos=%x, start=%x, size=%x\n",
-				r_pos, w_pos, start_pos, buf->use_len);
+			mpp_err("INVALID param: r_pos=%x, w_pos=%x, start=%x, size=%x, \
+			    buf_len = %x\n",r_pos, w_pos, start_pos, buf->use_len,
+			    buf->size);
 		}
 	} else {
 		if (start_pos >= r_pos || start_pos < w_pos ||
 		    end_pos < w_pos || end_pos >= r_pos) {
-			mpp_err("INVALID param: r_pos =%x, w_pos=%x, start=%x, size=%x\n",
-				r_pos, w_pos, start_pos, buf->use_len);
+			mpp_err("INVALID param: r_pos=%x, w_pos=%x, start=%x, size=%x, \
+			    buf_len = %x\n",r_pos, w_pos, start_pos, buf->use_len,
+			    buf->size);
 		}
 	}
 
