@@ -256,11 +256,16 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	RK_S32 stridey = 0;
 	RK_S32 stridec = 0;
 
-	regs->reg0264_adr_src0 = mpp_dev_get_iova_address(cfg->dev, task->input, 264);
-	regs->reg0265_adr_src1 = regs->reg0264_adr_src0;
-	regs->reg0266_adr_src2 = regs->reg0264_adr_src0;
-
-	vepu540c_jpeg_set_uv_offset(regs, syn, (Vepu541Fmt) fmt->format, task);
+	if (cfg->online) {
+		regs->reg0264_adr_src0 = 0;
+		regs->reg0265_adr_src1 = 0;
+		regs->reg0266_adr_src2 = 0;
+	}else{
+		regs->reg0264_adr_src0 = mpp_dev_get_iova_address(cfg->dev, task->input, 264);
+		regs->reg0265_adr_src1 = regs->reg0264_adr_src0;
+		regs->reg0266_adr_src2 = regs->reg0264_adr_src0;
+		vepu540c_jpeg_set_uv_offset(regs, syn, (Vepu541Fmt) fmt->format, task);
+	}
 
 	regs->reg0257_adr_bsbb = mpp_dev_get_iova_address(cfg->dev, task->output->buf, 257) + task->output->start_offset;
 	regs->reg0256_adr_bsbt = regs->reg0257_adr_bsbb + task->output->size - 1;

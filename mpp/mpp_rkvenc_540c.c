@@ -44,6 +44,8 @@
 #define RKVENC_MAX_CORE_NUM			4
 #define RV1106_FPGA_TEST 0
 
+#define RKVENC_DVBM_DISCONNECT	(BIT(15))
+
 #define to_rkvenc_info(info)		\
 		container_of(info, struct rkvenc_hw_info, hw)
 #define to_rkvenc_task(ctx)		\
@@ -274,6 +276,7 @@ struct rkvenc_dev {
 	u32 frm_id_start;
 	u32 frm_id_end;
 	u32 dvbm_en;
+	u32 dvbm_link;
 	u32 frm_id_tmp;
 	u32 multi_out;
 
@@ -1018,6 +1021,7 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 		if (dvbm_en)
 			rk_dvbm_link(enc->port);
 #endif
+		enc->dvbm_link = 1;
 		enc->dvbm_en = dvbm_en;
 	} break;
 	case RKVENC_MODE_LINK_ONEFRAME: {
@@ -1064,29 +1068,33 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 
 
 
-static int rkvenc_dump_dbg(struct mpp_dev *mpp)
+static void rkvenc_dump_dbg(struct mpp_dev *mpp)
 {
-	// struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
-	u32 i, off;
-	u32 start = 0;
-	u32 end = 0x5354;
+	if (!unlikely(mpp_dev_debug & DEBUG_DUMP_ERR_REG))
+		return;
+	pr_info("=== %s ===\n", __func__);
+	{
+		u32 i, off;
+		u32 start;// = 0x5168;//0x4000;
+		u32 end;// = 0x5170;//0x5350;
+		// struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
 
-	pr_info("====== %s ======\n", __func__);
-
-	// for (i = 0; i <= 0x480; i += 4) {
-	// 	off = i;
-	// 	pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
-	// }
-	for (i = start; i < end; i += 4) {
-		off = i;
-		pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
+		start = 0x5004;
+		end = 0x5028;
+		for (i = start; i <= end; i += 4) {
+			off = i;
+			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
+		}
+		start = 0x5168;
+		end = 0x5170;
+		for (i = start; i <= end; i += 4) {
+			off = i;
+			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
+		}
+		// rk_dvbm_ctrl(enc->port, DVBM_VEPU_DUMP_REGS, NULL);
 	}
+	pr_info("=== %s ===\n", __func__);
 
-	pr_info("====== %s ======\n", __func__);
-
-	// rk_dvbm_ctrl(enc->port, DVBM_VEPU_DUMP_REGS, NULL);
-
-	return 0;
 }
 
 static int rkvenc_irq(struct mpp_dev *mpp)
@@ -1103,6 +1111,8 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 	mpp_write(mpp, hw->int_mask_base, 0x100);
 	mpp_write(mpp, hw->int_clr_base, mpp->irq_status);
 	mpp_write(mpp, hw->int_sta_base, 0);
+	if (mpp->irq_status == RKVENC_DVBM_DISCONNECT)
+		return IRQ_HANDLED;
 
 #if RV1106_FPGA_TEST
 	if (enc->multi_out) {
@@ -1306,11 +1316,8 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 	case RKVENC_MODE_ONEFRAME: {
 		struct mpp_task *mpp_task = mpp->cur_task;
 
-		/* FIXME use a spin lock here */
-		if (!mpp_task) {
-			dev_err(mpp->dev, "no current task\n");
+		if (!mpp_task)
 			return IRQ_HANDLED;
-		}
 
 		mpp_time_diff(mpp_task);
 		mpp->cur_task = NULL;
@@ -1413,8 +1420,8 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 		if (reg)
 			*reg = task->irq_status;
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
-		if (enc->dvbm_en)
-			rk_dvbm_unlink(enc->port);
+		// if (enc->dvbm_en)
+		// 	rk_dvbm_unlink(enc->port);
 #endif
 	} break;
 	default:
@@ -1568,6 +1575,12 @@ static int rkvenc_free_session(struct mpp_session *session)
 
 		rkvenc_free_class_msg(task);
 		kfree(task);
+	}
+	if (session) {
+		struct rkvenc_dev *enc = to_rkvenc_dev(session->mpp);
+
+		rk_dvbm_unlink(enc->port);
+		enc->dvbm_link = 0;
 	}
 	if (session && session->priv) {
 		kfree(session->priv);
@@ -2170,7 +2183,6 @@ static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 
 		if (!connect)
 			clear_bit(24, &val);
-		// pr_info("val 0x%08x\n", val);
 		mpp_write(&enc->mpp, 0x18, val);
 	} break;
 	case DVBM_VEPU_NOTIFY_FRM_STR: {
@@ -2178,6 +2190,9 @@ static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 	} break;
 	case DVBM_VEPU_NOTIFY_FRM_END: {
 		enc->frm_id_end = *(u32*)arg;
+	} break;
+	case DVBM_VEPU_NOTIFY_DUMP: {
+		rkvenc_dump_dbg(&enc->mpp);
 	} break;
 	default : {
 	} break;

@@ -1388,12 +1388,18 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 
 	hal_h265e_enter();
 
-	regs->reg0160_adr_src0 =
-	        mpp_dev_get_iova_address(ctx->dev, enc_task->input, 160);
-	regs->reg0161_adr_src1 = regs->reg0160_adr_src0;
-	regs->reg0162_adr_src2 = regs->reg0160_adr_src0;
+	if (ctx->online) {
+		regs->reg0160_adr_src0 = 0;
+		regs->reg0161_adr_src1 = 0;
+		regs->reg0162_adr_src2 = 0;
+	} else {
+		regs->reg0160_adr_src0 =
+			mpp_dev_get_iova_address(ctx->dev, enc_task->input, 160);
+		regs->reg0161_adr_src1 = regs->reg0160_adr_src0;
+		regs->reg0162_adr_src2 = regs->reg0160_adr_src0;
 
-	vepu540c_h265_uv_address(regs, syn, (Vepu541Fmt) fmt->format, task);
+		vepu540c_h265_uv_address(regs, syn, (Vepu541Fmt) fmt->format, task);
+	}
 
 	recon_buf = hal_bufs_get_buf(ctx->dpb_bufs, syn->sp.recon_pic.slot_idx);
 	ref_buf = hal_bufs_get_buf(ctx->dpb_bufs, syn->sp.ref_pic.slot_idx);
@@ -1480,14 +1486,10 @@ static void vepu540c_h265_set_dvbm(H265eV540cRegSet *regs)
 	RK_U32 soft_resync = 1;
 	RK_U32 frame_match = 0;
 
-	//     mpp_env_get_u32("soft_resync", &soft_resync, 1);
-	//     mpp_env_get_u32("frame_match", &frame_match, 0);
-	// mpp_env_get_u32("dvbm_en", &dvbm_en, 1);
-
 	regs->reg_ctl.reg0024_dvbm_cfg.dvbm_en = 1;
 	regs->reg_ctl.reg0024_dvbm_cfg.src_badr_sel = 0;
 	regs->reg_ctl.reg0024_dvbm_cfg.vinf_frm_match = frame_match;
-	regs->reg_ctl.reg0024_dvbm_cfg.vrsp_half_cycle = 15;
+	regs->reg_ctl.reg0024_dvbm_cfg.vrsp_half_cycle = 8;
 
 	regs->reg_ctl.reg0006_vs_ldly.dvbm_ack_sel = soft_resync;
 	regs->reg_ctl.reg0006_vs_ldly.dvbm_ack_soft = 1;
@@ -1997,7 +1999,8 @@ static MPP_RET hal_h265e_v540c_wait(void *hal, HalEncTask *task)
 		mpp_err_f("poll cmd failed %d status %d \n", ret,
 		          elem->hw_status);
 
-	mpp_dev_release_iova_address(ctx->dev, task->input);
+	if (!ctx->online)
+		mpp_dev_release_iova_address(ctx->dev, task->input);
 	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
 	hal_h265e_leave();
 	return ret;

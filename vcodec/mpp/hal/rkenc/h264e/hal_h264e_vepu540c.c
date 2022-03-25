@@ -1470,9 +1470,11 @@ static void setup_vepu540c_rc_base(HalVepu540cRegSet *regs, H264eSps *sps,
 	hal_h264e_dbg_func("leave\n");
 }
 
-static void setup_vepu540c_io_buf(HalVepu540cRegSet *regs, MppDev dev,
+static void setup_vepu540c_io_buf(HalH264eVepu540cCtx *ctx,
                                   HalEncTask *task)
 {
+	HalVepu540cRegSet *regs = ctx->regs_set;
+	MppDev dev = ctx->dev;
 	MppFrame frm = task->frame;
 	MppPacket pkt = task->packet;
 	MppBuffer buf_in = mpp_frame_get_buffer(frm);
@@ -1485,15 +1487,6 @@ static void setup_vepu540c_io_buf(HalVepu540cRegSet *regs, MppDev dev,
 	size_t siz_out = buf_out->size;
 
 	hal_h264e_dbg_func("enter\n");
-
-	regs->reg_base.adr_src0 = mpp_dev_get_iova_address(dev, buf_in, 160);
-	regs->reg_base.adr_src1 = regs->reg_base.adr_src0;
-	regs->reg_base.adr_src2 = regs->reg_base.adr_src0;
-
-	regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out->buf, 173) + buf_out->start_offset;
-	regs->reg_base.bsbr_addr = regs->reg_base.bsbb_addr;
-	regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr;
-	regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr;
 
 	if (MPP_FRAME_FMT_IS_FBC(fmt)) {
 		off_in[0] = mpp_frame_get_fbc_offset(frm);;
@@ -1541,8 +1534,23 @@ static void setup_vepu540c_io_buf(HalVepu540cRegSet *regs, MppDev dev,
 		}
 	}
 
-	regs->reg_base.adr_src1 += off_in[0];
-	regs->reg_base.adr_src2 += off_in[1];
+	if (ctx->online) {
+		regs->reg_base.adr_src0 = 0;
+		regs->reg_base.adr_src1 = 0;
+		regs->reg_base.adr_src2 = 0;
+	} else {
+		regs->reg_base.adr_src0 = mpp_dev_get_iova_address(dev, buf_in, 160);
+		regs->reg_base.adr_src1 = regs->reg_base.adr_src0;
+		regs->reg_base.adr_src2 = regs->reg_base.adr_src0;
+		regs->reg_base.adr_src1 += off_in[0];
+		regs->reg_base.adr_src2 += off_in[1];
+	}
+
+	regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out->buf, 173);
+	regs->reg_base.bsbb_addr += buf_out->start_offset;
+	regs->reg_base.bsbr_addr = regs->reg_base.bsbb_addr;
+	regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr;
+	regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr;
 
 	regs->reg_base.bsbt_addr += (siz_out - 1);
 	regs->reg_base.adr_bsbs += off_out;
@@ -1994,14 +2002,12 @@ static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ct
 {
 	RK_U32 soft_resync = 1;
 	RK_U32 frame_match = 0;
-	//     mpp_env_get_u32("soft_resync", &soft_resync, 1);
-	//     mpp_env_get_u32("frame_match", &frame_match, 0);
-	// mpp_env_get_u32("dvbm_en", &dvbm_en, 1);
+
 	(void)ctx;
 	regs->reg_ctl.dvbm_cfg.dvbm_en = 1;
 	regs->reg_ctl.dvbm_cfg.src_badr_sel = 0;
 	regs->reg_ctl.dvbm_cfg.vinf_frm_match = frame_match;
-	regs->reg_ctl.dvbm_cfg.vrsp_half_cycle = 15;
+	regs->reg_ctl.dvbm_cfg.vrsp_half_cycle = 8;
 
 	regs->reg_ctl.vs_ldly.dvbm_ack_sel = soft_resync;
 	regs->reg_ctl.vs_ldly.dvbm_ack_soft = 1;
@@ -2040,7 +2046,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	setup_vepu540c_rdo_cfg(ctx);
 	setup_vepu540c_scl_cfg(&regs->reg_scl);
 	setup_vepu540c_rc_base(regs, sps, slice, &cfg->hw, task->rc_task);
-	setup_vepu540c_io_buf(regs, ctx->dev, task);
+	setup_vepu540c_io_buf(ctx, task);
 	setup_vepu540c_recn_refr(ctx, regs);
 
 	regs->reg_base.meiw_addr =
@@ -2259,8 +2265,8 @@ static MPP_RET hal_h264e_vepu540c_wait(void *hal, HalEncTask *task)
 		mpp_err_f("poll cmd failed %d\n", ret);
 		ret = MPP_ERR_VPUHW;
 	}
-
-	mpp_dev_release_iova_address(ctx->dev, task->input);
+	if (!ctx->online)
+		mpp_dev_release_iova_address(ctx->dev, task->input);
 	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
 	hal_h264e_dbg_func("leave %p\n", hal);
 
