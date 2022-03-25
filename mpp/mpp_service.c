@@ -19,6 +19,8 @@
 #include <linux/slab.h>
 #include <linux/nospec.h>
 #include <linux/mfd/syscon.h>
+#include <linux/sched/prio.h>
+#include <uapi/linux/sched/types.h>
 
 #include "mpp_debug.h"
 #include "mpp_common.h"
@@ -289,6 +291,7 @@ static int mpp_service_probe(struct platform_device *pdev)
 	struct mpp_taskqueue *queue;
 	struct device *dev = &pdev->dev;
 	struct device_node *np = dev->of_node;
+	struct sched_param param = { .sched_priority = MAX_RT_PRIO - 10 };
 
 	dev_info(dev, "%s\n", mpp_version);
 	dev_info(dev, "probe start\n");
@@ -320,6 +323,9 @@ static int mpp_service_probe(struct platform_device *pdev)
 		kthread_init_worker(&queue->worker);
 		queue->kworker_task = kthread_run(kthread_worker_fn, &queue->worker,
 						  "queue_work%d", i);
+
+		sched_setscheduler(queue->kworker_task, SCHED_FIFO, &param);
+
 		srv->task_queues[i] = queue;
 	}
 
