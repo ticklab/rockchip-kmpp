@@ -1070,8 +1070,8 @@ static MPP_RET vepu540c_h265_set_pp_regs(H265eV540cRegSet *regs,
 
 	reg_ctl->reg0012_dtrns_map.src_bus_edin = fmt->src_endian;
 	reg_base->reg0198_src_fmt.src_cfmt = fmt->format;
-
-	//    reg_base->reg0198_src_fmt.src_range = fmt->src_range;
+	reg_base->reg0198_src_fmt.alpha_swap = fmt->alpha_swap;
+	reg_base->reg0198_src_fmt.rbuv_swap = fmt->rbuv_swap;
 	reg_base->reg0198_src_fmt.out_fmt = 1;
 
 	reg_base->reg0203_src_proc.src_mirr = prep_cfg->mirroring > 0;
