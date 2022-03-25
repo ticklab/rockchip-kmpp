@@ -163,13 +163,11 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		}
 		break;
 	case VCODEC_CHAN_CONTROL:{
-			if (!req->data){
-				ret = -EFAULT;
-				goto fail;
-			}
-			if (copy_from_user(param, req->data, req->size)) {
-				ret = -EFAULT;
-				goto fail;
+			if (req->data) {
+				if (copy_from_user(param, req->data, req->size)) {
+					ret = -EFAULT;
+					goto fail;
+				}	
 			}
 			ret =
 			    mpp_vcodec_chan_control(chan_id, type,
