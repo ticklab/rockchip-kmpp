@@ -93,7 +93,7 @@ static RK_S32 h264_aq_tthd_default[16] = {
 	0, 0, 0, 0,
 	3, 3, 5, 5,
 	8, 8, 8, 15,
-	15, 20, 25, 35,
+	15, 20, 25, 25,
 };
 
 static RK_S32 h264_P_aq_step_default[16] = {

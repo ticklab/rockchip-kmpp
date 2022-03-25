@@ -107,7 +107,7 @@ static RK_U32 aq_thd_default[16] = {
 	0, 0, 0, 0,
 	3, 3, 5, 5,
 	8, 8, 8, 15,
-	15, 20, 25, 35
+	15, 20, 25, 25
 };
 
 static RK_S32 aq_qp_dealt_default[16] = {
@@ -1581,7 +1581,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	reg_base->reg0203_src_proc.src_rot = 0;
 
 	reg_rc_roi->klut_ofst.chrm_klut_ofst =
-	        (ctx->frame_type == INTRA_FRAME) ? 0 : 3;
+	        (ctx->frame_type == INTRA_FRAME) ? 6 : 9;
 	reg_rc_roi->klut_ofst.inter_chrm_dist_multi = 4;
 
 	reg_base->reg0216_sli_splt.sli_splt_mode = syn->sp.sli_splt_mode;

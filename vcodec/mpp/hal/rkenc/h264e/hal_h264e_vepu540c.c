@@ -1085,9 +1085,9 @@ static void setup_vepu540c_rdo_pred(HalVepu540cRegSet *regs, H264eSps *sps,
 	hal_h264e_dbg_func("enter\n");
 
 	if (slice->slice_type == H264_I_SLICE) {
-		regs->reg_rc_roi.klut_ofst.chrm_klut_ofst = 0;
+		regs->reg_rc_roi.klut_ofst.chrm_klut_ofst = 6;
 	} else {
-		regs->reg_rc_roi.klut_ofst.chrm_klut_ofst = 3;
+		regs->reg_rc_roi.klut_ofst.chrm_klut_ofst = 9;
 	}
 
 	regs->reg_base.rdo_cfg.rect_size =
@@ -1122,7 +1122,7 @@ static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 	if (H264_I_SLICE == slice->slice_type)
 		reg->rdo_smear_cfg_comb.stated_mode = 1;
 	else if (H264_I_SLICE == slice->last_slice_type)
-		reg->rdo_smear_cfg_comb.stated_mode = 0;
+		reg->rdo_smear_cfg_comb.stated_mode = 1;
 	else
 		reg->rdo_smear_cfg_comb.stated_mode = 2;
 
@@ -1857,12 +1857,12 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 
 	if (slice->slice_type == H264_I_SLICE) {
 		regs->reg_s3.ATR_THD0.atr_thd0 = 1;
-		regs->reg_s3.ATR_THD0.atr_thd1 = 4;
-		regs->reg_s3.ATR_THD1.atr_thd2 = 36;
+		regs->reg_s3.ATR_THD0.atr_thd1 = 2;
+		regs->reg_s3.ATR_THD1.atr_thd2 = 6;
 	} else {
-		regs->reg_s3.ATR_THD0.atr_thd0 = 4;
-		regs->reg_s3.ATR_THD0.atr_thd1 = 16;
-		regs->reg_s3.ATR_THD1.atr_thd2 = 81;
+		regs->reg_s3.ATR_THD0.atr_thd0 = 2;
+		regs->reg_s3.ATR_THD0.atr_thd1 = 4;
+		regs->reg_s3.ATR_THD1.atr_thd2 = 9;
 	}
 	regs->reg_s3.ATR_THD1.atr_thdqp = 32;
 
