@@ -174,6 +174,12 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 						    req->ctrl_cmd, param);
 			if (ret)
 				goto fail;
+			if (req->data) {
+				if (copy_to_user(req->data, param, req->size)) {
+					ret = -EFAULT;
+					goto fail;
+				}
+			}
 		}
 		break;
 	case VCODEC_CHAN_IN_FRM_RDY:{
