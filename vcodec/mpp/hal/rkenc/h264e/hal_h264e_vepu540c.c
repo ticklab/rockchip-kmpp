@@ -740,19 +740,19 @@ static MPP_RET setup_vepu540c_prep(HalVepu540cRegSet *regs,
 	            VEPU541_FMT_YUV420SP) ? y_stride : y_stride / 2;
 
 	if (hw_fmt < VEPU541_FMT_ARGB1555) {
-		regs->reg_base.src_udfy.csc_wgt_b2y = 25;
-		regs->reg_base.src_udfy.csc_wgt_g2y = 129;
-		regs->reg_base.src_udfy.csc_wgt_r2y = 66;
+		regs->reg_base.src_udfy.csc_wgt_b2y = 29;
+		regs->reg_base.src_udfy.csc_wgt_g2y = 150;
+		regs->reg_base.src_udfy.csc_wgt_r2y = 77;
 
-		regs->reg_base.src_udfu.csc_wgt_b2u = 112;
-		regs->reg_base.src_udfu.csc_wgt_g2u = -74;
-		regs->reg_base.src_udfu.csc_wgt_r2u = -38;
+		regs->reg_base.src_udfu.csc_wgt_b2u = 128;
+		regs->reg_base.src_udfu.csc_wgt_g2u = -85;
+		regs->reg_base.src_udfu.csc_wgt_r2u = -43;
 
-		regs->reg_base.src_udfv.csc_wgt_b2v = -18;
-		regs->reg_base.src_udfv.csc_wgt_g2v = -94;
-		regs->reg_base.src_udfv.csc_wgt_r2v = 112;
+		regs->reg_base.src_udfv.csc_wgt_b2v = -21;
+		regs->reg_base.src_udfv.csc_wgt_g2v = -107;
+		regs->reg_base.src_udfv.csc_wgt_r2v = 128;
 
-		regs->reg_base.src_udfo.csc_ofst_y = 15;
+		regs->reg_base.src_udfo.csc_ofst_y = 0;
 		regs->reg_base.src_udfo.csc_ofst_u = 128;
 		regs->reg_base.src_udfo.csc_ofst_v = 128;
 	} else {
