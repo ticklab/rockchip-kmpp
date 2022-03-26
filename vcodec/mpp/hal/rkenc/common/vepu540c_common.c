@@ -116,9 +116,9 @@ MPP_RET vepu540c_set_osd(Vepu540cOsdCfg * cfg)
 	num = osd->num_region;
 	for (i = 0; i < num; i++, tmp++) {
 		vepu540c_osd_com *reg = (vepu540c_osd_com *) & regs->osd_cfg[i];
-        VepuFmtCfg fmt_cfg;
-	    MppFrameFormat fmt = tmp->fmt;
-	    vepu541_set_fmt(&fmt_cfg, fmt);
+        	VepuFmtCfg fmt_cfg;
+		MppFrameFormat fmt = tmp->fmt;
+		vepu541_set_fmt(&fmt_cfg, fmt);
 		reg->cfg0.osd_en = tmp->enable;
 		reg->cfg0.osd_range_trns_en = tmp->range_trns_en;
 		reg->cfg0.osd_range_trns_sel = tmp->range_trns_sel;
@@ -158,21 +158,28 @@ MPP_RET vepu540c_set_osd(Vepu540cOsdCfg * cfg)
 		memcpy(reg->lut, tmp->lut, sizeof(tmp->lut));
 	}
 
-	regs->whi_cfg0.osd_csc_yr = 25;
-	regs->whi_cfg0.osd_csc_yg = 129;
-	regs->whi_cfg0.osd_csc_yb = 66;
+	regs->whi_cfg0.osd_csc_yr = 77;
+	regs->whi_cfg0.osd_csc_yg = 150;
+	regs->whi_cfg0.osd_csc_yb = 29;
 
-	regs->whi_cfg1.osd_csc_ur = 112;
-	regs->whi_cfg1.osd_csc_ug = -74;
-	regs->whi_cfg1.osd_csc_ub = -38;
+	regs->whi_cfg1.osd_csc_ur = -43;
+	regs->whi_cfg1.osd_csc_ug = -85;
+	regs->whi_cfg1.osd_csc_ub = 128;
 
-	regs->whi_cfg2.osd_csc_vr = -18;
-	regs->whi_cfg2.osd_csc_vg = -94;
-	regs->whi_cfg2.osd_csc_vb = 112;
+	regs->whi_cfg2.osd_csc_vr = 128;
+	regs->whi_cfg2.osd_csc_vg = -107;
+	regs->whi_cfg2.osd_csc_vb = -21;
 
-	regs->whi_cfg3.osd_csc_ofst_y = 15;
+	regs->whi_cfg3.osd_csc_ofst_y = 0;
 	regs->whi_cfg3.osd_csc_ofst_u = 128;
 	regs->whi_cfg3.osd_csc_ofst_v = 128;
+
+	regs->whi_cfg4.osd_inv_yg_max = 255;
+	regs->whi_cfg4.osd_inv_yg_min = 0;
+	regs->whi_cfg4.osd_inv_uvrb_max = 255;
+	regs->whi_cfg4.osd_inv_uvrb_min = 0;
+	regs->whi_cfg5.osd_inv_alpha_max = 255;
+	regs->whi_cfg5.osd_inv_alpha_min = 0;
 
 	return MPP_OK;
 }
@@ -295,19 +302,19 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	    stridey : stridey / 2;
 
 	if (regs->reg0274_src_fmt.src_cfmt < VEPU541_FMT_ARGB1555) {
-		regs->reg0275_src_udfy.csc_wgt_r2y = 66;
-		regs->reg0275_src_udfy.csc_wgt_g2y = 129;
-		regs->reg0275_src_udfy.csc_wgt_b2y = 25;
+		regs->reg0275_src_udfy.csc_wgt_r2y = 77;
+		regs->reg0275_src_udfy.csc_wgt_g2y = 150;
+		regs->reg0275_src_udfy.csc_wgt_b2y = 29;
 
-		regs->reg0276_src_udfu.csc_wgt_r2u = -38;
-		regs->reg0276_src_udfu.csc_wgt_g2u = -74;
-		regs->reg0276_src_udfu.csc_wgt_b2u = 112;
+		regs->reg0276_src_udfu.csc_wgt_r2u = -43;
+		regs->reg0276_src_udfu.csc_wgt_g2u = -85;
+		regs->reg0276_src_udfu.csc_wgt_b2u = 128;
 
-		regs->reg0277_src_udfv.csc_wgt_r2v = 112;
-		regs->reg0277_src_udfv.csc_wgt_g2v = -94;
-		regs->reg0277_src_udfv.csc_wgt_b2v = -18;
+		regs->reg0277_src_udfv.csc_wgt_r2v = 128;
+		regs->reg0277_src_udfv.csc_wgt_g2v = -107;
+		regs->reg0277_src_udfv.csc_wgt_b2v = -21;
 
-		regs->reg0278_src_udfo.csc_ofst_y = 16;
+		regs->reg0278_src_udfo.csc_ofst_y = 0;
 		regs->reg0278_src_udfo.csc_ofst_u = 128;
 		regs->reg0278_src_udfo.csc_ofst_v = 128;
 	}
