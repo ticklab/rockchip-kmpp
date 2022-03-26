@@ -273,7 +273,7 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	regs->reg0274_src_fmt.chroma_ds_mode = 0;
 	regs->reg0274_src_fmt.out_fmt = 1;
 
-	regs->reg0279_src_proc.src_mirr = 0;	//prep_cfg->mirroring > 0;
+	regs->reg0279_src_proc.src_mirr = syn->mirroring > 0;
 	regs->reg0279_src_proc.src_rot = syn->rotation;
 
 	if (syn->hor_stride) {

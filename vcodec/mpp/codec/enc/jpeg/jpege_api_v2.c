@@ -122,6 +122,9 @@ static MPP_RET jpege_proc_prep_cfg(MppEncPrepCfg *dst, MppEncPrepCfg *src)
         if (change & MPP_ENC_PREP_CFG_CHANGE_ROTATION)
             dst->rotation = src->rotation;
 
+	if (change & MPP_ENC_PREP_CFG_CHANGE_MIRRORING)
+		dst->mirroring = src->mirroring;
+
         /* jpeg encoder do not have mirring / denoise feature */
 
         if ((change & MPP_ENC_PREP_CFG_CHANGE_INPUT) ||
@@ -471,6 +474,7 @@ static MPP_RET jpege_proc_hal(void *ctx, HalEncTask *task)
     syntax->format      = prep->format;
     syntax->color       = prep->color;
     syntax->rotation    = prep->rotation;
+    syntax->mirroring   = prep->mirroring;
     syntax->offset_x    = mpp_frame_get_offset_x(frame);
     syntax->offset_y    = mpp_frame_get_offset_y(frame);
     syntax->quality     = codec->jpeg.quant;
