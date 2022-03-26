@@ -10,6 +10,8 @@
 
 #define MODULE_TAG "rc"
 
+#include <linux/module.h>
+
 #include "mpp_mem.h"
 #include "mpp_maths.h"
 
@@ -42,6 +44,8 @@ typedef struct MppRcImpl_t {
 } MppRcImpl;
 
 RK_U32 rc_debug = 0;
+module_param(rc_debug, uint, 0644);
+MODULE_PARM_DESC(rc_debug, "bits rc debug information");
 
 const static char default_rc_api[] = "default";
 
