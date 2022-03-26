@@ -12,6 +12,7 @@
 
 #include <linux/string.h>
 #include <linux/seq_file.h>
+#include <linux/uaccess.h>
 
 #include "mpp_err.h"
 #include "mpp_log.h"
@@ -277,29 +278,21 @@ static MPP_RET jpege_proc_jpeg_cfg(MppEncJpegCfg *dst, MppEncJpegCfg *src, MppEn
                 if (NULL == dst->qtable_u)
                     dst->qtable_u = mpp_malloc(RK_U8, QUANTIZE_TABLE_SIZE);
 
-                if (NULL == dst->qtable_y || NULL == dst->qtable_u) {
+                if (NULL == dst->qtable_v)
+                    dst->qtable_v = mpp_malloc(RK_U8, QUANTIZE_TABLE_SIZE);
+
+                if (NULL == dst->qtable_y || NULL == dst->qtable_u ||  dst->qtable_v == NULL) {
                     mpp_err_f("qtable is null, malloc err\n");
                     return MPP_ERR_MALLOC;
                 }
-                /* check table value */
-                if (src->qtable_u != src->qtable_v) {
-                    RK_U32 i;
 
-                    for (i = 0; i < QUANTIZE_TABLE_SIZE; i++) {
-                        if (src->qtable_u[i] != src->qtable_v[i]) {
-                            RK_U32 j;
-
-                            jpege_dbg_input("qtable_u and qtable_v are different, use qtable_u\n");
-                            for (j = 0; j < QUANTIZE_TABLE_SIZE; j++)
-                                jpege_dbg_input("qtable_u[%d] %d qtable_v[%d] %d\n",
-                                                j, src->qtable_u[j], j, src->qtable_v[j]);
-                            break;
-                        }
-                    }
-                }
                 /* default use one chroma qtable, select qtable_u */
-                memcpy(dst->qtable_y, src->qtable_y, QUANTIZE_TABLE_SIZE);
-                memcpy(dst->qtable_u, src->qtable_u, QUANTIZE_TABLE_SIZE);
+                if (copy_from_user(dst->qtable_y, src->qtable_y, QUANTIZE_TABLE_SIZE))
+                    return -EFAULT;
+                if (copy_from_user (dst->qtable_u, src->qtable_u, QUANTIZE_TABLE_SIZE))
+                    return -EFAULT;
+                if (copy_from_user (dst->qtable_v, src->qtable_v, QUANTIZE_TABLE_SIZE))
+                    return -EFAULT;
 
                 if (rc->rc_mode != MPP_ENC_RC_MODE_FIXQP) {
                   //  mpp_log("setup qtable will change mode %s fixqp",
@@ -321,8 +314,8 @@ static MPP_RET jpege_proc_jpeg_cfg(MppEncJpegCfg *dst, MppEncJpegCfg *src, MppEn
                            change, dst->quant, dst->q_factor);
             dst->change = src->change;
         }
-
         dst->change = src->change;
+        src->change = 0;
     }
 
     return ret;
