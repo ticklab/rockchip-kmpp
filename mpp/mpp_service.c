@@ -91,10 +91,7 @@ static int mpp_add_driver(struct mpp_service *srv,
 		     &srv->grf_infos[type],
 		     grf_name);
 
-	if (type == MPP_DRIVER_AV1DEC)
-		ret = av1dec_driver_register(driver);
-	else
-		ret = platform_driver_register(driver);
+	ret = platform_driver_register(driver);
 	if (ret)
 		return ret;
 
