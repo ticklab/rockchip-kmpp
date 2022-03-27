@@ -103,6 +103,8 @@ typedef struct MppEncImpl_t {
 	MppEncRefs refs;
 	MppEncRefFrmUsrCfg frm_cfg;
 
+	/* two-pass deflicker parameters */
+	EncRcTaskInfo       rc_info_prev;
 	/* Encoder configure set */
 	MppEncCfgSet cfg;
 	GopMode  gop_mode;

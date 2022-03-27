@@ -82,6 +82,9 @@ typedef struct H265eV540cHalContext_t {
 	MppBufferGroup tile_grp;
 	MppBuffer hw_tile_buf[2];
 
+	/* two-pass deflicker */
+	MppBuffer  buf_pass1;
+
 	RK_U32 enc_mode;
 	RK_U32 frame_size;
 	RK_S32 max_buf_cnt;
@@ -846,6 +849,11 @@ MPP_RET hal_h265e_v540c_deinit(void *hal)
 		ctx->recn_ref_buf = NULL;
 	}
 
+	if (ctx->buf_pass1) {
+		mpp_buffer_put(ctx->buf_pass1);
+		ctx->buf_pass1 = NULL;
+	}
+
 	if (ctx->dev) {
 		mpp_dev_deinit(ctx->dev);
 		ctx->dev = NULL;
@@ -1500,6 +1508,47 @@ static void vepu540c_h265_set_dvbm(H265eV540cRegSet *regs)
 	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 1;
 	vepu540c_set_dvbm(&regs->reg_base.online_addr);
 }
+static MPP_RET vepu540c_h265e_save_pass1_patch(H265eV540cRegSet *regs, H265eV540cHalContext *ctx)
+{
+	hevc_vepu540c_base *reg_base = &regs->reg_base;
+	RK_S32 width_align = MPP_ALIGN(ctx->cfg->prep.width, 32);
+	RK_S32 height_align = MPP_ALIGN(ctx->cfg->prep.height, 32);
+
+	if (NULL == ctx->buf_pass1) {
+	mpp_buffer_get(NULL, &ctx->buf_pass1, width_align * height_align * 3 / 2);
+	if (!ctx->buf_pass1) {
+		mpp_err("buf_pass1 malloc fail, debreath invaild");
+		return MPP_NOK;
+	}
+	}
+
+	reg_base->reg0192_enc_pic.cur_frm_ref = 1;
+	reg_base->reg0163_rfpw_h_addr = 0;
+	reg_base->reg0164_rfpw_b_addr = mpp_dev_get_iova_address(ctx->dev, ctx->buf_pass1, 163);
+	reg_base->reg0192_enc_pic.rec_fbc_dis = 1;
+
+	return MPP_OK;
+}
+
+static MPP_RET vepu540c_h265e_use_pass1_patch(H265eV540cRegSet *regs, H265eV540cHalContext *ctx,
+                                             H265eSyntax_new *syn)
+{
+	hevc_vepu540c_control_cfg *reg_ctl = &regs->reg_ctl;
+	hevc_vepu540c_base *reg_base = &regs->reg_base;
+	RK_S32 stridey = MPP_ALIGN(syn->pp.pic_width, 32);
+	VepuFmtCfg *fmt = (VepuFmtCfg *)ctx->input_fmt;
+
+	reg_ctl->reg0012_dtrns_map.src_bus_edin = fmt->src_endian;
+	reg_base->reg0198_src_fmt.src_cfmt = VEPU541_FMT_YUV420SP;
+	reg_base->reg0198_src_fmt.src_rcne = 1;
+	reg_base->reg0198_src_fmt.out_fmt = 1;
+	reg_base->reg0205_src_strd0.src_strd0 = stridey;
+	reg_base->reg0206_src_strd1.src_strd1 = 3 * stridey;
+	reg_base->reg0160_adr_src0 = mpp_dev_get_iova_address(ctx->dev, ctx->buf_pass1, 160);
+	reg_base->reg0161_adr_src1 = reg_base->reg0160_adr_src0 + 2 * stridey;
+	reg_base->reg0162_adr_src2 = 0;
+	return MPP_OK;
+}
 
 static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 {
@@ -1514,6 +1563,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	hevc_vepu540c_base *reg_base = &regs->reg_base;
 	hevc_vepu540c_rc_roi *reg_rc_roi = &regs->reg_rc_roi;
 	MppEncPrepCfg *prep = &ctx->cfg->prep;
+	EncFrmStatus *frm = &task->rc_task->frm;
 
 	hal_h265e_enter();
 	pic_width_align8 = (syn->pp.pic_width + 7) & (~7);
@@ -1639,6 +1689,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	vepu540c_h265_set_rc_regs(ctx, regs, task);
 	vepu540c_h265_set_slice_regs(syn, reg_base);
 	vepu540c_h265_set_ref_regs(syn, reg_base);
+
 	if (ctx->online)
 		vepu540c_h265_set_dvbm(regs);
 	if (ctx->osd_cfg.osd_data3)
@@ -1651,6 +1702,11 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	/*paramet cfg */
 	vepu540c_h265_global_cfg_set(ctx, regs);
 
+	/* two pass register patch */
+	if (frm->save_pass1)
+		vepu540c_h265e_save_pass1_patch(regs, ctx);
+	if (frm->use_pass1)
+		vepu540c_h265e_use_pass1_patch(regs, ctx, syn);
 	ctx->frame_num++;
 
 	hal_h265e_leave();

@@ -65,7 +65,8 @@ typedef struct HalH264eVepu540cCtx_t {
 	/* external line buffer over 4K */
 	RK_S32 ext_line_buf_size;
 
-	MppBuffer p_extra_buf;
+	/* two-pass deflicker */
+	MppBuffer  buf_pass1;
 
 	/* syntax for input from enc_impl */
 	RK_U32 updated;
@@ -136,10 +137,9 @@ static MPP_RET hal_h264e_vepu540c_deinit(void *hal)
 		hal_bufs_deinit(p->hw_recn);
 		p->hw_recn = NULL;
 	}
-
-	if (p->p_extra_buf) {
-		mpp_buffer_put(p->p_extra_buf);
-		p->p_extra_buf = NULL;
+	if (p->buf_pass1) {
+		mpp_buffer_put(p->buf_pass1);
+		p->buf_pass1 = NULL;
 	}
 
 	if (p->recn_ref_buf) {
@@ -682,7 +682,7 @@ static void setup_vepu540c_normal(HalVepu540cRegSet *regs)
 	/* reg006 INT_CLR is not set */
 	/* reg007 INT_STA is read only */
 	/* reg008 ~ reg0011 gap */
-	regs->reg_ctl.enc_wdg.vs_load_thd = 0x5ffff;
+	regs->reg_ctl.enc_wdg.vs_load_thd = 0xffff;
 	regs->reg_ctl.enc_wdg.rfp_load_thd = 0; //xff;
 
 	/* reg015 DTRNS_MAP */
@@ -1225,6 +1225,61 @@ static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 	hal_h264e_dbg_func("leave\n");
 }
 
+static MPP_RET vepu540c_h264e_save_pass1_patch(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx)
+{
+	RK_S32 width_align = MPP_ALIGN(ctx->cfg->prep.width, 16);
+	RK_S32 height_align = MPP_ALIGN(ctx->cfg->prep.height, 16);
+
+	if (NULL == ctx->buf_pass1) {
+		mpp_buffer_get(NULL, &ctx->buf_pass1, width_align * height_align * 3 / 2);
+		if (!ctx->buf_pass1) {
+			mpp_err("buf_pass1 maSlloc fail, debreath invaild");
+			return MPP_NOK;
+		}
+	}
+
+	regs->reg_base.enc_pic.cur_frm_ref = 1;
+	regs->reg_base.rfpw_h_addr = 0;
+	regs->reg_base.rfpw_b_addr = mpp_dev_get_iova_address(ctx->dev, ctx->buf_pass1, 163);
+	regs->reg_base.enc_pic.rec_fbc_dis = 1;
+
+    return MPP_OK;
+}
+
+static MPP_RET vepu540c_h264e_use_pass1_patch(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx)
+{
+	MppEncPrepCfg *prep = &ctx->cfg->prep;
+	RK_S32 y_stride;
+	RK_S32 c_stride;
+
+	hal_h264e_dbg_func("enter\n");
+
+	regs->reg_base.src_fmt.src_cfmt   = VEPU541_FMT_YUV420SP;
+	regs->reg_base.src_fmt.alpha_swap = 0;
+	regs->reg_base.src_fmt.rbuv_swap  = 0;
+	regs->reg_base.src_fmt.out_fmt    = 1;
+	regs->reg_base.src_fmt.src_rcne = 1;
+
+	y_stride = MPP_ALIGN(prep->width, 16);
+	c_stride = y_stride;
+
+	regs->reg_base.src_strd0.src_strd0  = y_stride;
+	regs->reg_base.src_strd1.src_strd1  = 3 * c_stride;
+
+	regs->reg_base.src_proc.src_mirr   = 0;
+	regs->reg_base.src_proc.src_rot    = 0;
+
+	regs->reg_base.pic_ofst.pic_ofst_y = 0;
+	regs->reg_base.pic_ofst.pic_ofst_x = 0;
+
+
+	regs->reg_base.adr_src0   = mpp_dev_get_iova_address(ctx->dev, ctx->buf_pass1, 160);
+	regs->reg_base.adr_src1   = regs->reg_base.adr_src0 + 2 * y_stride;
+	regs->reg_base.adr_src2   = 0;
+
+	hal_h264e_dbg_func("leave\n");
+    return MPP_OK;
+}
 static void setup_vepu540c_scl_cfg(vepu540c_scl_cfg *regs)
 {
 	static RK_U32 vepu540c_h264_scl_tab[] = {
@@ -2025,6 +2080,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	HalH264eVepu540cCtx *ctx = (HalH264eVepu540cCtx *) hal;
 	HalVepu540cRegSet *regs = ctx->regs_set;
 	MppEncCfgSet *cfg = ctx->cfg;
+	EncFrmStatus *frm = &task->rc_task->frm;
 	H264eSps *sps = ctx->sps;
 	H264ePps *pps = ctx->pps;
 	H264eSlice *slice = ctx->slice;
@@ -2073,6 +2129,12 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	if (ctx->online)
 		setup_vepu540c_dvbm(regs, ctx);
 	//  mpp_env_get_u32("dump_l1_reg", &dump_l1_reg, 1);
+
+	if (frm->save_pass1)
+		vepu540c_h264e_save_pass1_patch(regs, ctx);
+
+	if (frm->use_pass1)
+		vepu540c_h264e_use_pass1_patch(regs, ctx);
 
 	if (dump_l1_reg) {
 		RK_U32 *p = (RK_U32 *) & regs->reg_base;
