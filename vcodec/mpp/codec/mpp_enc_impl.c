@@ -1868,13 +1868,14 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 	seq_puts(
 		seq,
 		"\n--------venc chn attr 2---------------------------------------------------------------------------\n");
-	seq_printf(seq, "%8s%8s%8s%8s%12s%12s%12s\n", "ID", "VeStr", "SrcFr",
-		   "TarFr", "Timeref", "PixFmt", "RealFps*10");
-	seq_printf(seq, "%8d%8s%8d%8d%12x%12s%12u\n", chl_id, "y",
+	seq_printf(seq, "%8s%8s%8s%8s%12s%12s%12s%12s%10s\n", "ID", "VeStr", "SrcFr",
+		   "TarFr", "Timeref", "PixFmt", "RealFps*10", "rotation", "mirror");
+	seq_printf(seq, "%8d%8s%8d%8d%12x%12s%12u%12s%10s\n", chl_id, "y",
 		   cfg->rc.fps_in_num / cfg->rc.fps_in_denorm,
 		   cfg->rc.fps_out_num / cfg->rc.fps_out_denorm,
 		   (RK_U32)enc->init_time, strof_pixel_fmt(cfg->prep.format),
-		   enc->real_fps);
+		   enc->real_fps, strof_rotation(cfg->prep.rotation),
+		   strof_bool(cfg->prep.mirroring));
 
 	seq_puts(
 		seq,

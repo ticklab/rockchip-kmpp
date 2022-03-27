@@ -13,6 +13,7 @@
 #include "rk_type.h"
 #include "rk_venc_rc.h"
 #include "mpp_frame.h"
+#include "rk_venc_cmd.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -27,7 +28,7 @@ const char *strof_pixel_fmt(MppFrameFormat fmt);
 const char *strof_bool(RK_U32 enable);
 const char *strof_drop(RK_U32 mode);
 const char *strof_suprmode(RK_U32 mode);
-
+const char *strof_rotation(MppEncRotationCfg rotation);
 
 #ifdef  __cplusplus
 }
