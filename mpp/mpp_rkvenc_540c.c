@@ -44,6 +44,7 @@
 #define RV1106_FPGA_TEST 0
 
 #define RKVENC_DVBM_DISCONNECT	(BIT(15))
+#define REC_FBC_DIS_CLASS_OFFSET	(36)
 
 #define to_rkvenc_info(info)		\
 		container_of(info, struct rkvenc_hw_info, hw)
@@ -629,7 +630,6 @@ static int rkvenc_extract_task_msg(struct mpp_session *session,
 	return 0;
 
 fail:
-	rkvenc_free_class_msg(task);
 
 	mpp_debug_enter();
 	return ret;
@@ -673,11 +673,19 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 			       struct mpp_task_msgs *msgs)
 {
 	int ret;
-	struct rkvenc_task *task = (struct rkvenc_task *) session->task;
+	struct rkvenc_task *task = NULL;
 	struct mpp_task *mpp_task;
 	struct mpp_dev *mpp = session->mpp;
-
+    u32 i = 0;
 	mpp_debug_enter();
+
+
+    for (i = 0; i < MAX_TASK_CNT; i++){
+        task = (struct rkvenc_task *)session->task[i];
+        if (!task->mpp_task.state){
+            break;
+        }
+    }
 
 	if (!task)
 		return NULL;
@@ -686,6 +694,7 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 	mpp_task = &task->mpp_task;
 	mpp_task_init(session, mpp_task);
 	mpp_task->hw_info = mpp->var->hw_info;
+  	mpp_task->clbk_en = 1;
 	task->hw_info = to_rkvenc_info(mpp_task->hw_info);
 	/* extract reqs for current task */
 	ret = rkvenc_extract_task_msg(session, task, msgs, session->k_space);
@@ -725,6 +734,13 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 			}
 		}
 	}
+    /* check rec fbc is disable */
+	{
+		u32 val = task->reg[RKVENC_CLASS_PIC].data[REC_FBC_DIS_CLASS_OFFSET];
+		if (val & 0x80000000) {
+			mpp_task->clbk_en = 0;
+		}
+	}
 
 	if (session->k_space) {
 		u32 i;
@@ -748,7 +764,6 @@ fail:
 	mpp_task_dump_reg(mpp, mpp_task);
 	mpp_task_finalize(session, mpp_task);
 	/* free class register buffer */
-	rkvenc_free_class_msg(task);
 free_task:
 	kfree(task);
 
@@ -1557,11 +1572,15 @@ static int rkvenc_control(struct mpp_session *session, struct mpp_request *req)
 
 static int rkvenc_free_session(struct mpp_session *session)
 {
-	if (session && session->task) {
-		struct rkvenc_task *task = (struct rkvenc_task *)session->task;
-
-		rkvenc_free_class_msg(task);
-		kfree(task);
+	if (session) {
+		u32 i = 0;
+		for (i = 0 ; i < MAX_TASK_CNT; i++){
+			struct rkvenc_task *task = (struct rkvenc_task *)session->task[i];
+			if (task) {
+				rkvenc_free_class_msg(task);
+				kfree(task);
+			}
+		}
 	}
 	if (session) {
 		struct rkvenc2_session_priv *priv = (struct rkvenc2_session_priv *)session->priv;
@@ -1588,6 +1607,7 @@ static int rkvenc_init_session(struct mpp_session *session)
 	struct mpp_dev *mpp = NULL;
 	struct rkvenc_task *task = NULL;
 	int j = 0, ret = 0;
+    u32 i = 0;
 
 	if (!session) {
 		mpp_err("session is null\n");
@@ -1602,21 +1622,23 @@ static int rkvenc_init_session(struct mpp_session *session)
 	init_rwsem(&priv->rw_sem);
 	session->priv = priv;
 
-	task = kzalloc(sizeof(*task), GFP_KERNEL);
-	if (!task)
-		goto fail;
+    for(i = 0; i < MAX_TASK_CNT; i++) {
+    	task = kzalloc(sizeof(*task), GFP_KERNEL);
+    	if (!task)
+    		goto fail;
 
-	task->hw_info = to_rkvenc_info(mpp->var->hw_info);
-	{
-		struct rkvenc_hw_info *hw = task->hw_info;
+    	task->hw_info = to_rkvenc_info(mpp->var->hw_info);
+    	{
+    		struct rkvenc_hw_info *hw = task->hw_info;
 
-		for (j = 0; j < hw->reg_class; j++) {
-			ret = rkvenc_alloc_class_msg(task, j);
-			if (ret)
-				goto fail;
-		}
-	}
-	session->task = task;
+    		for (j = 0; j < hw->reg_class; j++) {
+    			ret = rkvenc_alloc_class_msg(task, j);
+    			if (ret)
+    				goto fail;
+    		}
+    	}
+    	session->task[i] = task;
+    }
 	return 0;
 
 fail:
@@ -1626,6 +1648,13 @@ fail:
 		rkvenc_free_class_msg(task);
 		kfree(task);
 	}
+    for (i = 0 ; i < MAX_TASK_CNT; i++){
+		struct rkvenc_task *task = (struct rkvenc_task *)session->task[i];
+        if (task) {
+    		rkvenc_free_class_msg(task);
+    		kfree(task);
+        }
+    }
 	return -ENOMEM;
 }
 

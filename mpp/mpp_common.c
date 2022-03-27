@@ -522,6 +522,8 @@ static void mpp_task_timeout_work(struct work_struct *work_s)
 					     struct mpp_task,
 					     timeout_work);
 
+	u32 clbk_en = task->clbk_en;
+
 	if (test_and_set_bit(TASK_STATE_HANDLE, &task->state)) {
 		mpp_err("task has been handled\n");
 		return;
@@ -552,7 +554,7 @@ static void mpp_task_timeout_work(struct work_struct *work_s)
 
 	/* remove task from taskqueue running list */
 	mpp_taskqueue_pop_running(mpp->queue, task);
-	if (session->callback)
+	if (session->callback && clbk_en)
 		session->callback(session->chn_id);
 
 }
@@ -788,7 +790,6 @@ again:
 	/* Push a pending task to running queue */
 	if (task) {
 		struct mpp_dev *task_mpp = mpp_get_task_used_device(task, task->session);
-
 		mpp_taskqueue_pending_to_run(queue, task);
 		set_bit(TASK_STATE_RUNNING, &task->state);
 		if (mpp_task_run(task_mpp, task))
@@ -1853,7 +1854,7 @@ int mpp_get_dma_attach_mem_info(struct mpp_session *session,
 		}
 		mem_region = mpp_task_get_mem_region(task, iova_address);
 		if (IS_ERR(mem_region)) {
-			mpp_err("reg[%3d]: 0x%08x fd %d failed\n",
+			mpp_err("reg[%3d]: 0x%08x iova %d failed\n",
 				tbl[i], reg[tbl[i]], iova_address);
 			return PTR_ERR(mem_region);
 		}
@@ -1980,7 +1981,7 @@ int mpp_task_finish(struct mpp_session *session,
 		    struct mpp_task *task)
 {
 	struct mpp_dev *mpp = mpp_get_task_used_device(task, session);
-
+	u32 clbk_en = task->clbk_en;
 	if (mpp->dev_ops->finish)
 		mpp->dev_ops->finish(mpp, task);
 
@@ -1995,7 +1996,7 @@ int mpp_task_finish(struct mpp_session *session,
 	wake_up(&task->wait);
 	mpp_taskqueue_pop_running(mpp->queue, task);
 
-	if (session->callback)
+	if (session->callback && clbk_en)
 		session->callback(session->chn_id);
 
 	return 0;
@@ -2018,7 +2019,7 @@ int mpp_task_finalize(struct mpp_session *session,
 		}
 		list_del_init(&mem_region->reg_link);
 	}
-
+	task->state = 0;
 	return 0;
 }
 
@@ -2668,21 +2669,21 @@ static int mpp_chnl_add_req(struct mpp_session *session,  void *reqs)
 		if (mpp_msg_is_last(req)) {
 			session->msg_flags = task_msgs.flags;
 			if (task_msgs.set_cnt > 0) {
-                struct mpp_dev *mpp = NULL;
-                struct mpp_task *task = NULL;
-                struct mpp_taskqueue *queue = NULL;
-				ret = mpp_process_task(session, &task_msgs);
-				if (ret)
-					return ret;
+				struct mpp_dev *mpp = NULL;
+				struct mpp_task *task = NULL;
+				struct mpp_taskqueue *queue = NULL;
+					ret = mpp_process_task(session, &task_msgs);
+					if (ret)
+						return ret;
 
-                mpp = task_msgs.mpp;
-                task = task_msgs.task;
-                queue = task_msgs.queue;
+				mpp = task_msgs.mpp;
+				task = task_msgs.task;
+				queue = task_msgs.queue;
 
-                atomic_inc(&mpp->task_count);
-                set_bit(TASK_STATE_PENDING, &task->state);
-                list_add_tail(&task->queue_link, &queue->pending_list);
-                 mpp_taskqueue_trigger_work(mpp);
+				atomic_inc(&mpp->task_count);
+				set_bit(TASK_STATE_PENDING, &task->state);
+				list_add_tail(&task->queue_link, &queue->pending_list);
+				mpp_taskqueue_trigger_work(mpp);
 			}
 			if (task_msgs.poll_cnt > 0) {
 				ret = mpp_wait_result(session, &task_msgs);

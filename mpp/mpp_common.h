@@ -37,6 +37,8 @@
 #define MPP_FLAGS_SCL_FD_NO_TRANS	(0x00000008)
 #define MPP_FLAGS_REG_NO_OFFSET		(0x00000010)
 #define MPP_FLAGS_SECURE_MODE		(0x00010000)
+#define MAX_TASK_CNT		(2)
+
 
 /* grf mask for get value */
 #define MPP_GRF_VAL_MASK		(0xFFFF)
@@ -387,7 +389,7 @@ struct mpp_session {
 	/* private data */
 	void *priv;
 	/*task */
-	void *task;
+	void *task[MAX_TASK_CNT];
 	u32 chn_id;
 	u32 k_space;
 	/*
@@ -466,6 +468,7 @@ struct mpp_task {
 
 	u32 dvbm_en;
 	u32 task_no;
+	u32 clbk_en;
 };
 
 struct mpp_taskqueue {
