@@ -2105,6 +2105,10 @@ static int rkvenc_probe_default(struct platform_device *pdev)
 		match = of_match_node(mpp_rkvenc_dt_match, pdev->dev.of_node);
 		if (match)
 			mpp->var = (struct mpp_dev_var *)match->data;
+		else {
+			dev_err(dev, "dt match failed!\n");
+			return -ENODEV;
+		}
 	}
 
 	ret = mpp_dev_probe(mpp, pdev);
