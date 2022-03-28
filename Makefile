@@ -22,7 +22,7 @@ endif
 
 VCODEC_GIT_REVISION := \
 	$(shell git log -1 --no-decorate --date=short \
-	--pretty=format:"%h author: %<|(30)%an %cd %s" -- $(src) || \
+	--pretty=format:"%h author: %<|(30)%an %cd %s" -- . || \
 	echo -n "unknown mpp version for missing VCS info")
 
 VCODEC_REVISION_0 := $(subst \,\\\,$(VCODEC_GIT_REVISION))
@@ -62,7 +62,7 @@ linux_clean:
 	@rm -f *.symvers *.order
 	@rm -rf .*.ko.cmd .*.o.cmd .tmp_versions
 	@rm -rf $(PREB_KO)
-	@$(RM) $(OBJS) 
+	@$(RM) $(OBJS)
 	@$(RM) $(CMDS)
 
 linux_release:
