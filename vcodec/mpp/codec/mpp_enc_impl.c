@@ -1037,6 +1037,10 @@ MPP_RET mpp_enc_proc_rc_update(MppEncImpl *enc)
 
 		memset(&usr_cfg, 0, sizeof(usr_cfg));
 		set_rc_cfg(&usr_cfg, cfg);
+
+		if (enc->online || enc->ref_buf_shared)
+			usr_cfg.shared_buf_en = 1;
+
 		ret = rc_update_usr_cfg(enc->rc_ctx, &usr_cfg);
 		rc_cfg->change = 0;
 		prep_cfg->change = 0;

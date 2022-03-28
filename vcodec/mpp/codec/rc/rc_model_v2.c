@@ -1241,6 +1241,9 @@ MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 		return (ins_bps > bit_thr) ? MPP_NOK : MPP_OK;
 	}
 
+	if (usr_cfg->shared_buf_en)
+		return MPP_OK;
+
 	switch (frame_type) {
 	case INTRA_FRAME:
 		bit_thr = 3 * cfg->bit_target / 2;

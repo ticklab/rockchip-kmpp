@@ -173,6 +173,7 @@ typedef struct RcCfg_s {
 	RcSuperframeCfg super_cfg;
 	RcDebreathCfg   debreath_cfg;
 	RcHierQPCfg     hier_qp_cfg;
+	RK_U32          shared_buf_en;
 } RcCfg;
 
 /*
