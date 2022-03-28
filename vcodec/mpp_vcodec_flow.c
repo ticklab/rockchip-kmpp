@@ -132,12 +132,13 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 
 				comb_chan = mpp_vcodec_get_chan_entry(
 					frm_info.jpeg_chan_id, MPP_CTX_ENC);
-				atomic_inc(&comb_chan->runing);
 
+				
 				if (comb_chan->state != CHAN_STATE_RUN) {
 					comb_chan = NULL;
 				}
 				if (comb_chan && comb_chan->handle) {
+					atomic_inc(&comb_chan->runing);
 					mpp_frame_init(&comb_frame);
 					mpp_frame_copy(comb_frame, frame);
 					mpp_frame_set_buffer(comb_frame,
@@ -155,30 +156,30 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		cfg_start = mpp_time();
 		atomic_inc(&chan_entry->runing);
 		ret = mpp_enc_cfg_reg((MppEnc)chan_entry->handle, frame);
-		if (MPP_OK != ret) {
-			atomic_dec(&chan_entry->runing);
-			wake_up(&chan_entry->stop_wait);
-			if (comb_frame) {
-				mpp_frame_deinit(&comb_frame);
-			}
-		} else {
+		if (MPP_OK == ret) {
 			if (comb_chan && comb_chan->handle) {
+				atomic_inc(&chan_entry->cfg.comb_runing);
 				ret = mpp_enc_cfg_reg((MppEnc)comb_chan->handle,
 						      comb_frame);
 				if (MPP_OK == ret) {
-					atomic_inc(
-						&chan_entry->cfg.comb_runing);
 					ret = mpp_enc_hw_start(
 						(MppEnc)chan_entry->handle,
 						(MppEnc)comb_chan->handle);
+					if (MPP_OK != ret){
+						mpp_err("combo start fail \n");
+						atomic_dec(&chan_entry->cfg.comb_runing);
+						atomic_dec(&comb_chan->runing);
+						wake_up(&comb_chan->stop_wait);
+					}
 				} else {
+					mpp_err("combo cfg fail \n");
 					atomic_dec(&comb_chan->runing);
+					atomic_dec(&chan_entry->cfg.comb_runing);
 					wake_up(&comb_chan->stop_wait);
 					ret = mpp_enc_hw_start(
 						    (MppEnc)chan_entry->handle,
 						    NULL);
 				}
-
 			} else {
 				ret = mpp_enc_hw_start((MppEnc)chan_entry->handle,
 						 NULL);
@@ -186,10 +187,10 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		}
 
 		if (MPP_OK != ret) {
+			mpp_err("chn cfg reg fail \n");
 			atomic_dec(&chan_entry->runing);
 			wake_up(&chan_entry->stop_wait);
 			if (comb_frame) {
-				atomic_dec(&comb_chan->runing);
 				mpp_frame_deinit(&comb_frame);
 			}
 		}
