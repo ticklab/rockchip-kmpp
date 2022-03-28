@@ -1560,7 +1560,9 @@ static int rkvenc_free_session(struct mpp_session *session)
 	if (session) {
 		struct rkvenc_dev *enc = to_rkvenc_dev(session->mpp);
 
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 		rk_dvbm_unlink(enc->port);
+#endif
 		enc->dvbm_link = 0;
 	}
 	if (session && session->priv) {
