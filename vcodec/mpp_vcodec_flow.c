@@ -115,6 +115,9 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 
 		if (NULL != buf) {
 			MppBufferInfo info;
+			chan_entry->gap_time = (RK_S32)(mpp_time() - chan_entry->last_yuv_time);
+			chan_entry->last_yuv_time = mpp_time();
+
 			if (enc_chan_get_buf_info(buf, &frm_info, &frame)) {
 				mpi_buf_unref(buf);
 				return MPP_OK;
@@ -125,6 +128,8 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 			mpp_vcodec_jpegcomb("attach jpeg id %d \n",
 					    frm_info.jpeg_chan_id);
 			if (frm_info.jpeg_chan_id > 0) {
+				chan_entry->combo_gap_time = (RK_S32)(mpp_time() - chan_entry->last_jeg_combo_start);
+				chan_entry->last_jeg_combo_start = mpp_time();
 				mpp_vcodec_jpegcomb("attach jpeg id %d",
 						    frm_info.jpeg_chan_id);
 				chan_entry->binder_chan_id =
@@ -132,8 +137,6 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 
 				comb_chan = mpp_vcodec_get_chan_entry(
 					frm_info.jpeg_chan_id, MPP_CTX_ENC);
-
-				
 				if (comb_chan->state != CHAN_STATE_RUN) {
 					comb_chan = NULL;
 				}
@@ -239,6 +242,7 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 		comb_entry = mpp_vcodec_get_chan_entry(
 			chan_entry->binder_chan_id, MPP_CTX_ENC);
 		if (comb_entry && comb_entry->handle) {
+			chan_entry->last_jeg_combo_end = mpp_time();
 			ret = mpp_enc_int_process((MppEnc)chan_entry->handle,
 						  comb_entry->handle, &packet,
 						  &jpeg_packet);

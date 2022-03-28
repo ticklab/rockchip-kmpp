@@ -1882,10 +1882,16 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 		"\n--------ring buf status---------------------------------------------------------------------------\n");
 
 	seq_printf(seq, "%8s%8s%8s%8s%10s%10s%10s%10s\n", "ID", "w_pos", "r_pos",
-			"usd_len", "total_len", "min_size", "hw_run", "run_pos");
+			"usd_len", "total_len", "min_size", "l_w_pos", "l_r_pos");
 	seq_printf(seq, "%8d%8d%8d%8d%10d%10d%10d%10d\n", chl_id, enc->ring_pool->w_pos,
 			enc->ring_pool->r_pos, enc->ring_pool->use_len, enc->ring_pool->len
-			,enc->ring_pool->min_buf_size, enc->hw_run, enc->enc_status);
+			,enc->ring_pool->min_buf_size, enc->ring_pool->l_w_pos, enc->ring_pool->l_r_pos);
+
+	seq_puts(
+		seq,
+		"\n--------hw status---------------------------------------------------------------------------------\n");
+	seq_printf(seq, "%8s%8s%12s\n", "ID", "hw_run", "enc_status");
+	seq_printf(seq, "%8d%8d%12d\n", chl_id,enc->hw_run, enc->enc_status);
 
 	enc_impl_proc_debug(seq_file, enc->impl, chl_id);
 	rc_proc_show(seq_file, enc->rc_ctx, chl_id);

@@ -168,7 +168,7 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 				if (copy_from_user(param, req->data, req->size)) {
 					ret = -EFAULT;
 					goto fail;
-				}	
+				}
 			}
 			ret =
 			    mpp_vcodec_chan_control(chan_id, type,
@@ -356,16 +356,18 @@ static int venc_proc_debug(struct seq_file *seq, void *offset)
 	for(i =0; i < MAX_ENC_NUM; i++) {
 		struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(i, type);
 		if(chan_entry->handle){
-            RK_U32 runing = atomic_read(&chan_entry->runing) > 0;
-            RK_U32 comb_run = atomic_read(&chan_entry->cfg.comb_runing) > 0;
-            seq_puts(
-                seq,
-                "\n--------venc chn runing status--------------------------------------------------------------------\n");
+			RK_U32 runing = atomic_read(&chan_entry->runing) > 0;
+			RK_U32 comb_run = atomic_read(&chan_entry->cfg.comb_runing) > 0;
+			seq_puts(
+			seq,
+			"\n--------venc chn runing status--------------------------------------------------------------------\n");
 
-            seq_printf(seq, "%8s%8s%10s%16s%10s\n", "ID", "runing", "combo_run", "cfg_consmue", "strm_cnt");
+			seq_printf(seq, "%8s%8s%10s%10s%10s%10s%10s%14s%15s%15s\n", "ID", "runing", "combo_run", "cfg_gap", "strm_cnt",
+			"strm_out", "gap_time", "cb_gap_time", "last_cb_start", "last_cb_end");
 
-            seq_printf(seq, "%8d%8u%10u%16u%10u\n", i, runing, comb_run, chan_entry->last_cfg_time,
-		atomic_read(&chan_entry->stream_count));
+			seq_printf(seq, "%8d%8u%10u%10u%10u%10u%10u%14u%15llu%15llu\n", i, runing, comb_run, chan_entry->last_cfg_time,
+			atomic_read(&chan_entry->stream_count),atomic_read(&chan_entry->str_out_cnt), chan_entry->gap_time,
+				chan_entry->combo_gap_time, chan_entry->last_jeg_combo_start,  chan_entry->last_jeg_combo_end);
 
 			mpp_enc_proc_debug(seq, chan_entry->handle, i);
 		}

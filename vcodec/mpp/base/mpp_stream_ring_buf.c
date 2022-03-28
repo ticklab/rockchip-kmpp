@@ -42,7 +42,7 @@ MPP_RET ring_buf_init(ring_buf_pool *ctx, MppBuffer buf, RK_U32 max_strm_cnt)
 	ctx->mpi_buf_id = mpp_buffer_get_mpi_buf_id(buf);
 	ctx->init_done = 1;
 	ctx->min_buf_size = MPP_ALIGN(ctx->len / max_strm_cnt, SZ_1K);
-	ring_buf_dbg("ctx->len = %d, max_strm_cnt = %d, ctx->min_buf_size = %d", ctx->len, 
+	ring_buf_dbg("ctx->len = %d, max_strm_cnt = %d, ctx->min_buf_size = %d", ctx->len,
 	    max_strm_cnt, ctx->min_buf_size);
 	return MPP_OK;
 }
@@ -93,7 +93,7 @@ MPP_RET ring_buf_put_use(ring_buf_pool *ctx, ring_buf *buf)
 		use_len = end_pos - r_pos;
 
 	ctx->w_pos = end_pos;
-
+	ctx->l_w_pos = end_pos;
 	if (ctx->use_len < use_len)
 		ctx->use_len = use_len;
 
@@ -128,6 +128,7 @@ MPP_RET ring_buf_put_free(ring_buf_pool *ctx, ring_buf *buf)
 		}
 	}
 	ctx->r_pos = end_pos;
+ 	ctx->l_r_pos = end_pos;
 	ring_buf_dbg(" pool %p free update ctx->r_pos %d ctx->w_pos %d\n", ctx,
 		     ctx->r_pos, ctx->w_pos);
 	return MPP_OK;

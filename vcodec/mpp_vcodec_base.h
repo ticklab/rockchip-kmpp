@@ -58,6 +58,11 @@ struct mpp_chan {
 	atomic_t stream_count;
 	atomic_t str_out_cnt;
 	RK_U32 last_cfg_time;
+	RK_S64 last_yuv_time;
+	RK_S64 last_jeg_combo_start;
+	RK_S64 last_jeg_combo_end;
+	RK_S32 gap_time;
+	RK_S32 combo_gap_time;
 };
 
 struct stream_packet {

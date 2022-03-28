@@ -21,6 +21,7 @@
 #include "rk_venc_cfg.h"
 #include "rk_export_func.h"
 #include "mpp_packet_impl.h"
+#include "mpp_time.h"
 
 int mpp_vcodec_schedule(void)
 {
@@ -81,6 +82,10 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			mpp_vcodec_chan_entry_init(chan_entry, type, coding,
 						   (void *)enc);
 			mpp_vcodec_inc_chan_num(type);
+
+			chan_entry->last_yuv_time = mpp_time();
+			chan_entry->last_jeg_combo_start = mpp_time();
+			chan_entry->last_jeg_combo_end = mpp_time();
 			init_done = 1;
 		} break;
 	default:{
@@ -246,11 +251,11 @@ int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 {
 
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
-    	MppPacketImpl *packet = NULL, *n;
-        struct venc_module *venc =  NULL;
+	MppPacketImpl *packet = NULL, *n;
+    struct venc_module *venc =  NULL;
 
 	mutex_lock(&chan_entry->stream_remove_lock);
-    	list_for_each_entry_safe(packet, n, &chan_entry->stream_remove, list) {
+	list_for_each_entry_safe(packet, n, &chan_entry->stream_remove, list) {
 		if ((uintptr_t)packet == enc_packet->u64packet_addr) {
 			list_del_init(&packet->list);
 			kref_put(&packet->ref, stream_packet_free);
@@ -260,7 +265,8 @@ int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 			break;
 		}
 	}
-    	mutex_unlock(&chan_entry->stream_remove_lock);
+    mutex_unlock(&chan_entry->stream_remove_lock);
+
 
     return 0;
 }
