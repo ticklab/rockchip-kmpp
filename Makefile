@@ -21,7 +21,7 @@ else
 endif
 
 VCODEC_GIT_REVISION := \
-	$(shell git log -1 --no-decorate --date=short \
+	$(shell cd $(TOP) && git log -1 --no-decorate --date=short \
 	--pretty=format:"%h author: %<|(30)%an %cd %s" -- . || \
 	echo -n "unknown mpp version for missing VCS info")
 
