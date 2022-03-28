@@ -34,7 +34,7 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 	MppCtxType type = attr->type;
 	MppCodingType coding = attr->coding;
 	RK_S32	online = attr->online;
-    RK_U32  buf_size = attr->buf_size;
+	RK_U32  buf_size = attr->buf_size;
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	MPP_RET ret = MPP_NOK;
 	RK_U32 init_done = 1;
@@ -252,7 +252,8 @@ int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	MppPacketImpl *packet = NULL, *n;
-    struct venc_module *venc =  NULL;
+	struct venc_module *venc =  NULL;
+	RK_U32 found = 0;
 
 	mutex_lock(&chan_entry->stream_remove_lock);
 	list_for_each_entry_safe(packet, n, &chan_entry->stream_remove, list) {
@@ -262,11 +263,20 @@ int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 			atomic_dec(&chan_entry->str_out_cnt);
 			venc = mpp_vcodec_get_enc_module_entry();
 			vcodec_thread_trigger(venc->thd);
+			found = 1;
 			break;
 		}
 	}
-    mutex_unlock(&chan_entry->stream_remove_lock);
 
+	if (!found){
+		list_for_each_entry_safe(packet, n, &chan_entry->stream_remove, list) {
+			RK_U64 p_address = (uintptr_t )packet;
+			mpp_err("release packet fail %lld \n", p_address);	
+		}
+		mpp_assert(found);
+		mpp_err("release packet fail %lld \n", enc_packet->u64packet_addr);
+	}
+	mutex_unlock(&chan_entry->stream_remove_lock);
 
     return 0;
 }
