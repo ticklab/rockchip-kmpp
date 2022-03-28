@@ -41,7 +41,6 @@
 #define RKVENC_DRIVER_NAME			"mpp_rkvenc_540c"
 
 #define	RKVENC_SESSION_MAX_BUFFERS		40
-#define RKVENC_MAX_CORE_NUM			4
 #define RV1106_FPGA_TEST 0
 
 #define RKVENC_DVBM_DISCONNECT	(BIT(15))
@@ -253,18 +252,8 @@ struct rkvenc_dev {
 	struct reset_control *rst_a;
 	struct reset_control *rst_h;
 	struct reset_control *rst_core;
-	/* for ccu */
-	struct rkvenc_ccu *ccu;
-	struct list_head core_link;
-	u32 disable_work;
 	atomic_t on_work;
 
-	/* internal rcb-memory */
-	u32 sram_size;
-	u32 sram_used;
-	dma_addr_t sram_iova;
-	u32 sram_enabled;
-	struct page *rcb_page;
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct dvbm_port *port;
 #endif
@@ -295,14 +284,6 @@ struct rkvenc_dev {
 	enum RKVENC_MODE link_mode;
 	atomic_t link_task_cnt;
 	u32 link_run;
-};
-
-struct rkvenc_ccu {
-	u32 core_num;
-	/* lock for core attach */
-	struct mutex lock;
-	struct list_head core_list;
-	struct mpp_dev *main_core;
 };
 
 static struct rkvenc_hw_info rkvenc_rv1106_hw_info = {
@@ -2059,104 +2040,6 @@ static int rkvenc_link_init(struct platform_device *pdev,
 	return 0;
 }
 
-static int rkvenc2_alloc_rcbbuf(struct platform_device *pdev, struct rkvenc_dev *enc)
-{
-	int ret;
-	u32 vals[2];
-	dma_addr_t iova;
-	u32 sram_used, sram_size;
-	struct device_node *sram_np;
-	struct resource sram_res;
-	resource_size_t sram_start, sram_end;
-	struct iommu_domain *domain;
-	struct device *dev = &pdev->dev;
-
-	/* get rcb iova start and size */
-	ret = device_property_read_u32_array(dev, "rockchip,rcb-iova", vals, 2);
-	if (ret) {
-		dev_err(dev, "could not find property rcb-iova\n");
-		return ret;
-	}
-	iova = PAGE_ALIGN(vals[0]);
-	sram_used = PAGE_ALIGN(vals[1]);
-	if (!sram_used) {
-		dev_err(dev, "sram rcb invalid.\n");
-		return -EINVAL;
-	}
-	/* alloc reserve iova for rcb */
-	ret = iommu_dma_reserve_iova(dev, iova, sram_used);
-	if (ret) {
-		dev_err(dev, "alloc rcb iova error.\n");
-		return ret;
-	}
-	/* get sram device node */
-	sram_np = of_parse_phandle(dev->of_node, "rockchip,sram", 0);
-	if (!sram_np) {
-		dev_err(dev, "could not find phandle sram\n");
-		return -ENODEV;
-	}
-	/* get sram start and size */
-	ret = of_address_to_resource(sram_np, 0, &sram_res);
-	of_node_put(sram_np);
-	if (ret) {
-		dev_err(dev, "find sram res error\n");
-		return ret;
-	}
-	/* check sram start and size is PAGE_SIZE align */
-	sram_start = round_up(sram_res.start, PAGE_SIZE);
-	sram_end = round_down(sram_res.start + resource_size(&sram_res), PAGE_SIZE);
-	if (sram_end <= sram_start) {
-		dev_err(dev, "no available sram, phy_start %pa, phy_end %pa\n",
-			&sram_start, &sram_end);
-		return -ENOMEM;
-	}
-	sram_size = sram_end - sram_start;
-	sram_size = sram_used < sram_size ? sram_used : sram_size;
-	/* iova map to sram */
-	domain = enc->mpp.iommu_info->domain;
-	ret = iommu_map(domain, iova, sram_start, sram_size, IOMMU_READ | IOMMU_WRITE);
-	if (ret) {
-		dev_err(dev, "sram iommu_map error.\n");
-		return ret;
-	}
-	/* alloc dma for the remaining buffer, sram + dma */
-	if (sram_size < sram_used) {
-		struct page *page;
-		size_t page_size = PAGE_ALIGN(sram_used - sram_size);
-
-		page = alloc_pages(GFP_KERNEL | __GFP_ZERO, get_order(page_size));
-		if (!page) {
-			dev_err(dev, "unable to allocate pages\n");
-			ret = -ENOMEM;
-			goto err_sram_map;
-		}
-		/* iova map to dma */
-		ret = iommu_map(domain, iova + sram_size, page_to_phys(page),
-				page_size, IOMMU_READ | IOMMU_WRITE);
-		if (ret) {
-			dev_err(dev, "page iommu_map error.\n");
-			__free_pages(page, get_order(page_size));
-			goto err_sram_map;
-		}
-		enc->rcb_page = page;
-	}
-
-	enc->sram_size = sram_size;
-	enc->sram_used = sram_used;
-	enc->sram_iova = iova;
-	enc->sram_enabled = -1;
-	dev_info(dev, "sram_start %pa\n", &sram_start);
-	dev_info(dev, "sram_iova %pad\n", &enc->sram_iova);
-	dev_info(dev, "sram_size %u\n", enc->sram_size);
-	dev_info(dev, "sram_used %u\n", enc->sram_used);
-
-	return 0;
-
-err_sram_map:
-	iommu_unmap(domain, iova, sram_size);
-
-	return ret;
-}
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 {
@@ -2225,8 +2108,6 @@ static int rkvenc_probe_default(struct platform_device *pdev)
 	ret = mpp_dev_probe(mpp, pdev);
 	if (ret)
 		return ret;
-
-	rkvenc2_alloc_rcbbuf(pdev, enc);
 
 	ret = devm_request_threaded_irq(dev, mpp->irq,
 					mpp_dev_irq,
