@@ -442,7 +442,7 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 			size_t size[3] = { 0 };
 
 			size[0] = (mb_wd64 * mb_h64 << 8);
-			size[1] = MPP_ALIGN(mb_wd64 * mb_h64 * 16 * 4, 256) * 16;
+			size[1] = MPP_ALIGN(mb_wd64 * mb_h64 * 4, 256) * 16;
 			size[2] = smera_size;
 			hal_h265e_dbg_detail("frame size %d -> %d max count %d -> %d\n",
 					ctx->frame_size, frame_size, old_max_cnt,
@@ -455,7 +455,7 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 			ctx->fbc_header_len =
 				MPP_ALIGN(((mb_wd64 * mb_h64) << 6), SZ_8K);
 			size[0] = (mb_wd64 * mb_h64 << 8);
-			size[1] = MPP_ALIGN(mb_wd64 * mb_h64 * 16 * 4, 256) * 16;
+			size[1] = MPP_ALIGN(mb_wd64 * mb_h64 * 4, 256) * 16;
 			size[2] = ctx->fbc_header_len + ((mb_wd64 * mb_h64) << 12) * 3 / 2;//fbc_h + fbc_b
 			size[3] = smera_size;
 
