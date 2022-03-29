@@ -2055,9 +2055,6 @@ static MPP_RET hal_h265e_v540c_wait(void *hal, HalEncTask *task)
 		mpp_err_f("poll cmd failed %d status %d \n", ret,
 		          elem->hw_status);
 
-	if (!ctx->online)
-		mpp_dev_release_iova_address(ctx->dev, task->input);
-	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
 	hal_h265e_leave();
 	return ret;
 }

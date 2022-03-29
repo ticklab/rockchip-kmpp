@@ -2022,8 +2022,6 @@ static MPP_RET hal_h264e_vepu580_wait(void *hal, HalEncTask * task)
 		ret = MPP_ERR_VPUHW;
 	}
 
-	mpp_dev_release_iova_address(ctx->dev, task->input);
-	mpp_dev_release_iova_address(ctx->dev, task->output->buf);
 	hal_h264e_dbg_func("leave %p\n", hal);
 
 	return ret;
