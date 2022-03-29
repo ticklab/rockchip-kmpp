@@ -764,9 +764,10 @@ static int rkvenc_link_fill_table(struct rkvenc_link_dev *link,
 	struct rkvenc_reg_msg *msg;
 	u32 *tb_reg = (u32 *)table->vaddr;
 	struct rkvenc_hw_info *hw = task->hw_info;
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct rkvenc2_session_priv *priv =
 		(struct rkvenc2_session_priv *)task->mpp_task.session;
-
+#endif
 	//mpp_err("table->iova=%pad \n", &table->iova);
 	/* set class data addr valid */
 	hdr = (struct rkvenc_link_header *)table->vaddr;
@@ -1563,10 +1564,10 @@ static int rkvenc_free_session(struct mpp_session *session)
 		kfree(task);
 	}
 	if (session) {
-		struct rkvenc_dev *enc = to_rkvenc_dev(session->mpp);
 		struct rkvenc2_session_priv *priv = (struct rkvenc2_session_priv *)session->priv;
-
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+		struct rkvenc_dev *enc = to_rkvenc_dev(session->mpp);
+
 		mpp_power_on(session->mpp);
 		rk_dvbm_unlink(enc->port);
 		mpp_power_off(session->mpp);
