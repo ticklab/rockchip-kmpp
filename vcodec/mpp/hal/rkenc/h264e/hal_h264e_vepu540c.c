@@ -1100,6 +1100,7 @@ static void setup_vepu540c_rdo_pred(HalVepu540cRegSet *regs, H264eSps *sps,
 	regs->reg_base.rdo_cfg.scl_lst_sel = pps->pic_scaling_matrix_present;
 	regs->reg_base.rdo_cfg.atf_e = 1;
 	regs->reg_base.rdo_cfg.atr_e = 1;
+	regs->reg_base.rdo_cfg.intra_mode_cost_e = 1;
 
 	regs->reg_base.iprd_csts.rdo_mark_mode = 0;
 
