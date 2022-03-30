@@ -1671,12 +1671,16 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 
 	enc_dbg_detail("task %d enc start\n", frm->seq_idx);
 	ENC_RUN_FUNC2(enc_impl_start, enc->impl, hal_task, enc, ret);
-	if (frm_cfg->force_flag)
+
+	if (frm_cfg->force_flag) {
 		mpp_enc_refs_set_usr_cfg(enc->refs, frm_cfg);
+		frm_cfg->force_flag = 0;
+	}
 
 	mpp_enc_refs_stash(enc->refs);
-
 	ENC_RUN_FUNC2(mpp_enc_normal_cfg, enc, task, enc, ret);
+
+
 
 TASK_DONE:
 	if (ret)
@@ -1716,7 +1720,6 @@ static MPP_RET mpp_enc_comb_end_jpeg(MppEnc ctx, MppPacket *packet)
 	EncRcTask *rc_task = &enc->rc_task;
 	HalEncTask *hal_task = &task->info.enc;
 	EncFrmStatus *frm = &rc_task->frm;
-	MppEncRefFrmUsrCfg *frm_cfg = &enc->frm_cfg;
 
 	enc_dbg_detail("task %d hal wait\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_hal_end, enc->rc_ctx, rc_task, enc, ret);
@@ -1731,8 +1734,6 @@ static MPP_RET mpp_enc_comb_end_jpeg(MppEnc ctx, MppPacket *packet)
 
 	frm->reencode = 0;
 	frm->reencode_times = 0;
-	frm_cfg->force_flag = 0;
-
 TASK_DONE:
 
 	*packet = enc->packet;
@@ -1766,7 +1767,6 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 	HalEncTask *hal_task = &task->info.enc;
 	EncFrmStatus *frm = &rc_task->frm;
 	EncTaskStatus *status = &task->status;
-	MppEncRefFrmUsrCfg *frm_cfg = &enc->frm_cfg;
 	EncTask *jpeg_task = NULL;
 	MPP_RET ret = MPP_OK;
 	if (jpeg_ctx) {
@@ -1814,7 +1814,6 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 
 	frm->reencode = 0;
 	frm->reencode_times = 0;
-	frm_cfg->force_flag = 0;
 
 TASK_DONE:
 
