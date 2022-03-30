@@ -347,16 +347,16 @@ static MPP_RET hal_jpege_vepu540c_status_check(void *hal)
 
 	mpp_err_f("hw_status: 0x%08x", hw_status);
 	if (hw_status & RKV_ENC_INT_LINKTABLE_FINISH)
-		mpp_err_f("RKV_ENC_INT_LINKTABLE_FINISH");
+		hal_jpege_dbg_detail("RKV_ENC_INT_LINKTABLE_FINISH");
 
 	if (hw_status & RKV_ENC_INT_ONE_FRAME_FINISH)
-		mpp_err_f("RKV_ENC_INT_ONE_FRAME_FINISH");
+		hal_jpege_dbg_detail("RKV_ENC_INT_ONE_FRAME_FINISH");
 
 	if (hw_status & RKV_ENC_INT_ONE_SLICE_FINISH)
-		mpp_err_f("RKV_ENC_INT_ONE_SLICE_FINISH");
+		hal_jpege_dbg_detail("RKV_ENC_INT_ONE_SLICE_FINISH");
 
 	if (hw_status & RKV_ENC_INT_SAFE_CLEAR_FINISH)
-		mpp_err_f("RKV_ENC_INT_SAFE_CLEAR_FINISH");
+		hal_jpege_dbg_detail("RKV_ENC_INT_SAFE_CLEAR_FINISH");
 
 	if (hw_status & RKV_ENC_INT_BIT_STREAM_OVERFLOW)
 		mpp_err_f("RKV_ENC_INT_BIT_STREAM_OVERFLOW");
