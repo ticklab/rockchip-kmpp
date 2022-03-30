@@ -146,13 +146,42 @@ struct pp_param_t {
 	u32 wp_con_comb5;
 	u32 wp_con_comb6;
 
-	u32 md_con_base; /* 0x404 */
-	u32 md_fly_chk;
+	/* 0x0404 - MD_CON_BASE */
+	struct {
+		u32 cur_frm_en : 1;
+		u32 ref_frm_en : 1;
+		u32 switch_sad : 2;
+		u32 thres_sad  : 12;
+		u32 thres_move : 3;
+		u32 reserved1  : 13;
+	} md_con_base;
+
+	/* 0x0408 - MD_CON_FLY_CHECK */
+	struct {
+		u32 night_mode_en : 1;
+		u32 flycatkin_flt_en : 1;
+		u32 thres_dust_move : 4;
+		u32 thres_dust_blk : 3;
+		u32 thres_dust_chng : 8;
+		u32 reserved1 : 15;
+	} md_fly_chk;
+
 	u32 md_sto_strd;
 
 	u32 od_con_base; /* 0x500 */
-	u32 od_con_cmplx;
-	u32 od_con_sad;
+
+	struct {
+		u32 od_thres_complex : 12;
+		u32 od_thres_area_complex : 18;
+		u32 reserved1 : 2;
+	} od_con_cmplx;
+
+	/* 0x0508 - OD_CON_SAD */
+	struct {
+		u32 od_thres_sad : 12;
+		u32 od_thres_area_sad : 18;
+		u32 reserved1 : 2;
+	} od_con_sad;
 
 	/* 0x600 ~ 0x734 */
 	u32 osd_en[8];
@@ -190,6 +219,7 @@ struct pp_chn_info_t {
 	int weightp_en;
 	int md_en;
 	int od_en;
+	int down_scale_en;
 
 	struct pp_buffer_t *buf_rfpw;
 	struct pp_buffer_t *buf_rfpr;

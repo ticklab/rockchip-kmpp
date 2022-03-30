@@ -39,6 +39,7 @@ struct pp_chn_attr {
 	int weightp_en;
 	int md_en;
 	int od_en;
+	int down_scale_en;
 };
 
 struct pp_com_cfg {
@@ -56,11 +57,17 @@ struct pp_com_cfg {
 
 struct pp_md_cfg {
 	struct dma_buf *mdw_buf;
-	int resi_thd0;
+	int switch_sad;
+	int thres_sad;
+	int thres_move;
+	int night_mode;
+	int filter_switch;
 };
 
 struct pp_od_cfg {
-	int stride;
+	int is_background;
+	int thres_complex;
+	int thres_area_complex;
 };
 
 struct pp_od_out {
@@ -70,13 +77,13 @@ struct pp_od_out {
 
 enum pp_cmd {
 	PP_CMD_BASE = 0,
-	PP_CMD_SET_COMMON_CFG,
-	PP_CMD_SET_MD_CFG,
-	PP_CMD_SET_OD_CFG,
+	PP_CMD_SET_COMMON_CFG, /* struct pp_com_cfg */
+	PP_CMD_SET_MD_CFG, /* struct pp_md_cfg */
+	PP_CMD_SET_OD_CFG, /* struct pp_od_cfg */
 
 	PP_CMD_RUN_SYNC,
 
-	PP_CMD_GET_OD_OUTPUT,
+	PP_CMD_GET_OD_OUTPUT, /* struct pp_od_out */
 };
 
 struct vcodec_mpibuf_fn {

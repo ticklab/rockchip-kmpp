@@ -384,7 +384,7 @@ static int vepu_pp_irq(struct mpp_dev *mpp)
 {
 	mpp->irq_status = mpp_read(mpp, VEPU_PP_INT_STA);
 	mpp_write(mpp, VEPU_PP_INT_CLR, 0x3F);
-	mpp_err("irq_status 0x%08x\n", mpp->irq_status);
+
 	if (!PP_REG_RO_VALID_INT_STS(mpp->irq_status))
 		return IRQ_NONE;
 
@@ -449,8 +449,6 @@ static int vepu_pp_result(struct mpp_dev *mpp,
 
 	for (i = 0; i < task->r_req_cnt; i++) {
 		req = &task->r_reqs[i];
-
-		pr_info("i %d data %p size %d\n", i, req->data, req->size);
 		memcpy(req->data, (u8 *)&task->output, req->size);
 	}
 

@@ -137,6 +137,7 @@ int vepu_pp_create_chn(int chn, struct pp_chn_attr *attr)
 	info->weightp_en = attr->weightp_en;
 	info->md_en = attr->md_en;
 	info->od_en = attr->od_en;
+	info->down_scale_en = attr->down_scale_en;
 	info->api = &pp_srv_api;
 
 	info->dev_srv = vmalloc(info->api->ctx_size);
@@ -233,6 +234,7 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 		int frm_cnt = cfg->frm_cnt;
 		int gop = cfg->gop;
 
+		p->enc_pic_fmt.src_from_isp = !info->down_scale_en;
 		p->enc_pic_fmt.ref_pic0_updt_en = (info->smear_en || info->weightp_en) &&
 									   ((frm_cnt % gop) != (gop - 1));
 		p->enc_pic_fmt.ref_pic1_updt_en = (info->md_en && (frm_cnt % cfg->md_interval == 0)) || 
@@ -257,11 +259,8 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 
 		p->wp_con_comb0 = info->weightp_en && (frm_cnt % gop);
 
-		{
-			u32 md_cur_frm_en = info->md_en && (frm_cnt % cfg->md_interval == 0) && (frm_cnt > 0);
-			u32 md_ref_frm_en = md_cur_frm_en && (frm_cnt > cfg->md_interval);
-			p->md_con_base = md_cur_frm_en | (md_ref_frm_en << 1);
-		}
+		p->md_con_base.cur_frm_en = info->md_en && (frm_cnt % cfg->md_interval == 0) && (frm_cnt > 0);
+		p->md_con_base.ref_frm_en = p->md_con_base.cur_frm_en && (frm_cnt > cfg->md_interval);
 
 		{
 			//TODO:
@@ -277,19 +276,28 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 	}
 	case PP_CMD_SET_MD_CFG: {
 		struct pp_md_cfg *cfg = (struct pp_md_cfg *)param;
-		p->md_con_base |= 0x000101e8;
-		p->md_fly_chk = 0x000064cd;
+		p->md_con_base.switch_sad = cfg->switch_sad;
+		p->md_con_base.thres_sad = cfg->thres_sad;
+		p->md_con_base.thres_move = cfg->thres_move;
+
+		p->md_fly_chk.night_mode_en = cfg->night_mode;
+		p->md_fly_chk.flycatkin_flt_en = cfg->filter_switch;
+		p->md_fly_chk.thres_dust_move = 3;
+		p->md_fly_chk.thres_dust_blk = 3;
+		p->md_fly_chk.thres_dust_chng = 50;
 		p->md_sto_strd = 64; /* ?? */
 
-		p->adr_rfpw = info->api->get_address(info->dev_srv, cfg->mdw_buf, 0);
 		p->adr_rfmw = info->buf_rfmwr->iova;
 		p->adr_rfmr = info->buf_rfmwr->iova;
+		p->adr_md_base = info->api->get_address(info->dev_srv, cfg->mdw_buf, 0);
 		break;
 	}
 	case PP_CMD_SET_OD_CFG: {
-		//struct pp_md_cfg *cfg = (struct pp_md_cfg *)param;
-		p->od_con_cmplx = 0x01cb000c;
-		p->od_con_sad = 0x01cb0007;
+		struct pp_od_cfg *cfg = (struct pp_od_cfg *)param;
+		p->od_con_cmplx.od_thres_complex = cfg->thres_complex;
+		p->od_con_cmplx.od_thres_area_complex = cfg->thres_area_complex;
+		p->od_con_sad.od_thres_sad = 7;
+		p->od_con_sad.od_thres_area_sad = cfg->thres_area_complex;
 		break;
 	}
 	default: {
@@ -340,10 +348,14 @@ int vepu_pp_control(int chn, enum pp_cmd cmd, void *param)
 	}
 
 	if (cmd == PP_CMD_GET_OD_OUTPUT) {
+		struct pp_od_out *out = (struct pp_od_out *)param;
 
+		out->od_flg = info->output.od_out_flag;
+		out->pix_sum = info->output.od_out_pix_sum;
+		pr_info("od_flg %d pix_sum 0x%08x\n", out->od_flg, out->pix_sum);
 	}
 
-	pr_info("vepu pp control cmd 0x%08x finished\n", cmd);
+	pr_debug("vepu pp control cmd 0x%08x finished\n", cmd);
 
 	return 0;
 }
