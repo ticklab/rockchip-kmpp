@@ -269,12 +269,12 @@ int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 	}
 
 	if (!found){
+		mpp_err("release packet fail %llx \n", enc_packet->u64packet_addr);
 		list_for_each_entry_safe(packet, n, &chan_entry->stream_remove, list) {
 			RK_U64 p_address = (uintptr_t )packet;
-			mpp_err("release packet fail %lld \n", p_address);	
+			mpp_err("dump packet out list %llx \n", p_address);
 		}
 		mpp_assert(found);
-		mpp_err("release packet fail %lld \n", enc_packet->u64packet_addr);
 	}
 	mutex_unlock(&chan_entry->stream_remove_lock);
 
