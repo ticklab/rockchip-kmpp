@@ -1299,11 +1299,14 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 	EncFrmStatus *frm = &rc_task->frm;
 	HalEncTask *hal_task = &task->info.enc;
 	MppPacket packet = hal_task->packet;
+	MppEncRefFrmUsrCfg *frm_cfg = &enc->frm_cfg;
 	MPP_RET ret = MPP_OK;
 	if (!enc->online && enc->cfg.rc.debreath_en && !enc->ref_buf_shared) {
-		ret = mpp_enc_proc_two_pass(enc, task);
-		if (ret)
-		return ret;
+		if (!frm_cfg->force_flag) {
+			ret = mpp_enc_proc_two_pass(enc, task);
+			if (ret)
+				return ret;
+		}
 	}
 	enc_dbg_detail("task %d enc proc dpb\n", frm->seq_idx);
 	mpp_enc_refs_get_cpb(enc->refs, cpb);
@@ -1674,17 +1677,15 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 
 	if (frm_cfg->force_flag) {
 		mpp_enc_refs_set_usr_cfg(enc->refs, frm_cfg);
-		frm_cfg->force_flag = 0;
 	}
 
 	mpp_enc_refs_stash(enc->refs);
 	ENC_RUN_FUNC2(mpp_enc_normal_cfg, enc, task, enc, ret);
-
-
-
+ 	frm_cfg->force_flag = 0;
 TASK_DONE:
 	if (ret)
 		mpp_enc_terminate_task(enc, task);
+
 	return ret;
 }
 
