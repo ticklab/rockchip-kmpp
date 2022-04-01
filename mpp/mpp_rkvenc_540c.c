@@ -454,16 +454,16 @@ static bool req_over_class(struct mpp_request *req,
 	return ret;
 }
 
-static int rkvenc_free_class_msg(struct rkvenc_task *task)
+static int rkvenc_invalid_class_msg(struct rkvenc_task *task)
 {
 	u32 i;
 	u32 reg_class = task->hw_info->reg_class;
 
 	for (i = 0; i < reg_class; i++) {
 		if (task->reg[i].data) {
-			kfree(task->reg[i].data);
+			//kfree(task->reg[i].data);
 			task->reg[i].data = NULL;
-			task->reg[i].size = 0;
+			task->reg[i].valid = 0;
 		}
 	}
 
@@ -472,7 +472,6 @@ static int rkvenc_free_class_msg(struct rkvenc_task *task)
 
 static int rkvenc_alloc_class_msg(struct rkvenc_task *task, int class)
 {
-	u32 *data;
 	struct rkvenc_hw_info *hw = task->hw_info;
 
 	if (!task->reg[class].data) {
@@ -480,10 +479,10 @@ static int rkvenc_alloc_class_msg(struct rkvenc_task *task, int class)
 		u32 base_e = hw->reg_msg[class].base_e;
 		u32 class_size = base_e - base_s + sizeof(u32);
 
-		data = kzalloc(class_size, GFP_KERNEL);
+		/*data = kzalloc(class_size, GFP_KERNEL);
 		if (!data)
-			return -ENOMEM;
-		task->reg[class].data = data;
+			return -ENOMEM;*/
+		task->reg[class].data = NULL;
 		task->reg[class].size = class_size;
 	}
 
@@ -560,11 +559,30 @@ static u32 *rkvenc_get_class_reg(struct rkvenc_task *task, u32 addr)
 	return (u32 *)reg;
 }
 
+static int rkvenc_set_class_reg(struct rkvenc_task *task, u32 addr, u32 *data)
+{
+	int i;
+	u32 base_s, base_e;
+	struct rkvenc_hw_info *hw = task->hw_info;
+
+	for (i = 0; i < hw->reg_class; i++) {
+		base_s = hw->reg_msg[i].base_s;
+		base_e = hw->reg_msg[i].base_e;
+		if (addr >= base_s && addr < base_e) {
+			if((addr - base_s) == 0){
+				task->reg[i].data = data;
+			}
+			break;
+		}
+	}
+	return 0;
+	}
+
+
 static int rkvenc_extract_task_msg(struct mpp_session *session,
 				   struct rkvenc_task *task,
 				   struct mpp_task_msgs *msgs, u32 kernel_space)
 {
-	int ret;
 	u32 i, j;
 	struct mpp_request *req;
 	struct rkvenc_hw_info *hw = task->hw_info;
@@ -578,7 +596,7 @@ static int rkvenc_extract_task_msg(struct mpp_session *session,
 
 		switch (req->cmd) {
 		case MPP_CMD_SET_REG_WRITE: {
-			void *data;
+			//void *data;
 			struct mpp_request *wreq;
 
 			for (j = 0; j < hw->reg_class; j++) {
@@ -587,18 +605,7 @@ static int rkvenc_extract_task_msg(struct mpp_session *session,
 
 				wreq = &task->w_reqs[task->w_req_cnt];
 				rkvenc_update_req(task, j, req, wreq);
-				data = rkvenc_get_class_reg(task, wreq->offset);
-				if (!data)
-					goto fail;
-				if (!kernel_space) {
-					if (copy_from_user(data, wreq->data, wreq->size)) {
-						mpp_err("copy_from_user reg failed\n");
-						return -EIO;
-					}
-				}else {
-					memcpy(data, wreq->data, wreq->size);
-				}
-
+				rkvenc_set_class_reg(task, wreq->offset, wreq->data);
 				task->reg[j].valid = 1;
 				task->w_req_cnt++;
 			}
@@ -628,11 +635,6 @@ static int rkvenc_extract_task_msg(struct mpp_session *session,
 
 	mpp_debug_enter();
 	return 0;
-
-fail:
-
-	mpp_debug_enter();
-	return ret;
 }
 
 static int rkvenc_task_get_format(struct mpp_dev *mpp,
@@ -1407,11 +1409,12 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 
 			req = &task->r_reqs[i];
 			ret = rkvenc_get_class_msg(task, req->offset, &msg);
+
 			if (ret)
 				return -EINVAL;
 			s = (req->offset - msg.offset) / sizeof(u32);
 			e = s + req->size / sizeof(u32);
-			reg = (u32 *)msg.data;
+			reg = (u32 *)req->data;
 			//mpp_err("msg.offset=%08x, s=%d, e=%d\n", msg.offset, s ,e);
 			for (j = s; j < e; j++)
 				reg[j] = mpp_read_relaxed(mpp, msg.offset + j * sizeof(u32));
@@ -1470,24 +1473,7 @@ static int rkvenc_result(struct mpp_dev *mpp,
 	switch (enc->link_mode) {
 	case RKVENC_MODE_ONEFRAME:
 	case RKVENC_MODE_LINK_ONEFRAME: {
-		u32 i;
-		u32 *reg;
-		struct mpp_request *req;
-
-		for (i = 0; i < task->r_req_cnt; i++) {
-			req = &task->r_reqs[i];
-			reg = rkvenc_get_class_reg(task, req->offset);
-			if (!reg)
-				return -EINVAL;
-			if (!mpp_task->session->k_space) {
-				if (copy_to_user(req->data, reg, req->size)) {
-					mpp_err("copy_to_user reg fail\n");
-					return -EIO;
-				}
-			}else{
-				memcpy(req->data, (u8 *)reg, req->size);
-			}
-		}
+		;
 	}break;
 	case RKVENC_MODE_LINK_ADD: {
 		u32 i;
@@ -1520,11 +1506,10 @@ static int rkvenc_result(struct mpp_dev *mpp,
 
 static int rkvenc_free_task(struct mpp_session *session, struct mpp_task *mpp_task)
 {
+    struct rkvenc_task *task = to_rkvenc_task(mpp_task);
 
-	mpp_task_finalize(session, mpp_task);
-	//rkvenc_free_class_msg(task);
-	//kfree(task);
-
+    mpp_task_finalize(session, mpp_task);
+	rkvenc_invalid_class_msg(task);
 	return 0;
 }
 
@@ -1577,7 +1562,7 @@ static int rkvenc_free_session(struct mpp_session *session)
 		for (i = 0 ; i < MAX_TASK_CNT; i++){
 			struct rkvenc_task *task = (struct rkvenc_task *)session->task[i];
 			if (task) {
-				rkvenc_free_class_msg(task);
+				rkvenc_invalid_class_msg(task);
 				kfree(task);
 			}
 		}
@@ -1645,13 +1630,13 @@ fail:
 	if (session->priv)
 		kfree(session->priv);
 	if (task) {
-		rkvenc_free_class_msg(task);
+		rkvenc_invalid_class_msg(task);
 		kfree(task);
 	}
     for (i = 0 ; i < MAX_TASK_CNT; i++){
 		struct rkvenc_task *task = (struct rkvenc_task *)session->task[i];
         if (task) {
-    		rkvenc_free_class_msg(task);
+    		rkvenc_invalid_class_msg(task);
     		kfree(task);
         }
     }

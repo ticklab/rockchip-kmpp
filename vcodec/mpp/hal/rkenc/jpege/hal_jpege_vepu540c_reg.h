@@ -837,6 +837,7 @@ typedef struct JpegVepu540cBase_t {
 typedef struct JpegV540cRegSet_t {
 	jpeg_vepu540c_control_cfg reg_ctl;
 	jpeg_vepu540c_base reg_base;
+	vepu540c_scl_cfg  reg_scl;
 	vepu540c_jpeg_tab jpeg_table;
 	vepu540c_osd_regs reg_osd_cfg;
 	vepu540c_dbg reg_dbg;
