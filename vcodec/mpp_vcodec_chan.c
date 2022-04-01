@@ -215,13 +215,11 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 	RK_U32 count = atomic_read(&chan_entry->stream_count);
 
 	if (count) {
-        	MppPacketImpl *packet = NULL;
-
-        	mutex_lock(&chan_entry->stream_done_lock);
+		MppPacketImpl *packet = NULL;
+		mutex_lock(&chan_entry->stream_done_lock);
 		packet = list_first_entry_or_null(&chan_entry->stream_done,
 						  MppPacketImpl, list);
 		mutex_unlock(&chan_entry->stream_done_lock);
-
 		atomic_dec(&chan_entry->stream_count);
 
 		enc_packet->flag = mpp_packet_get_flag(packet);
@@ -237,13 +235,16 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 		mutex_lock(&chan_entry->stream_done_lock);
 		list_del_init(&packet->list);
 		mutex_lock(&chan_entry->stream_remove_lock);
-	    	list_move_tail(&packet->list, &chan_entry->stream_remove);
+		list_move_tail(&packet->list, &chan_entry->stream_remove);
 		mutex_unlock(&chan_entry->stream_remove_lock);
 		mutex_unlock(&chan_entry->stream_done_lock);
-
-        	atomic_inc(&chan_entry->str_out_cnt);
+		atomic_inc(&chan_entry->str_out_cnt);
+		return 0;
+	}else {
+		mpp_err("no stream count found in list \n");
+		memset(enc_packet, 0, sizeof(struct venc_packet));
 	}
-	return 0;
+	return -1;
 }
 
 int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,

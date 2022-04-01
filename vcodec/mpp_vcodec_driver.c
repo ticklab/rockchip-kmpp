@@ -203,12 +203,13 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 				goto fail;
 			}
 			ret = mpp_vcodec_chan_get_stream(chan_id, type, param);
+			if (ret)
+				return -EINVAL;
+
 			if (copy_to_user(req->data, param, req->size)) {
 				mpp_err("copy_to_user failed.\n");
 				return -EINVAL;
 			}
-			if (ret)
-				goto fail;
 		}
 		break;
     	case VCODEC_CHAN_OUT_STRM_END:{
@@ -508,7 +509,6 @@ EXPORT_SYMBOL(vmpi_register_fn2vcocdec);
 
 void vmpi_unregister_fn2vcocdec (void)
 {
-
     mpp_vcodec_unregister_mipdev();
     mpidev_ops = NULL;
 	mpibuf_ops = NULL;
