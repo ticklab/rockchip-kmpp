@@ -37,9 +37,10 @@ struct vcodec_msg {
 struct chanid_ctx {
 	RK_S32 chan_id;
 	MppCtxType type;
-    void *param;
-    RK_U32 size;
+	void *param;
+	RK_U32 size;
 	atomic_t release_request;
+	struct semaphore ioctl_sem;
 };
 static int vcodec_open(struct inode *inode, struct file *filp)
 {
@@ -48,6 +49,7 @@ static int vcodec_open(struct inode *inode, struct file *filp)
 		return -ENOMEM;
 	filp->private_data = (void *)ctx;
 	atomic_set(&ctx->release_request, 0);
+	sema_init(&ctx->ioctl_sem, 1);
 	return 0;
 }
 
@@ -255,10 +257,15 @@ static long vcodec_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			memset(&v_msg, 0, sizeof(v_msg));
 			if (copy_from_user(&v_msg, msg, sizeof(v_msg)))
 				return -EFAULT;
+
+			down(&ctx->ioctl_sem);
 			ret = vcodec_process_msg(&v_msg, &req);
-			if (ret)
+			if (ret) {
+				up(&ctx->ioctl_sem);
 				return -EFAULT;
+			}
 			ret = vcodec_process_cmd(filp->private_data, &req);
+			up(&ctx->ioctl_sem);
 			if (ret)
 				return -EFAULT;
 		}
