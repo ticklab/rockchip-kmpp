@@ -429,13 +429,11 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 		max_lt_cnt = info->max_lt_cnt;
 	}
 
-
-	if (ctx->online) {
-		smera_size = MPP_ALIGN(prep->width, 32) / 32 * MPP_ALIGN(prep->width, 32) / 32;
-		smera_size = (smera_size + 15) / 16;
-    }else{
+	if (1) {
+		smera_size = MPP_ALIGN(prep->width, 512) / 512 * MPP_ALIGN(prep->width, 32) / 32 * 16;
+	}else{
 		smera_size = MPP_ALIGN(prep->width, 256) / 256 * MPP_ALIGN(prep->width, 32) / 32;
-    }
+	}
 
 	if (frame_size > ctx->frame_size || new_max_cnt > old_max_cnt) {
 
