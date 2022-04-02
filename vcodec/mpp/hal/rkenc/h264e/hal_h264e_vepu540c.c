@@ -11,6 +11,7 @@
 #define MODULE_TAG "hal_h264e_vepu540c"
 
 #include <linux/string.h>
+#include <linux/dma-buf.h>
 
 #include "mpp_mem.h"
 #include "mpp_maths.h"
@@ -1610,7 +1611,10 @@ static void setup_vepu540c_io_buf(HalH264eVepu540cCtx *ctx,
 
 	regs->reg_base.bsbt_addr += (siz_out - 1);
 	regs->reg_base.adr_bsbs += off_out;
-
+	if (off_out){
+		dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),
+		    DMA_TO_DEVICE, task->output->start_offset, off_out);
+	}
 	hal_h264e_dbg_func("leave\n");
 }
 

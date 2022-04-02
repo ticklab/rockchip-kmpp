@@ -10,6 +10,7 @@
 #define MODULE_TAG  "hal_h265e_v540c"
 
 #include <linux/string.h>
+#include <linux/dma-buf.h>
 
 //#include "mpp_env.h"
 #include "mpp_mem.h"
@@ -1393,6 +1394,7 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	MppBuffer mv_info_buf = enc_task->mv_info;
 	H265eSyntax_new *syn = (H265eSyntax_new *) enc_task->syntax.data;
 	VepuFmtCfg *fmt = (VepuFmtCfg *) ctx->input_fmt;
+    RK_U32 len = mpp_packet_get_length(task->packet);
 
 	hal_h265e_enter();
 
@@ -1482,9 +1484,12 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	regs->reg0175_bsbr_addr = regs->reg0174_bsbs_addr;
 
 	regs->reg0172_bsbt_addr += enc_task->output->size - 1;
-	regs->reg0174_bsbs_addr =
-	        regs->reg0174_bsbs_addr + mpp_packet_get_length(task->packet);
+	regs->reg0174_bsbs_addr = regs->reg0174_bsbs_addr + len;
 
+	if (len){
+		dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),
+		    DMA_TO_DEVICE, task->output->start_offset, len);
+	}
 	regs->reg0204_pic_ofst.pic_ofst_y = mpp_frame_get_offset_y(task->frame);
 	regs->reg0204_pic_ofst.pic_ofst_x = mpp_frame_get_offset_x(task->frame);
 }

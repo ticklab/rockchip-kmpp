@@ -12,6 +12,8 @@
 #define pr_fmt(fmt) MODULE_TAG ":" fmt
 
 #include <linux/string.h>
+#include <linux/dma-buf.h>
+
 #include "mpp_mem.h"
 #include "mpp_maths.h"
 #include "mpp_frame_impl.h"
@@ -28,7 +30,6 @@
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 #include <soc/rockchip/rockchip_dvbm.h>
 #endif
-#include <linux/dma-buf.h>
 
 
 typedef struct jpegeV540cHalContext_t {
@@ -345,7 +346,6 @@ static MPP_RET hal_jpege_vepu540c_status_check(void *hal)
 
 	RK_U32 hw_status = elem->hw_status;
 
-	mpp_err_f("hw_status: 0x%08x", hw_status);
 	if (hw_status & RKV_ENC_INT_LINKTABLE_FINISH)
 		hal_jpege_dbg_detail("RKV_ENC_INT_LINKTABLE_FINISH");
 
