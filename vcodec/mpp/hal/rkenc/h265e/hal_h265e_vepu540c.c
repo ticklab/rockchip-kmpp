@@ -28,6 +28,10 @@
 #include "vepu540c_common.h"
 #include "hal_h265e_vepu540c.h"
 #include "hal_h265e_vepu540c_reg.h"
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+#include <soc/rockchip/rockchip_dvbm.h>
+#endif
+
 #define  MAX_TITLE_NUM 2
 #define hal_h265e_err(fmt, ...) \
     do {\
@@ -1492,25 +1496,6 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	regs->reg0204_pic_ofst.pic_ofst_x = mpp_frame_get_offset_x(task->frame);
 }
 
-static void vepu540c_h265_set_dvbm(H265eV540cRegSet *regs)
-{
-	RK_U32 soft_resync = 1;
-	RK_U32 frame_match = 0;
-
-	regs->reg_ctl.reg0024_dvbm_cfg.dvbm_en = 1;
-	regs->reg_ctl.reg0024_dvbm_cfg.src_badr_sel = 0;
-	regs->reg_ctl.reg0024_dvbm_cfg.vinf_frm_match = frame_match;
-	regs->reg_ctl.reg0024_dvbm_cfg.vrsp_half_cycle = 8;
-
-	regs->reg_ctl.reg0006_vs_ldly.dvbm_ack_sel = soft_resync;
-	regs->reg_ctl.reg0006_vs_ldly.dvbm_ack_soft = 1;
-	regs->reg_ctl.reg0006_vs_ldly.dvbm_inf_sel = 0;
-
-	regs->reg_base.reg0194_dvbm_id.ch_id = 1;
-	regs->reg_base.reg0194_dvbm_id.frame_id = 0;
-	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 1;
-	vepu540c_set_dvbm(&regs->reg_base.online_addr);
-}
 static MPP_RET vepu540c_h265e_save_pass1_patch(H265eV540cRegSet *regs, H265eV540cHalContext *ctx)
 {
 	hevc_vepu540c_base *reg_base = &regs->reg_base;
@@ -1552,6 +1537,71 @@ static MPP_RET vepu540c_h265e_use_pass1_patch(H265eV540cRegSet *regs, H265eV540c
 	reg_base->reg0162_adr_src2 = 0;
 	return MPP_OK;
 }
+
+#ifdef HW_DVBM
+static MPP_RER vepu540c_h265_set_dvbm(H265eV540cRegSet *regs)
+{
+	RK_U32 soft_resync = 1;
+	RK_U32 frame_match = 0;
+
+	regs->reg_ctl.reg0024_dvbm_cfg.dvbm_en = 1;
+	regs->reg_ctl.reg0024_dvbm_cfg.src_badr_sel = 0;
+	regs->reg_ctl.reg0024_dvbm_cfg.vinf_frm_match = frame_match;
+	regs->reg_ctl.reg0024_dvbm_cfg.vrsp_half_cycle = 8;
+
+	regs->reg_ctl.reg0006_vs_ldly.dvbm_ack_sel = soft_resync;
+	regs->reg_ctl.reg0006_vs_ldly.dvbm_ack_soft = 1;
+	regs->reg_ctl.reg0006_vs_ldly.dvbm_inf_sel = 0;
+
+	regs->reg_base.reg0194_dvbm_id.ch_id = 1;
+	regs->reg_base.reg0194_dvbm_id.frame_id = 0;
+	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 1;
+	vepu540c_set_dvbm(&regs->reg_base.online_addr);
+	return MPP_OK;
+}
+#else
+static MPP_RET vepu540c_h265_set_dvbm(H265eV540cRegSet *regs)
+{
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+	struct dvbm_addr_cfg dvbm_adr;
+
+	rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+	regs->reg_ctl.reg0024_dvbm_cfg.dvbm_en = 1;
+	regs->reg_ctl.reg0024_dvbm_cfg.src_badr_sel = 1;
+	regs->reg_ctl.reg0024_dvbm_cfg.vinf_frm_match = 1;
+	regs->reg_ctl.reg0024_dvbm_cfg.vrsp_half_cycle = 8;
+
+	regs->reg_ctl.reg0006_vs_ldly.vswm_lcnt_soft = dvbm_adr.line_cnt;
+	regs->reg_ctl.reg0006_vs_ldly.vswm_fcnt_soft = dvbm_adr.frame_id;
+	regs->reg_ctl.reg0006_vs_ldly.dvbm_ack_sel = 1;
+	regs->reg_ctl.reg0006_vs_ldly.dvbm_ack_soft = 1;
+	regs->reg_ctl.reg0006_vs_ldly.dvbm_inf_sel = 1;
+
+	regs->reg_base.reg0194_dvbm_id.ch_id = 1;
+	regs->reg_base.reg0194_dvbm_id.frame_id = dvbm_adr.frame_id;
+	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 0;
+
+	regs->reg_base.online_addr.reg0156_adr_vsy_t = dvbm_adr.ybuf_top;
+	regs->reg_base.online_addr.reg0157_adr_vsc_t = dvbm_adr.cbuf_top;
+	regs->reg_base.online_addr.reg0158_adr_vsy_b = dvbm_adr.ybuf_bot;
+	regs->reg_base.online_addr.reg0159_adr_vsc_b = dvbm_adr.cbuf_bot;
+	regs->reg_base.reg0160_adr_src0 = dvbm_adr.ybuf_sadr;
+	regs->reg_base.reg0161_adr_src1 = dvbm_adr.cbuf_sadr;
+	regs->reg_base.reg0162_adr_src2 = dvbm_adr.cbuf_sadr;
+	if (dvbm_adr.overflow) {
+		mpp_err("cur frame already overflow!\n");
+		return MPP_NOK;
+	}
+#else
+	regs->reg_base.online_addr.reg0156_adr_vsy_t = 0;
+	regs->reg_base.online_addr.reg0157_adr_vsc_t = 0;
+	regs->reg_base.online_addr.reg0158_adr_vsy_b = 0;
+	regs->reg_base.online_addr.reg0159_adr_vsc_b = 0;
+#endif
+
+	return MPP_OK;
+}
+#endif
 
 static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 {
@@ -1692,9 +1742,10 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	vepu540c_h265_set_rc_regs(ctx, regs, task);
 	vepu540c_h265_set_slice_regs(syn, reg_base);
 	vepu540c_h265_set_ref_regs(syn, reg_base);
-
-	if (ctx->online)
-		vepu540c_h265_set_dvbm(regs);
+	if (ctx->online) {
+		if (vepu540c_h265_set_dvbm(regs))
+			return MPP_NOK;
+	}
 	if (ctx->osd_cfg.osd_data3)
 		vepu540c_set_osd(&ctx->osd_cfg);
 

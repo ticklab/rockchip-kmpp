@@ -259,6 +259,7 @@ struct rkvenc_dev {
 
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct dvbm_port *port;
+	u32 line_cnt;
 #endif
 	/* dvbm y/c top/bot addr */
 	u32 ybuf_top;
@@ -671,6 +672,123 @@ static void *task_init(struct rkvenc_task *task){
 	return 0;
 }
 
+static void rkvenc_dump_dbg(struct mpp_dev *mpp)
+{
+	if (!unlikely(mpp_dev_debug & DEBUG_DUMP_ERR_REG))
+		return;
+	pr_info("=== %s ===\n", __func__);
+	{
+		u32 i, off;
+		u32 start;// = 0x5168;//0x4000;
+		u32 end;// = 0x5170;//0x5350;
+		// struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
+
+		start = 0x5004;
+		end = 0x5028;
+		for (i = start; i <= end; i += 4) {
+			off = i;
+			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
+		}
+		start = 0x5168;
+		end = 0x5170;
+		for (i = start; i <= end; i += 4) {
+			off = i;
+			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
+		}
+		// rk_dvbm_ctrl(enc->port, DVBM_VEPU_DUMP_REGS, NULL);
+	}
+	pr_info("=== %s ===\n", __func__);
+
+}
+
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+#define VEPU_LINE_CNT_UNMARK	(~GENMASK(13, 0))
+#define VEPU_LINE_CNT		GENMASK(13, 0)
+#define VEPU_FRAME_CNT		GENMASK(21, 14)
+#define VEPU_FRAME_CNT_OFF	(14)
+#define VEPU_LDLY_REG		(0x18)
+
+static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
+{
+	struct rkvenc_dev *enc = (struct rkvenc_dev *)ctx;
+
+	if (!enc)
+		return 0;
+
+	switch (event) {
+	case DVBM_VEPU_NOTIFY_ADDR: {
+		struct dvbm_addr_cfg *cfg = (struct dvbm_addr_cfg*)arg;
+
+		enc->ybuf_top = cfg->ybuf_top;
+		enc->ybuf_bot = cfg->ybuf_bot;
+		enc->cbuf_top = cfg->cbuf_top;
+		enc->cbuf_bot = cfg->cbuf_bot;
+
+		//pr_info("%s y/c t: 0x%08x 0x%08x y/c b: 0x%08x 0x%08x\n",
+		//	__func__, enc->ybuf_top, enc->cbuf_top, enc->ybuf_bot, enc->cbuf_bot);
+	} break;
+	case DVBM_VEPU_REQ_CONNECT : {
+		u32 connect = *(u32*)arg;
+		unsigned long val = mpp_read(&enc->mpp, 0x18);
+
+		if (!connect)
+			clear_bit(24, &val);
+		mpp_write(&enc->mpp, 0x18, val);
+	} break;
+	case DVBM_VEPU_NOTIFY_FRM_STR: {
+		enc->frm_id_start = *(u32*)arg;
+	} break;
+	case DVBM_VEPU_NOTIFY_FRM_END: {
+		enc->frm_id_end = *(u32*)arg;
+	} break;
+	case DVBM_VEPU_NOTIFY_FRM_INFO: {
+		struct dvbm_isp_frm_info *info = (struct dvbm_isp_frm_info*)arg;
+		u32 val;
+		u32 cur_fcnt;
+		u32 cur_lcnt;
+
+		val = mpp_read(&enc->mpp, VEPU_LDLY_REG);
+		cur_fcnt = (val & VEPU_FRAME_CNT) >> VEPU_FRAME_CNT_OFF;
+		cur_lcnt = val & VEPU_LINE_CNT;
+		if (cur_fcnt != info->frame_cnt) {
+			if (info->line_cnt > 0)
+				pr_err("frame cnt not match, maybe overflow [%d %d]->[%d %d]\n",
+				       cur_fcnt, cur_lcnt, info->frame_cnt, info->line_cnt);
+			return 0;
+		}
+		val &= VEPU_LINE_CNT_UNMARK;
+		val |= info->line_cnt;
+		if (atomic_read(&enc->on_work)) {
+			//pr_err("frame cnt %d line cnt %d\n", enc->frm_id_start, info->line_cnt);
+			enc->line_cnt = info->line_cnt;
+			mpp_write(&enc->mpp, VEPU_LDLY_REG, val);
+		}
+	} break;
+	case DVBM_VEPU_NOTIFY_DUMP: {
+		rkvenc_dump_dbg(&enc->mpp);
+	} break;
+	default : {
+	} break;
+	}
+	return 0;
+}
+
+static void update_online_info(struct mpp_dev *mpp)
+{
+	struct dvbm_isp_frm_info info;
+	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
+	u32 val;
+
+	val = mpp_read(mpp, VEPU_LDLY_REG);
+	rk_dvbm_ctrl(enc->port, DVBM_VEPU_GET_FRAME_INFO, &info);
+
+	val &= (~GENMASK(21, 0));
+	val |= ((info.frame_cnt << 14) | info.line_cnt);
+
+	mpp_write(mpp, VEPU_LDLY_REG, val);
+}
+#endif
+
 static void *rkvenc_alloc_task(struct mpp_session *session,
 			       struct mpp_task_msgs *msgs)
 {
@@ -972,6 +1090,7 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 
 	mpp_debug_enter();
 
+	enc->line_cnt = 0;
 	atomic_set(&enc->on_work, 1);
 	//dev_info(mpp->dev, "link_run=%d mode %d\n", enc->link_run, enc->link_mode);
 	switch (enc->link_mode) {
@@ -1015,16 +1134,22 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 		mpp->cur_task = mpp_task;
 
 		/* Flush the register before the start the device */
-		//mpp_err("enc_start_val=%08x\n", enc_start_val);
+		// mpp_err("enc_start_val=%08x\n", enc_start_val);
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+		if (dvbm_en)
+			rk_dvbm_link(enc->port);
+#endif
 		wmb();
 		if (enc->link_run)
 			mpp_write(mpp, hw->enc_start_base, enc_start_val);
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 		if (dvbm_en)
-			rk_dvbm_link(enc->port);
+			update_online_info(mpp);
 #endif
-		priv->dvbm_link = 1;
-		priv->dvbm_en = dvbm_en;
+		if (dvbm_en) {
+			priv->dvbm_link = 1;
+			priv->dvbm_en = dvbm_en;
+		}
 	} break;
 	case RKVENC_MODE_LINK_ONEFRAME: {
 		atomic_set(&enc->link_task_cnt, 0);
@@ -1066,37 +1191,6 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 	mpp_debug_leave();
 
 	return 0;
-}
-
-
-
-static void rkvenc_dump_dbg(struct mpp_dev *mpp)
-{
-	if (!unlikely(mpp_dev_debug & DEBUG_DUMP_ERR_REG))
-		return;
-	pr_info("=== %s ===\n", __func__);
-	{
-		u32 i, off;
-		u32 start;// = 0x5168;//0x4000;
-		u32 end;// = 0x5170;//0x5350;
-		// struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
-
-		start = 0x5004;
-		end = 0x5028;
-		for (i = start; i <= end; i += 4) {
-			off = i;
-			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
-		}
-		start = 0x5168;
-		end = 0x5170;
-		for (i = start; i <= end; i += 4) {
-			off = i;
-			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
-		}
-		// rk_dvbm_ctrl(enc->port, DVBM_VEPU_DUMP_REGS, NULL);
-	}
-	pr_info("=== %s ===\n", __func__);
-
 }
 
 static int rkvenc_irq(struct mpp_dev *mpp)
@@ -1330,6 +1424,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 		mpp_debug(DEBUG_IRQ_STATUS, "irq_status: %08x\n", task->irq_status);
 
 		if (task->irq_status & enc->hw_info->err_mask) {
+			dev_err(mpp->dev, "irq_status 0x%08x\n", task->irq_status);
 			atomic_inc(&mpp->reset_request);
 			/* dump register */
 			if (mpp_debug_unlikely(DEBUG_DUMP_ERR_REG)) {
@@ -1389,6 +1484,7 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 {
 	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
 	struct rkvenc_task *task = to_rkvenc_task(mpp_task);
+	struct rkvenc2_session_priv *priv = mpp_task->session->priv;
 
 	mpp_debug_enter();
 
@@ -1425,8 +1521,8 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 		if (reg)
 			*reg = task->irq_status;
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
-		// if (enc->dvbm_en)
-		// 	rk_dvbm_unlink(enc->port);
+		if (priv->dvbm_en)
+			rk_dvbm_unlink(enc->port);
 #endif
 	} break;
 	default:
@@ -1573,10 +1669,12 @@ static int rkvenc_free_session(struct mpp_session *session)
 		struct rkvenc_dev *enc = to_rkvenc_dev(session->mpp);
 
 		mpp_power_on(session->mpp);
-		rk_dvbm_unlink(enc->port);
+		if (priv->dvbm_link){
+			rk_dvbm_unlink(enc->port);
+			priv->dvbm_link = 0;
+		}
 		mpp_power_off(session->mpp);
 #endif
-		priv->dvbm_link = 0;
 	}
 	if (session && session->priv) {
 		kfree(session->priv);
@@ -2064,50 +2162,6 @@ static int rkvenc_link_init(struct platform_device *pdev,
 
 	return 0;
 }
-
-#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
-static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
-{
-	struct rkvenc_dev *enc = (struct rkvenc_dev *)ctx;
-
-	if (!enc)
-		return 0;
-
-	switch (event) {
-	case DVBM_VEPU_NOTIFY_ADDR: {
-		struct dvbm_addr_cfg *cfg = (struct dvbm_addr_cfg*)arg;
-
-		enc->ybuf_top = cfg->ybuf_top;
-		enc->ybuf_bot = cfg->ybuf_bot;
-		enc->cbuf_top = cfg->cbuf_top;
-		enc->cbuf_bot = cfg->cbuf_bot;
-
-		//pr_info("%s y/c t: 0x%08x 0x%08x y/c b: 0x%08x 0x%08x\n",
-		//	__func__, enc->ybuf_top, enc->cbuf_top, enc->ybuf_bot, enc->cbuf_bot);
-	} break;
-	case DVBM_VEPU_REQ_CONNECT : {
-		u32 connect = *(u32*)arg;
-		unsigned long val = mpp_read(&enc->mpp, 0x18);
-
-		if (!connect)
-			clear_bit(24, &val);
-		mpp_write(&enc->mpp, 0x18, val);
-	} break;
-	case DVBM_VEPU_NOTIFY_FRM_STR: {
-		enc->frm_id_start = *(u32*)arg;
-	} break;
-	case DVBM_VEPU_NOTIFY_FRM_END: {
-		enc->frm_id_end = *(u32*)arg;
-	} break;
-	case DVBM_VEPU_NOTIFY_DUMP: {
-		rkvenc_dump_dbg(&enc->mpp);
-	} break;
-	default : {
-	} break;
-	}
-	return 0;
-}
-#endif
 
 static int rkvenc_probe_default(struct platform_device *pdev)
 {

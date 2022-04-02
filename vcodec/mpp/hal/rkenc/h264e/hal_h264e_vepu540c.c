@@ -28,6 +28,9 @@
 #include "vepu540c_common.h"
 
 #include "hal_h264e_vepu540c_reg.h"
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+#include <soc/rockchip/rockchip_dvbm.h>
+#endif
 
 #define DUMP_REG 0
 #define MAX_CORE_NUM 2
@@ -2054,7 +2057,7 @@ static void setup_vepu540c_ext_line_buf(HalVepu540cRegSet *regs,
 		regs->reg_base.ebufb_addr = 0;
 	}
 }
-
+#ifdef HW_DVBM
 static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx)
 {
 	RK_U32 soft_resync = 1;
@@ -2075,6 +2078,45 @@ static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ct
 	regs->reg_base.dvbm_id.vrsp_rtn_en = 1;
 	vepu540c_set_dvbm(&regs->reg_base.online_addr);
 }
+#else
+static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx)
+{
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+	struct dvbm_addr_cfg dvbm_adr;
+
+	(void)ctx;
+	rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+	regs->reg_ctl.dvbm_cfg.dvbm_en = 1;
+	regs->reg_ctl.dvbm_cfg.src_badr_sel = 1;
+	regs->reg_ctl.dvbm_cfg.vinf_frm_match = 1;
+	regs->reg_ctl.dvbm_cfg.vrsp_half_cycle = 8;
+
+	regs->reg_ctl.vs_ldly.vswm_lcnt_soft = dvbm_adr.line_cnt;
+	regs->reg_ctl.vs_ldly.vswm_fcnt_soft = dvbm_adr.frame_id;
+	regs->reg_ctl.vs_ldly.dvbm_ack_sel = 1;
+	regs->reg_ctl.vs_ldly.dvbm_ack_soft = 1;
+	regs->reg_ctl.vs_ldly.dvbm_inf_sel = 1;
+
+	regs->reg_base.dvbm_id.ch_id = 1;
+	regs->reg_base.dvbm_id.frame_id = dvbm_adr.frame_id;
+	regs->reg_base.dvbm_id.vrsp_rtn_en = 0;
+
+
+	regs->reg_base.online_addr.reg0156_adr_vsy_t = dvbm_adr.ybuf_top;
+	regs->reg_base.online_addr.reg0157_adr_vsc_t = dvbm_adr.cbuf_top;
+	regs->reg_base.online_addr.reg0158_adr_vsy_b = dvbm_adr.ybuf_bot;
+	regs->reg_base.online_addr.reg0159_adr_vsc_b = dvbm_adr.cbuf_bot;
+	regs->reg_base.adr_src0 = dvbm_adr.ybuf_sadr;
+	regs->reg_base.adr_src1 = dvbm_adr.cbuf_sadr;
+	regs->reg_base.adr_src2 = dvbm_adr.cbuf_sadr;
+#else
+	regs->reg_base.online_addr.reg0156_adr_vsy_t = 0;
+	regs->reg_base.online_addr.reg0157_adr_vsc_t = 0;
+	regs->reg_base.online_addr.reg0158_adr_vsy_b = 0;
+	regs->reg_base.online_addr.reg0159_adr_vsc_b = 0;
+#endif
+}
+#endif
 
 static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 {

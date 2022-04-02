@@ -256,11 +256,7 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	RK_S32 stridey = 0;
 	RK_S32 stridec = 0;
 
-	if (cfg->online) {
-		regs->reg0264_adr_src0 = 0;
-		regs->reg0265_adr_src1 = 0;
-		regs->reg0266_adr_src2 = 0;
-	}else{
+	if (!cfg->online) {
 		regs->reg0264_adr_src0 = mpp_dev_get_iova_address(cfg->dev, task->input, 264);
 		regs->reg0265_adr_src1 = regs->reg0264_adr_src0;
 		regs->reg0266_adr_src2 = regs->reg0264_adr_src0;
@@ -357,14 +353,16 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 				regs->reg0261_adr_vsc_b = dvbm_adr.cbuf_bot;
 				regs->reg0262_adr_vsy_t = dvbm_adr.ybuf_top;
 				regs->reg0263_adr_vsc_t = dvbm_adr.cbuf_top;
+				regs->reg0264_adr_src0 = dvbm_adr.ybuf_sadr;
+				regs->reg0265_adr_src1 = dvbm_adr.cbuf_sadr;
+				regs->reg0266_adr_src2 = dvbm_adr.cbuf_sadr;
 	#else
 				regs->reg0260_adr_vsy_b = 0;
 				regs->reg0261_adr_vsc_b = 0;
 				regs->reg0262_adr_vsy_t = 0;
 				regs->reg0263_adr_vsc_t = 0;
 	#endif
-				mpp_err("%s online\n", __func__);
-		}
+	}
 	return MPP_OK;
 }
 
