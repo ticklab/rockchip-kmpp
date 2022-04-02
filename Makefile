@@ -52,9 +52,11 @@ linux_build:
 	@mkdir -p $(PREB_KO)
 	@cp mpp_vcodec.ko $(PREB_KO)
 	@cp rk_vcodec.ko  $(PREB_KO)
+	@cp vepu_pp.ko  $(PREB_KO)
 	@mkdir -p $(REL_KO)
 	@cp mpp_vcodec.ko $(REL_KO)
 	@cp rk_vcodec.ko  $(REL_KO)
+	@cp vepu_pp.ko  $(REL_KO)
 	@find $(REL_KO) -name "*.ko" | xargs ${CROSS_COMPILE}strip --strip-debug --remove-section=.comment --remove-section=.note --preserve-dates
 
 linux_clean:
