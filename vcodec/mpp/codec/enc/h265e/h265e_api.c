@@ -86,7 +86,7 @@ static MPP_RET h265e_init(void *ctx, EncImplCfg * ctrlCfg)
 	h265->num_ref = 1;
 
 	h265->slice_cfg.split_enable = 0;
-	h265->entropy_cfg.cabac_init_flag = 1;
+	h265->entropy_cfg.cabac_init_flag = 0;
 	h265->sao_cfg.slice_sao_chroma_disable = 0;
 	h265->sao_cfg.slice_sao_luma_disable = 0;
 	h265->dblk_cfg.slice_deblocking_filter_disabled_flag = 0;
