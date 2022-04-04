@@ -23,11 +23,13 @@
 #include "mpp_buffer.h"
 #include "rk_export_func.h"
 #include "mpp_packet_impl.h"
+#include "mpp_packet_pool.h"
 
 RK_U32 mpp_vcodec_debug = 0;
 
 #define CHAN_MAX_YUV_POOL_SIZE  5
 #define CHAN_MAX_STREAM_POOL_SIZE  2
+#define MAX_STREAM_CNT 128
 
 static struct vcodec_entry g_vcodec_entry;
 
@@ -152,11 +154,12 @@ static int mpp_enc_module_init(void)
 	venc->num_enc = 0;
 	thds = vcodec_thread_create((struct vcodec_module *)venc);
 
-    vcodec_thread_set_count(thds, 1);
-		vcodec_thread_set_callback(thds,
-					   (void *)
-					   mpp_vcodec_enc_routine,
-					   (void *)venc);
+ 	vcodec_thread_set_count(thds, 1);
+	vcodec_thread_set_callback(thds,
+		(void *)mpp_vcodec_enc_routine,
+		(void *)venc);
+
+	mpp_packet_pool_init(MAX_STREAM_CNT);
 
 	venc->check = &venc;
 	venc->thd = thds;
@@ -493,12 +496,11 @@ int mpp_vcodec_unregister_mipdev(void)
 int mpp_vcodec_deinit(void)
 {
 	struct venc_module *venc = &g_vcodec_entry.venc;
-
-    if (venc->thd){
+	if (venc->thd){
 		vcodec_thread_stop(venc->thd);
 		vcodec_thread_destroy(venc->thd);
 		venc->thd = NULL;
-    }
-
+	}
+	mpp_packet_pool_deinit();
 	return 0;
 }

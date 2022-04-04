@@ -22,6 +22,7 @@
 #include "mpp_vcodec_base.h"
 #include "mpp_vcodec_flow.h"
 #include "mpp_vcodec_intf.h"
+#include "mpp_packet_pool.h"
 
 #include "mpp_log.h"
 #include "mpp_enc.h"
@@ -392,6 +393,7 @@ static int venc_proc_debug(struct seq_file *seq, void *offset)
 			mpp_enc_proc_debug(seq, chan_entry->handle, i);
 		}
 	}
+	mpp_packet_pool_proc(seq);
 	return 0;
 }
 
