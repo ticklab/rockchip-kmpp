@@ -89,7 +89,7 @@ static int pp_allocate_buffer(struct pp_chn_info_t *info)
 	int pic_hd8_m1 = (h >> 3) - 1;
 	int buf_len = 0, wi, hi;
 	enum PP_RET ret = VEPU_PP_OK;
-	
+
 	if (ds_en) {
 		wi = ((pic_wd8_m1 + 4) >> 2) * 2;
 		hi = ((pic_hd8_m1 + 4) >> 2) * 2;
@@ -250,16 +250,18 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 	case PP_CMD_SET_COMMON_CFG: {
 		struct pp_com_cfg *cfg = (struct pp_com_cfg *)param;
 		int frm_cnt = cfg->frm_cnt;
-		int gop = cfg->gop;
+		int gop = cfg->gop ? cfg->gop : 30;
+		int interval = cfg->md_interval ? cfg->md_interval : 1;
+		int md_od_switch = (info->frm_accum_interval == 0);
 
 		p->enc_pic_fmt.src_from_isp = !info->down_scale_en;
 		p->enc_pic_fmt.ref_pic0_updt_en = (info->smear_en || info->weightp_en) &&
-						  ((frm_cnt % gop) != (gop - 1));
-		p->enc_pic_fmt.ref_pic1_updt_en = (info->md_en && (frm_cnt % cfg->md_interval == 0)) ||
-						  (info->od_en && (frm_cnt % cfg->od_interval == 0));
+							(info->frm_accum_gop != (gop - 1));
+		p->enc_pic_fmt.ref_pic1_updt_en = (info->md_en && md_od_switch) ||
+							(info->od_en && md_od_switch);
 
-		p->enc_pic_rsl.pic_wd8_m1 = info->width / 8 - 1;
-		p->enc_pic_rsl.pic_hd8_m1 = info->height / 8 - 1;
+		p->enc_pic_rsl.pic_wd8_m1 = (info->width >> 3) - 1;
+		p->enc_pic_rsl.pic_hd8_m1 = (info->height >> 3) - 1;
 
 		p->vsp_pic_con.src_cfmt = cfg->fmt;
 
@@ -269,20 +271,20 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 		p->vsp_pic_ofst.pic_ofst_x = 0;
 		p->vsp_pic_ofst.pic_ofst_y = 0;
 		p->vsp_pic_strd0.src_strd0 = info->width;
-		p->vsp_pic_strd1.src_strd1 = info->width / 2;
+		p->vsp_pic_strd1.src_strd1 = info->width >> 1; //TODO: different format
 
-		p->smr_con_base.smear_cur_frm_en = info->smear_en && (frm_cnt % gop);
-		p->smr_con_base.smear_ref_frm_en = p->smr_con_base.smear_cur_frm_en && ((frm_cnt % gop) != 1);
-		p->smr_sto_strd = ((p->enc_pic_rsl.pic_wd8_m1 + 4) / 4 + 7) / 8 * 16;
+		p->smr_con_base.smear_cur_frm_en = info->smear_en && info->frm_accum_gop;
+		p->smr_con_base.smear_ref_frm_en = p->smr_con_base.smear_cur_frm_en && (info->frm_accum_gop != 1);
+		p->smr_sto_strd = ((((p->enc_pic_rsl.pic_wd8_m1 + 4) >> 2) + 7) >> 3) * 16;
 
-		p->wp_con_comb0 = info->weightp_en && (frm_cnt % gop);
+		p->wp_con_comb0 = info->weightp_en && info->frm_accum_gop;
 
-		p->md_con_base.cur_frm_en = info->md_en && (frm_cnt % cfg->md_interval == 0) && (frm_cnt > 0);
-		p->md_con_base.ref_frm_en = p->md_con_base.cur_frm_en && (frm_cnt > cfg->md_interval);
+		p->md_con_base.cur_frm_en = info->md_en && md_od_switch && (frm_cnt > 0);
+		p->md_con_base.ref_frm_en = p->md_con_base.cur_frm_en && (frm_cnt > interval);
 
 		{
 			//TODO:
-			u32 od_en = info->od_en && (frm_cnt % cfg->od_interval == 0);
+			u32 od_en = info->od_en && md_od_switch;
 			u32 od_background_en = (frm_cnt > 0);
 			u32 od_sad_comp_en = 1;
 			p->od_con_base = od_en | (od_background_en << 1) | (od_sad_comp_en << 2);
@@ -290,6 +292,14 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 
 		pp_set_src_addr(info, cfg);
 		pp_set_common_addr(info, cfg);
+
+		info->frm_accum_interval++;
+		if (info->frm_accum_interval == interval)
+			info->frm_accum_interval = 0;
+
+		info->frm_accum_gop++;
+		if (info->frm_accum_gop == gop)
+			info->frm_accum_gop = 0;
 		break;
 	}
 	case PP_CMD_SET_MD_CFG: {
@@ -370,7 +380,7 @@ int vepu_pp_control(int chn, enum pp_cmd cmd, void *param)
 
 		out->od_flg = info->output.od_out_flag;
 		out->pix_sum = info->output.od_out_pix_sum;
-		pr_info("od_flg %d pix_sum 0x%08x\n", out->od_flg, out->pix_sum);
+		pr_debug("od_flg %d pix_sum 0x%08x\n", out->od_flg, out->pix_sum);
 	}
 
 	pr_debug("vepu pp control cmd 0x%08x finished\n", cmd);

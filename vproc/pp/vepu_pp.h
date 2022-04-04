@@ -220,6 +220,8 @@ struct pp_chn_info_t {
 	int md_en;
 	int od_en;
 	int down_scale_en;
+	int frm_accum_interval;
+	int frm_accum_gop;
 
 	struct pp_buffer_t *buf_rfpw;
 	struct pp_buffer_t *buf_rfpr;
