@@ -82,13 +82,25 @@ static void pp_free_buffer(struct pp_chn_info_t *info, struct pp_buffer_t *pp_bu
 
 static int pp_allocate_buffer(struct pp_chn_info_t *info)
 {
-	int w = PP_ALIGN(info->width, 32);
-	int h = PP_ALIGN(info->height, 32);
+	int ds_en = info->down_scale_en;
+	int w = ds_en ? PP_ALIGN(info->width, 32) : PP_ALIGN(info->width, 32) * 4;
+	int h = ds_en ? PP_ALIGN(info->height, 32) : PP_ALIGN(info->height, 32) * 4;
+	int pic_wd8_m1 = (w >> 3) - 1;
+	int pic_hd8_m1 = (h >> 3) - 1;
+	int buf_len = 0, wi, hi;
 	enum PP_RET ret = VEPU_PP_OK;
+	
+	if (ds_en) {
+		wi = ((pic_wd8_m1 + 4) >> 2) * 2;
+		hi = ((pic_hd8_m1 + 4) >> 2) * 2;
+	} else {
+		wi = ((pic_wd8_m1 + 16) >> 4) * 8;
+		hi = ((pic_hd8_m1 + 16) >> 4) * 8;
+	}
+	buf_len = wi * hi * 16;
 
-	//TODO: reduce buffer size
-	info->buf_rfpw = pp_malloc_buffer(info, w * h / 8);
-	info->buf_rfpr = pp_malloc_buffer(info, w * h / 8);
+	info->buf_rfpw = pp_malloc_buffer(info, buf_len);
+	info->buf_rfpr = pp_malloc_buffer(info, buf_len);
 	if (IS_ERR_OR_NULL(info->buf_rfpw) ||
 	    IS_ERR_OR_NULL(info->buf_rfpr)) {
 		pp_err("failed\n");
@@ -96,7 +108,16 @@ static int pp_allocate_buffer(struct pp_chn_info_t *info)
 	}
 
 	if (info->md_en) {
-		info->buf_rfmwr = pp_malloc_buffer(info, w * h / 8);
+		if (ds_en) {
+			wi = (pic_wd8_m1 + 4) >> 2;
+			hi = (pic_hd8_m1 + 4) >> 2;
+		} else {
+			wi = ((pic_wd8_m1 + 16) >> 4) * 4;
+			hi = ((pic_hd8_m1 + 16) >> 4) * 4;
+		}
+		buf_len = ((wi * hi + 63) >> 6) * 16;
+
+		info->buf_rfmwr = pp_malloc_buffer(info, buf_len);
 		if (IS_ERR_OR_NULL(info->buf_rfmwr)) {
 			pp_err("failed\n");
 			ret = VEPU_PP_NOK;
