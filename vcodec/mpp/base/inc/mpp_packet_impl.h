@@ -49,6 +49,7 @@ typedef union MppPacketStatus_t {
 typedef struct MppPacketImpl_t {
 	const char *name;
 
+    struct list_head poo_list;
     struct list_head list;
 	struct kref ref;
 

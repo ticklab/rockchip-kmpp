@@ -1196,7 +1196,7 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 	}
 	ret = mpp_packet_new_ring_buf(&enc->packet, enc->ring_pool, 0);
 	if (ret) {
-		mpp_err("mpp_packet get new ring buf fail \n");
+		enc->pkt_fail_cnt++ ;
 		return ret;
 	}
 	{
@@ -1894,8 +1894,8 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 	seq_puts(
 		seq,
 		"\n--------hw status---------------------------------------------------------------------------------\n");
-	seq_printf(seq, "%8s%8s%12s\n", "ID", "hw_run", "enc_status");
-	seq_printf(seq, "%8d%8d%12d\n", chl_id,enc->hw_run, enc->enc_status);
+	seq_printf(seq, "%8s%8s%12s%14s\n", "ID", "hw_run", "enc_status", "pkt_fail_cnt");
+	seq_printf(seq, "%8d%8d%12d%14u\n", chl_id,enc->hw_run, enc->enc_status, enc->pkt_fail_cnt);
 
 	enc_impl_proc_debug(seq_file, enc->impl, chl_id);
 	rc_proc_show(seq_file, enc->rc_ctx, chl_id);
