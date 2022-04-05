@@ -25,6 +25,22 @@
 #include "mpp_packet_impl.h"
 #include "mpp_time.h"
 
+static MPP_RET frame_add_osd(MppFrame frame, MppEncOSDData3 *osd_data){
+	RK_U32 i = 0;
+	mpp_frame_add_osd(frame, (MppOsd)osd_data);
+	for (i = 0; i < osd_data->num_region; i++) {
+		if (osd_data->region[i].osd_buf.buf) {
+			mpi_buf_unref(osd_data->region[i].osd_buf.buf);
+		}
+
+		if (osd_data->region[i].inv_cfg.inv_buf.buf) {
+			mpi_buf_unref(
+				osd_data->region[i].inv_cfg.inv_buf.buf);
+		}
+	}
+	return MPP_OK;
+}
+
 static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 				     struct mpp_frame_infos *frm_info,
 				     MppFrame *frame)
@@ -47,21 +63,7 @@ static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 	mpp_frame_set_offset_x(*frame, frm_info->offset_x);
 	mpp_frame_set_offset_y(*frame, frm_info->offset_y);
 	if (frm_info->osd_buf) {
-		RK_U32 i = 0;
-		MppEncOSDData3 *osd_data = NULL;
-		mpp_frame_add_osd(*frame, frm_info->osd_buf);
-		osd_data = (MppEncOSDData3 *)frm_info->osd_buf;
-
-		for (i = 0; i < osd_data->num_region; i++) {
-			if (osd_data->region[i].osd_buf.buf) {
-				mpi_buf_unref(osd_data->region[i].osd_buf.buf);
-			}
-
-			if (osd_data->region[i].inv_cfg.inv_buf.buf) {
-				mpi_buf_unref(
-					osd_data->region[i].inv_cfg.inv_buf.buf);
-			}
-		}
+		frame_add_osd(*frame, (MppEncOSDData3 *)frm_info->osd_buf);
 	}
 	return MPP_OK;
 }
@@ -144,6 +146,9 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 					atomic_inc(&comb_chan->runing);
 					mpp_frame_init(&comb_frame);
 					mpp_frame_copy(comb_frame, frame);
+					if (frm_info.jpg_combo_osd_buf) {
+						frame_add_osd(comb_frame, (MppEncOSDData3 *)frm_info.jpg_combo_osd_buf);
+					}
 					mpp_frame_set_buffer(comb_frame,
 							     frm_buf);
 				}
@@ -190,7 +195,9 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		}
 
 		if (MPP_OK != ret) {
-			mpp_err("chn cfg reg fail \n");
+			if(MPP_ERR_MALLOC == ret) {
+				mpp_err("strm buf full drop frame\n");
+			}
 			atomic_dec(&chan_entry->runing);
 			wake_up(&chan_entry->stop_wait);
 			if (comb_frame) {

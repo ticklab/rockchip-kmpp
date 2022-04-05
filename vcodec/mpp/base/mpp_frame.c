@@ -244,7 +244,9 @@ MPP_RET mpp_frame_copy(MppFrame dst, MppFrame src)
 	memcpy(dst, src, sizeof(MppFrameImpl));
 	p = (MppFrameImpl *) dst;
 
-	if (p->osd) {
+	p->osd = NULL; //osd part no process
+
+	/*if (p->osd) {
 			MppEncOSDData3 *osd_data = NULL;
 			RK_U32 i = 0;
 			osd_data = (MppEncOSDData3 *)p->osd;
@@ -257,7 +259,7 @@ MPP_RET mpp_frame_copy(MppFrame dst, MppFrame src)
 					mpi_buf_ref(osd_data->region[i].inv_cfg.inv_buf.buf);
 				}
 			}
-	}
+	}*/
 //    if (p->meta)
 //        mpp_meta_inc_ref(p->meta);
 
