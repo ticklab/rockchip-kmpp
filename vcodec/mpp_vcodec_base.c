@@ -309,7 +309,7 @@ int mpp_vcodec_chan_entry_init(struct mpp_chan *entry, MppCtxType type,
 			mpibuf_fn->buf_queue_create(CHAN_MAX_YUV_POOL_SIZE);
 	}
 
-	entry->state = CHAN_STATE_SUSPEND;
+	entry->state = CHAN_STATE_SUSPEND_PENDING;
 	spin_unlock_irqrestore(&entry->chan_lock, lock_flag);
 	return 0;
 }

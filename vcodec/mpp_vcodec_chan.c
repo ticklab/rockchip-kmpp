@@ -101,7 +101,7 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 	return 0;
 }
 
-#define VCODEC_WAIT_TIMEOUT_DELAY		(2000)
+#define VCODEC_WAIT_TIMEOUT_DELAY		(2200)
 
 int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 {
@@ -118,7 +118,6 @@ int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 		break;
 	case MPP_CTX_ENC:{
 			ret = mpp_vcodec_chan_stop(chan_id, type);
-
     		ret = wait_event_timeout(chan_entry->stop_wait,
     						 !atomic_read(&chan_entry->runing),
     						 msecs_to_jiffies
@@ -178,15 +177,15 @@ int mpp_vcodec_chan_stop(int chan_id, MppCtxType type)
 			unsigned long lock_flag;
 			ret = mpp_enc_stop(chan_entry->handle);
 			spin_lock_irqsave(&chan_entry->chan_lock, lock_flag);
-            if (chan_entry->state != CHAN_STATE_RUN) {
-                spin_unlock_irqrestore(&chan_entry->chan_lock,
-                                           lock_flag);
-
-                return 0;
+			if (chan_entry->state != CHAN_STATE_RUN) {
+				spin_unlock_irqrestore(&chan_entry->chan_lock,
+							lock_flag);
+				return 0;
 			}
 			chan_entry->state = CHAN_STATE_SUSPEND;
 			spin_unlock_irqrestore(&chan_entry->chan_lock,
 					       lock_flag);
+			wake_up(&chan_entry->wait);
 			enc_chan_update_chan_prior_tab();
 		}
 		break;
@@ -291,11 +290,11 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 	struct mpp_chan *chan_entry = NULL;
 	struct mpi_buf *buf = NULL;
 	int ret = 0;
-    struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
-    if (!mpibuf_fn){
-       mpp_err_f("mpibuf_ops get fail");
-       return -1;
-    }
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	if (!mpibuf_fn){
+		mpp_err_f("mpibuf_ops get fail");
+		return -1;
+	}
 
 	chan_entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
 	venc = mpp_vcodec_get_enc_module_entry();
@@ -303,7 +302,7 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 
 	if (mpibuf_fn->dma_buf_import) {
 		dmabuf = dma_buf_get(info->fd);	//add one ref will be free in mpi_buf
-        dma_buf_end_cpu_access(dmabuf, DMA_TO_DEVICE); //flush to device
+		dma_buf_end_cpu_access(dmabuf, DMA_TO_DEVICE); //flush to device
 		// mpp_log("import dmabuf %p \n", dmabuf);
 		if (IS_ERR(dmabuf)) {
 			mpp_err("dma_buf_get fd %d failed\n", info->fd);

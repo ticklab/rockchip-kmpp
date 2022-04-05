@@ -137,6 +137,7 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		}
 		break;
 	case VCODEC_CHAN_RESET:{
+            ret = mpp_vcodec_chan_stop(chan_id, type);
 			if (ret)
 				goto fail;
 		}
@@ -288,11 +289,22 @@ static unsigned int vcodec_poll(struct file *filp, poll_table * wait)
 		mask |= POLLIN | POLLRDNORM;
 		return mask;
 	}
+
+	if(chan_entry->state == CHAN_STATE_SUSPEND){
+		mask |= POLLIN | POLLHUP | POLLERR;
+		return mask;
+	}
+
 	poll_wait(filp, &chan_entry->wait, wait);
 	//mpp_log("poll_wait out \n");
 	if (!list_empty(&chan_entry->stream_done)) {
 		mask |= POLLIN | POLLRDNORM;
 		//mpp_log("mask set %d \n", mask);
+	} else {
+		if(chan_entry->state == CHAN_STATE_SUSPEND){
+			mask |= POLLIN | POLLHUP | POLLERR;
+			return  mask;
+		}
 	}
 	//	mpp_log("return mask %d \n", mask);
 	return mask;
