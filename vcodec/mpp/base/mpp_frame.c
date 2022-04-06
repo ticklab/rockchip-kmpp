@@ -79,6 +79,10 @@ MPP_RET mpp_frame_deinit(MppFrame * frame)
 		}
 	}
 
+	if (p->pp_info) {
+		//mpi_buf_unref(pp_info.smear);
+	}
+
 	mpp_free(*frame);
 	*frame = NULL;
 	return MPP_OK;
@@ -197,6 +201,27 @@ MppOsd mpp_frame_get_osd(MppFrame frame)
 
 }
 
+MPP_RET mpp_frame_add_ppinfo(MppFrame frame, MppPpInfo pp_info)
+{
+	MppFrameImpl *p = (MppFrameImpl *)frame;
+	if (check_is_mpp_frame(frame) || !pp_info)
+		return MPP_ERR_NULL_PTR;
+
+	p->pp_info = pp_info;
+	//    mpi_buf_ref(pp_info.smear);
+
+	return 0;
+}
+
+MppPpInfo mpp_frame_get_ppinfo(MppFrame frame)
+{
+	MppFrameImpl *p = (MppFrameImpl *)frame;
+
+	if (check_is_mpp_frame(frame))
+		return NULL;
+
+	return (MppPpInfo)p->pp_info;
+}
 
 void mpp_frame_set_stopwatch_enable(MppFrame frame, RK_S32 enable)
 {

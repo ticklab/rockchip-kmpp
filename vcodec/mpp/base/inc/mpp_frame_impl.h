@@ -122,6 +122,7 @@ struct MppFrameImpl_t {
 	RK_U32   is_gray;
 	RK_U32   is_full;
 	RK_U32   phy_addr;
+	MppPpInfo pp_info;
 
 	/*
 	 * pointer for multiple frame output at one time

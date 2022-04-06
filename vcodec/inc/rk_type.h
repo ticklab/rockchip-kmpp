@@ -108,6 +108,7 @@ typedef void* MppRoi;
 typedef void* MppOsd;
 typedef void* MpiBuf;
 typedef void *HalBufs;
+typedef void* MppPpInfo;
 
 
 struct vcodec_attr {

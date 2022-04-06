@@ -358,6 +358,8 @@ MPP_RET mpp_frame_add_roi(MppFrame frame, MppRoi roi);
 MppRoi mpp_frame_get_roi(MppFrame frame);
 MPP_RET mpp_frame_add_osd(MppFrame frame, MppOsd osd);
 MppOsd mpp_frame_get_osd(MppFrame frame);
+MPP_RET mpp_frame_add_ppinfo(MppFrame frame, MppPpInfo pp_info);
+MppPpInfo mpp_frame_get_ppinfo(MppFrame frame);
 
 /*
  * color related parameter

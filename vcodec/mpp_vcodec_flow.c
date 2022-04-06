@@ -70,6 +70,10 @@ static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 	mpp_frame_set_phy_addr(*frame, frm_info->phy_addr);
 	if (frm_info->osd_buf)
 		frame_add_osd(*frame, (MppEncOSDData3 *)frm_info->osd_buf);
+	if (frm_info->pp_info) {
+		mpp_frame_add_ppinfo(*frame, (MppPpInfo*)frm_info->pp_info);
+		//mpi_buf_unref(frm_info->pp_info.smear);
+	}
 	return MPP_OK;
 }
 
