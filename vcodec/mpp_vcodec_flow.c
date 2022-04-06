@@ -28,6 +28,7 @@
 static MPP_RET frame_add_osd(MppFrame frame, MppEncOSDData3 *osd_data){
 	RK_U32 i = 0;
 	mpp_frame_add_osd(frame, (MppOsd)osd_data);
+
 	for (i = 0; i < osd_data->num_region; i++) {
 		if (osd_data->region[i].osd_buf.buf) {
 			mpi_buf_unref(osd_data->region[i].osd_buf.buf);
@@ -38,17 +39,18 @@ static MPP_RET frame_add_osd(MppFrame frame, MppEncOSDData3 *osd_data){
 				osd_data->region[i].inv_cfg.inv_buf.buf);
 		}
 	}
+
 	return MPP_OK;
 }
 
 static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 				     struct mpp_frame_infos *frm_info,
-				     MppFrame *frame)
+				     MppFrame *frame, RK_S32 chan_id)
 {
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 	memset(frm_info, 0, sizeof(*frm_info));
 	if (mpibuf_fn->get_buf_frm_info)
-		mpibuf_fn->get_buf_frm_info(buf, frm_info);
+		mpibuf_fn->get_buf_frm_info(buf, frm_info, chan_id);
 	else {
 		mpp_err("get buf info fail");
 		return MPP_NOK;
@@ -120,7 +122,7 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 			chan_entry->gap_time = (RK_S32)(mpp_time() - chan_entry->last_yuv_time);
 			chan_entry->last_yuv_time = mpp_time();
 
-			if (enc_chan_get_buf_info(buf, &frm_info, &frame)) {
+			if (enc_chan_get_buf_info(buf, &frm_info, &frame, chan_entry->chan_id)) {
 				mpi_buf_unref(buf);
 				return MPP_OK;
 			}
