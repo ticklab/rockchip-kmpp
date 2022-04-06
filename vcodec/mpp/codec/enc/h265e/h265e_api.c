@@ -95,6 +95,7 @@ static MPP_RET h265e_init(void *ctx, EncImplCfg * ctrlCfg)
 	h265->merge_cfg.max_mrg_cnd = 2;
 	h265->merge_cfg.merge_left_flag = 1;
 	h265->merge_cfg.merge_up_flag = 1;
+	h265->trans_cfg.defalut_ScalingList_enable = 1;
 
 	/*
 	 * default prep:

@@ -540,7 +540,103 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 	return ret;
 }
 
-static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *reg)
+static void setup_vepu540c_hevc_scl_cfg(vepu540c_scl_cfg *regs)
+{
+	static RK_U32 vepu540c_h265_scl_tab[] = {
+		/* 0x21e0 */
+		0x10001000, 0x10001000, 0x10001000, 0x10001000, 0x10101010, 0x10101010, 0x00000000, 0x00000000,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x0aab0c31, 0x10001000, 0x10001000, 0x0d790f0f, 0x0a3d0ba3,
+		0x10001000, 0x0e390f0f, 0x0ba30ccd, 0x08d40a3d, 0x10001000, 0x0c310e39, 0x097b0aab, 0x071c0842,
+		0x0f0f0f0f, 0x0aab0ccd, 0x07500889, 0x0572063e, 0x0d790e39, 0x097b0ba3, 0x05d10750, 0x03f004be,
+		0x0ba30c31, 0x08420a3d, 0x04be063e, 0x02e903a8, 0x0a3d0aab, 0x071c08d4, 0x03f00572, 0x023a02e9,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x0aab0c31, 0x10001000, 0x10001000, 0x0d790f0f, 0x0a3d0ba3,
+		0x10001000, 0x0e390f0f, 0x0ba30ccd, 0x08d40a3d, 0x10001000, 0x0c310e39, 0x097b0aab, 0x071c0842,
+		0x0f0f0f0f, 0x0aab0ccd, 0x07500889, 0x0572063e, 0x0d790e39, 0x097b0ba3, 0x05d10750, 0x03f004be,
+		0x0ba30c31, 0x08420a3d, 0x04be063e, 0x02e903a8, 0x0a3d0aab, 0x071c08d4, 0x03f00572, 0x023a02e9,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x0aab0c31, 0x10001000, 0x10001000, 0x0d790f0f, 0x0a3d0ba3,
+		0x10001000, 0x0e390f0f, 0x0ba30ccd, 0x08d40a3d, 0x10001000, 0x0c310e39, 0x097b0aab, 0x071c0842,
+		0x0f0f0f0f, 0x0aab0ccd, 0x07500889, 0x0572063e, 0x0d790e39, 0x097b0ba3, 0x05d10750, 0x03f004be,
+		0x0ba30c31, 0x08420a3d, 0x04be063e, 0x02e903a8, 0x0a3d0aab, 0x071c08d4, 0x03f00572, 0x023a02e9,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x0aab0ccd, 0x10001000, 0x0f0f1000, 0x0ccd0e39, 0x0a3d0aab,
+		0x10001000, 0x0e390f0f, 0x0aab0ccd, 0x09250a3d, 0x0f0f1000, 0x0ccd0e39, 0x0a3d0aab, 0x07c20925,
+		0x0e390f0f, 0x0aab0ccd, 0x09250a3d, 0x063e07c2, 0x0ccd0e39, 0x0a3d0aab, 0x07c20925, 0x04be063e,
+		0x0aab0ccd, 0x09250a3d, 0x063e07c2, 0x039b04be, 0x0a3d0aab, 0x07c20925, 0x04be063e, 0x02d0039b,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x0aab0ccd, 0x10001000, 0x0f0f1000, 0x0ccd0e39, 0x0a3d0aab,
+		0x10001000, 0x0e390f0f, 0x0aab0ccd, 0x09250a3d, 0x0f0f1000, 0x0ccd0e39, 0x0a3d0aab, 0x07c20925,
+		0x0e390f0f, 0x0aab0ccd, 0x09250a3d, 0x063e07c2, 0x0ccd0e39, 0x0a3d0aab, 0x07c20925, 0x04be063e,
+		0x0aab0ccd, 0x09250a3d, 0x063e07c2, 0x039b04be, 0x0a3d0aab, 0x07c20925, 0x04be063e, 0x02d0039b,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x0aab0ccd, 0x10001000, 0x0f0f1000, 0x0ccd0e39, 0x0a3d0aab,
+		0x10001000, 0x0e390f0f, 0x0aab0ccd, 0x09250a3d, 0x0f0f1000, 0x0ccd0e39, 0x0a3d0aab, 0x07c20925,
+		0x0e390f0f, 0x0aab0ccd, 0x09250a3d, 0x063e07c2, 0x0ccd0e39, 0x0a3d0aab, 0x07c20925, 0x04be063e,
+		0x0aab0ccd, 0x09250a3d, 0x063e07c2, 0x039b04be, 0x0a3d0aab, 0x07c20925, 0x04be063e, 0x02d0039b,
+		0x10001000, 0x10001000, 0x10001000, 0x10101010, 0x0e390f0f, 0x0aab0c31, 0x10001000, 0x18151211,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x10101010, 0x0d790f0f, 0x0a3d0ba3, 0x0aab0c31, 0x19161311,
+		0x10001000, 0x0e390f0f, 0x10001000, 0x12111010, 0x0ba30ccd, 0x08d40a3d, 0x10001000, 0x1d191614,
+		0x10001000, 0x0c310e39, 0x0d790f0f, 0x15121010, 0x097b0aab, 0x071c0842, 0x0a3d0ba3, 0x241f1b18,
+		0x0f0f0f0f, 0x0aab0ccd, 0x10001000, 0x18141111, 0x07500889, 0x0572063e, 0x0e390f0f, 0x2f29231e,
+		0x0d790e39, 0x097b0ba3, 0x0ba30ccd, 0x1b161312, 0x05d10750, 0x03f004be, 0x08d40a3d, 0x41362c23,
+		0x0ba30c31, 0x08420a3d, 0x10001000, 0x1f191615, 0x04be063e, 0x02e903a8, 0x0c310e39, 0x58463629,
+		0x0a3d0aab, 0x071c08d4, 0x097b0aab, 0x241d1918, 0x03f00572, 0x023a02e9, 0x071c0842, 0x7358412f,
+		0x10001000, 0x10001000, 0x0f0f0f0f, 0x10101010, 0x0e390f0f, 0x0aab0c31, 0x0aab0ccd, 0x18151211,
+		0x10001000, 0x10001000, 0x07500889, 0x10101010, 0x0d790f0f, 0x0a3d0ba3, 0x0572063e, 0x19161311,
+		0x10001000, 0x0e390f0f, 0x0d790e39, 0x12111010, 0x0ba30ccd, 0x08d40a3d, 0x097b0ba3, 0x1d191614,
+		0x10001000, 0x0c310e39, 0x05d10750, 0x15121010, 0x097b0aab, 0x071c0842, 0x03f004be, 0x241f1b18,
+		0x0f0f0f0f, 0x0aab0ccd, 0x0ba30c31, 0x18141111, 0x07500889, 0x0572063e, 0x08420a3d, 0x2f29231e,
+		0x0d790e39, 0x097b0ba3, 0x04be063e, 0x1b161312, 0x05d10750, 0x03f004be, 0x02e903a8, 0x41362c23,
+		0x0ba30c31, 0x08420a3d, 0x0a3d0aab, 0x1f191615, 0x04be063e, 0x02e903a8, 0x071c08d4, 0x58463629,
+		0x0a3d0aab, 0x071c08d4, 0x03f00572, 0x241d1918, 0x03f00572, 0x023a02e9, 0x023a02e9, 0x7358412f,
+		0x10001000, 0x10001000, 0x10001000, 0x10101010, 0x0e390f0f, 0x0aab0c31, 0x10001000, 0x18151211,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x10101010, 0x0d790f0f, 0x0a3d0ba3, 0x0aab0ccd, 0x19161311,
+		0x10001000, 0x0e390f0f, 0x10001000, 0x12111010, 0x0ba30ccd, 0x08d40a3d, 0x0f0f1000, 0x1d191614,
+		0x10001000, 0x0c310e39, 0x0ccd0e39, 0x15121010, 0x097b0aab, 0x071c0842, 0x0a3d0aab, 0x241f1b18,
+		0x0f0f0f0f, 0x0aab0ccd, 0x10001000, 0x18141111, 0x07500889, 0x0572063e, 0x0e390f0f, 0x2f29231e,
+		0x0d790e39, 0x097b0ba3, 0x0aab0ccd, 0x1b161312, 0x05d10750, 0x03f004be, 0x09250a3d, 0x41362c23,
+		0x0ba30c31, 0x08420a3d, 0x0f0f1000, 0x1f191615, 0x04be063e, 0x02e903a8, 0x0ccd0e39, 0x58463629,
+		0x0a3d0aab, 0x071c08d4, 0x0a3d0aab, 0x241d1918, 0x03f00572, 0x023a02e9, 0x07c20925, 0x7358412f,
+		0x10001000, 0x10001000, 0x0e390f0f, 0x10101010, 0x0e390f0f, 0x0aab0ccd, 0x0aab0ccd, 0x18141211,
+		0x10001000, 0x0f0f1000, 0x09250a3d, 0x11101010, 0x0ccd0e39, 0x0a3d0aab, 0x063e07c2, 0x19181412,
+		0x10001000, 0x0e390f0f, 0x0ccd0e39, 0x12111010, 0x0aab0ccd, 0x09250a3d, 0x0a3d0aab, 0x1c191814,
+		0x0f0f1000, 0x0ccd0e39, 0x07c20925, 0x14121110, 0x0a3d0aab, 0x07c20925, 0x04be063e, 0x211c1918,
+		0x0e390f0f, 0x0aab0ccd, 0x0aab0ccd, 0x18141211, 0x09250a3d, 0x063e07c2, 0x09250a3d, 0x29211c19,
+		0x0ccd0e39, 0x0a3d0aab, 0x063e07c2, 0x19181412, 0x07c20925, 0x04be063e, 0x039b04be, 0x3629211c,
+		0x0aab0ccd, 0x09250a3d, 0x0a3d0aab, 0x1c191814, 0x063e07c2, 0x039b04be, 0x07c20925, 0x47362921,
+		0x0a3d0aab, 0x07c20925, 0x04be063e, 0x211c1918, 0x04be063e, 0x02d0039b, 0x02d0039b, 0x5b473629,
+		0x10001000, 0x10001000, 0x10101010, 0x10101010, 0x0e390f0f, 0x0aab0ccd, 0x10101010, 0x18141211,
+		0x10001000, 0x0f0f1000, 0x12111211, 0x11101010, 0x0ccd0e39, 0x0a3d0aab, 0x18141815, 0x19181412,
+		0x10001000, 0x0e390f0f, 0x10101010, 0x12111010, 0x0aab0ccd, 0x09250a3d, 0x11101010, 0x1c191814,
+		0x0f0f1000, 0x0ccd0e39, 0x14121311, 0x14121110, 0x0a3d0aab, 0x07c20925, 0x19181916, 0x211c1918,
+		0x0e390f0f, 0x0aab0ccd, 0x10101010, 0x18141211, 0x09250a3d, 0x063e07c2, 0x12111211, 0x29211c19,
+		0x0ccd0e39, 0x0a3d0aab, 0x18141614, 0x19181412, 0x07c20925, 0x04be063e, 0x1c191d19, 0x3629211c,
+		0x0aab0ccd, 0x09250a3d, 0x11101010, 0x1c191814, 0x063e07c2, 0x039b04be, 0x14121512, 0x47362921,
+		0x0a3d0aab, 0x07c20925, 0x19181b18, 0x211c1918, 0x04be063e, 0x02d0039b, 0x211c241f, 0x5b473629,
+		0x10001000, 0x10001000, 0x12111111, 0x10101010, 0x0e390f0f, 0x0aab0ccd, 0x18141814, 0x18141211,
+		0x10001000, 0x0f0f1000, 0x1c19231e, 0x11101010, 0x0ccd0e39, 0x0a3d0aab, 0x29212f29, 0x19181412,
+		0x10001000, 0x0e390f0f, 0x14121312, 0x12111010, 0x0aab0ccd, 0x09250a3d, 0x19181b16, 0x1c191814,
+		0x0f0f1000, 0x0ccd0e39, 0x211c2c23, 0x14121110, 0x0a3d0aab, 0x07c20925, 0x36294136, 0x211c1918,
+		0x0e390f0f, 0x0aab0ccd, 0x18141615, 0x18141211, 0x09250a3d, 0x063e07c2, 0x1c191f19, 0x29211c19,
+		0x0ccd0e39, 0x0a3d0aab, 0x29213629, 0x19181412, 0x07c20925, 0x04be063e, 0x47365846, 0x3629211c,
+		0x0aab0ccd, 0x09250a3d, 0x19181918, 0x1c191814, 0x063e07c2, 0x039b04be, 0x211c241d, 0x47362921,
+		0x0a3d0aab, 0x07c20925, 0x3629412f, 0x211c1918, 0x04be063e, 0x02d0039b, 0x5b477358, 0x5b473629,
+		0x10101010, 0x18151211, 0x10101010, 0x18141211, 0x10101010, 0x19161311, 0x11101010, 0x19181412,
+		0x12111010, 0x1d191614, 0x12111010, 0x1c191814, 0x15121010, 0x241f1b18, 0x14121110, 0x211c1918,
+		0x18141111, 0x2f29231e, 0x18141211, 0x29211c19, 0x1b161312, 0x41362c23, 0x19181412, 0x3629211c,
+		0x1f191615, 0x58463629, 0x1c191814, 0x47362921, 0x241d1918, 0x7358412f, 0x211c1918, 0x5b473629,
+		0x10101010, 0x18151211, 0x10101010, 0x18141211, 0x10101010, 0x19161311, 0x11101010, 0x19181412,
+		0x12111010, 0x1d191614, 0x12111010, 0x1c191814, 0x15121010, 0x241f1b18, 0x14121110, 0x211c1918,
+		0x18141111, 0x2f29231e, 0x18141211, 0x29211c19, 0x1b161312, 0x41362c23, 0x19181412, 0x3629211c,
+		0x1f191615, 0x58463629, 0x1c191814, 0x47362921, 0x241d1918, 0x7358412f, 0x211c1918, 0x5b473629,
+		0x10101010, 0x18151211, 0x10101010, 0x18141211, 0x10101010, 0x19161311, 0x11101010, 0x19181412,
+		0x12111010, 0x1d191614, 0x12111010, 0x1c191814, 0x15121010, 0x241f1b18, 0x14121110, 0x211c1918,
+		0x18141111, 0x2f29231e, 0x18141211, 0x29211c19, 0x1b161312, 0x41362c23, 0x19181412, 0x3629211c,
+		0x1f191615, 0x58463629, 0x1c191814, 0x47362921, 0x241d1918, 0x7358412f, 0x211c1918, 0x5b473629
+	};
+	hal_h265e_dbg_func("enter\n");
+	memcpy(&regs->q_dc_y16, vepu540c_h265_scl_tab, sizeof(vepu540c_h265_scl_tab));
+	hal_h265e_dbg_func("leave\n");
+}
+
+static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *reg,
+				  HalEncTask *task)
 {
 	rdo_skip_par *p_rdo_skip = NULL;
 	rdo_noskip_par *p_rdo_noskip = NULL;
@@ -548,6 +644,7 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	RK_S32 delta_qp = 0;
 	RK_U32 *smear_cnt = ctx->smear_cnt;
 	RK_U32 mb_cnt = ctx->mb_num;
+	VepuPpInfo *ppinfo = (VepuPpInfo *)mpp_frame_get_ppinfo(task->frame);
 
 	reg->rdo_segment_cfg.rdo_segment_multi = 28;
 	reg->rdo_segment_cfg.rdo_segment_en = 1;
@@ -581,12 +678,40 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	else
 		reg->rdo_smear_cfg_comb.stated_mode = 2;
 
-	if (1) {
+	reg->weightp_cfg_comb.cime_ds_data_chg_for_wp = 0;
+	reg->weightp_cfg_comb.weightp_en = 1;
+	reg->weightp_cfg_comb.weightp_y = 0;
+	reg->weightp_cfg_comb.weightp_c = 0;
+	reg->weightp_cfg_comb.log2weight_denom_y = 0;
+	reg->whightp_input_comb.input_weight_y = 1;
+	reg->whightp_input_comb.input_weight_u = 1;
+	reg->whightp_input_comb.input_weight_v = 1;
+	reg->whightp_inoffset_comb.input_offset_y = 0;
+	reg->whightp_inoffset_comb.input_offset_u = 0;
+	reg->whightp_inoffset_comb.input_offset_v = 0;
+
+	if (!ppinfo) {
 		reg->rdo_smear_cfg_comb.smear_stride = 0;
 		reg->rdo_smear_cfg_comb.online_en = 1;
 	} else {
-		reg->rdo_smear_cfg_comb.smear_stride = (ctx->cfg->prep.width + 255) / 256;
-		reg->rdo_smear_cfg_comb.online_en = 0;
+		if (0 /*ppinfo->smrw_buf*/) {
+			RK_S32 pic_wd8_m1 = (ctx->cfg->prep.width + 31) / 32 * 32 / 8 - 1;
+			reg->rdo_smear_cfg_comb.smear_stride = ((pic_wd8_m1 + 4) / 4 + 7) / 8 * 16;
+			reg->rdo_smear_cfg_comb.online_en = 0;
+		} else {
+			reg->rdo_smear_cfg_comb.smear_stride = 0;
+			reg->rdo_smear_cfg_comb.online_en = 1;
+		}
+
+		if (ppinfo->wp_out_par_y & 0x1) {
+			reg->weightp_cfg_comb.cime_ds_data_chg_for_wp = 1;
+			reg->weightp_cfg_comb.weightp_en = 1;
+			reg->weightp_cfg_comb.weightp_y = 1;
+			reg->weightp_cfg_comb.weightp_c = 0;
+			reg->weightp_cfg_comb.log2weight_denom_y = (ppinfo->wp_out_par_y >> 1) & 0x7;
+			reg->whightp_input_comb.input_weight_y = (ppinfo->wp_out_par_y >> 4) & 0x1FF;
+			reg->whightp_inoffset_comb.input_offset_y = (ppinfo->wp_out_par_y >> 16) & 0xFF;
+		}
 	}
 
 	reg->rdo_smear_madp_thd0_comb.rdo_smear_madp_cur_thd0 = 0;
@@ -775,14 +900,16 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 }
 
 static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
-					 H265eV540cRegSet *regs)
+					 H265eV540cRegSet *regs,
+					 HalEncTask *task)
 {
 	MppEncHwCfg *hw = &ctx->cfg->hw;
 	RK_U32 i;
 	hevc_vepu540c_rc_roi *rc_regs = &regs->reg_rc_roi;
 	hevc_vepu540c_wgt *reg_wgt = &regs->reg_wgt;
 	vepu540c_rdo_cfg *reg_rdo = &regs->reg_rdo;
-	vepu540c_h265_rdo_cfg(ctx, reg_rdo);
+	vepu540c_h265_rdo_cfg(ctx, reg_rdo, task);
+	setup_vepu540c_hevc_scl_cfg(&regs->reg_scl);
 
 	if (ctx->frame_type == INTRA_FRAME) {
 		RK_U8 *thd = (RK_U8 *) & rc_regs->aq_tthd0;
@@ -793,8 +920,12 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 			step[i] = hw->aq_step_i[i] & 0x3f;
 		}
 		reg_wgt->iprd_lamb_satd_ofst.lambda_satd_offset = 11;
-		memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_moda_qp,
-		       sizeof(lamd_moda_qp));
+		if (ctx->smart_en)
+			memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp,
+			       sizeof(lamd_modb_qp));
+		else
+			memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_moda_qp,
+			       sizeof(lamd_moda_qp));
 	} else {
 		RK_U8 *thd = (RK_U8 *) & rc_regs->aq_tthd0;
 		RK_S8 *step = (RK_S8 *) & rc_regs->aq_stp0;
@@ -808,7 +939,7 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 171;
 	if (ctx->smart_en)
-		reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 128;
+		reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 85;
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_p = 85;
 	{
 		/* 0x1760 */
@@ -1529,6 +1660,7 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	VepuFmtCfg *fmt = (VepuFmtCfg *) ctx->input_fmt;
 	RK_U32 len = mpp_packet_get_length(task->packet);
 	RK_U32 is_phys = mpp_frame_get_is_full(task->frame);
+	VepuPpInfo *ppinfo = (VepuPpInfo *)mpp_frame_get_ppinfo(task->frame);
 
 	hal_h265e_enter();
 
@@ -1565,8 +1697,13 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	}
 	regs->reg0185_adr_smr_wr =
 		mpp_dev_get_iova_address(ctx->dev, recon_buf->buf[SMEAR_TYPE], 185);
-	regs->reg0184_adr_smr_rd =
-		mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[SMEAR_TYPE], 184);
+	if (0/*ppinfo && ppinfo->smrw_buf*/)
+		regs->reg0184_adr_smr_rd =
+			mpp_dev_get_iova_address2(ctx->dev, (struct dma_buf *)ppinfo->smrw_buf, 184);
+	else
+		regs->reg0184_adr_smr_rd =
+			mpp_dev_get_iova_address(ctx->dev, ref_buf->buf[SMEAR_TYPE], 184);
+
 
 	if (ctx->cfg->codec.h265.tmvp_enable) {
 		regs->reg0167_cmvw_addr =
@@ -1937,7 +2074,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 				 (MppEncROICfg *)ctx->roi_data, prep->width, prep->height);
 
 	/*paramet cfg */
-	vepu540c_h265_global_cfg_set(ctx, regs);
+	vepu540c_h265_global_cfg_set(ctx, regs, task);
 
 	is_gray = mpp_frame_get_is_gray(task->frame);
 	if (ctx->is_gray != is_gray) {

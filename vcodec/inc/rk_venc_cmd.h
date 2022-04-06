@@ -1287,4 +1287,14 @@ typedef struct MppEncUserDataSet_t {
 	MppEncUserDataFull  *datas;
 } MppEncUserDataSet;
 
+typedef struct VepuPpInfo_t {
+	void *smrw_buf;
+	RK_S32 smear_stride;
+	RK_S32 wp_out_par_y;
+	RK_S32 wp_out_par_u;
+	RK_S32 wp_out_par_v;
+	RK_S32 wp_out_pic_mean;
+	RK_S32 reserved[8];
+} VepuPpInfo;
+
 #endif /*__RK_VENC_CMD_H__*/

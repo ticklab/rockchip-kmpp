@@ -124,6 +124,25 @@ static int pp_allocate_buffer(struct pp_chn_info_t *info)
 		}
 	}
 
+	if (info->smear_en) {
+		if (ds_en) {
+			wi = ((pic_wd8_m1 + 4) >> 2) * 2;
+			hi = ((pic_hd8_m1 + 4) >> 2) * 2;
+		} else {
+			wi = ((pic_wd8_m1 + 16) >> 4) * 8;
+			hi = ((pic_hd8_m1 + 16) >> 4) * 8;
+		}
+		buf_len = ((wi * hi + 127) >> 7) * 16;
+
+		info->buf_rfswr = pp_malloc_buffer(info, buf_len);
+		if (IS_ERR_OR_NULL(info->buf_rfswr)) {
+			pp_err("failed\n");
+			ret = VEPU_PP_NOK;
+		}
+
+		info->smear_stride = ((pic_wd8_m1 + 4) / 4 + 7) / 8 * 16;
+	}
+
 	return ret;
 }
 
@@ -134,6 +153,8 @@ static void pp_release_buffer(struct pp_chn_info_t *info)
 
 	if (info->md_en)
 		pp_free_buffer(info, info->buf_rfmwr);
+	if (info->smear_en)
+		pp_free_buffer(info, info->buf_rfswr);
 }
 
 int vepu_pp_create_chn(int chn, struct pp_chn_attr *attr)
@@ -328,6 +349,36 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 		p->od_con_sad.od_thres_area_sad = cfg->thres_area_complex;
 		break;
 	}
+	case PP_CMD_SET_SMEAR_CFG: {
+		struct pp_smear_cfg *cfg = (struct pp_smear_cfg *)param;
+		p->adr_smr_base = info->api->get_address(info->dev_srv, cfg->smrw_buf, 0);
+		p->adr_rfsw = info->buf_rfswr->iova;
+		p->adr_rfsr = info->buf_rfswr->iova;
+		p->smr_resi_thd0 = 0x080b080b;
+		p->smr_resi_thd1 = 0x06101414;
+		p->smr_resi_thd2 = 0x09060606;
+		p->smr_resi_thd3 = 0x00000706;
+		p->smr_madp_thd0 = 0x00180000;
+		p->smr_madp_thd1 = 0x00400030;
+		p->smr_madp_thd2 = 0x00200010;
+		p->smr_madp_thd3 = 0x00600030;
+		p->smr_madp_thd4 = 0x00180030;
+		p->smr_madp_thd5 = 0x00300060;
+		p->smr_cnt_thd0 = 0x41415252;
+		p->smr_cnt_thd1 = 0x00303030;
+		p->smr_sto_strd = info->smear_stride;
+		break;
+	}
+	case PP_CMD_SET_WEIGHTP_CFG: {
+		p->wp_con_comb0 |= (0x03fd << 16);
+		p->wp_con_comb1 = 0x00800080;
+		p->wp_con_comb2 = 0x01000080;
+		p->wp_con_comb3 = 0x01000100;
+		p->wp_con_comb4 = 0x00400040;
+		p->wp_con_comb5 = 0x00080040;
+		p->wp_con_comb6 = 0x00080008;
+		break;
+	}
 	default: {
 	}
 	}
@@ -345,7 +396,8 @@ int vepu_pp_control(int chn, enum pp_cmd cmd, void *param)
 	info = &g_pp_ctx.chn_info[chn];
 
 	if (cmd == PP_CMD_SET_COMMON_CFG || cmd == PP_CMD_SET_MD_CFG ||
-	    cmd == PP_CMD_SET_OD_CFG)
+	    cmd == PP_CMD_SET_OD_CFG || cmd == PP_CMD_SET_SMEAR_CFG ||
+	    cmd == PP_CMD_SET_WEIGHTP_CFG)
 		vepu_pp_set_param(info, cmd, param);
 
 	if (cmd == PP_CMD_RUN_SYNC) {
@@ -381,6 +433,18 @@ int vepu_pp_control(int chn, enum pp_cmd cmd, void *param)
 		out->od_flg = info->output.od_out_flag;
 		out->pix_sum = info->output.od_out_pix_sum;
 		pr_debug("od_flg %d pix_sum 0x%08x\n", out->od_flg, out->pix_sum);
+	}
+
+	if (cmd == PP_CMD_GET_WEIGHTP_OUTPUT) {
+		struct pp_weightp_out *out = (struct pp_weightp_out *)param;
+
+		out->wp_out_par_y = info->output.wp_out_par_y;
+		out->wp_out_par_u = info->output.wp_out_par_u;
+		out->wp_out_par_v = info->output.wp_out_par_v;
+		out->wp_out_pic_mean = info->output.wp_out_pic_mean;
+		pr_debug("wp_par 0x%08x 0x%08x 0x%08x pic_mean 0x%08x\n",
+			 out->wp_out_par_y, out->wp_out_par_u,
+			 out->wp_out_par_v, out->wp_out_pic_mean);
 	}
 
 	pr_debug("vepu pp control cmd 0x%08x finished\n", cmd);

@@ -50,7 +50,7 @@ MPP_RET h264e_pps_update(H264ePps *pps, MppEncCfgSet *cfg)
 	pps->num_ref_idx_l0_default_active = 1;
 	pps->num_ref_idx_l1_default_active = 1;
 
-	pps->weighted_pred = 0;
+	pps->weighted_pred = 1;
 	pps->weighted_bipred_idc = 0;
 
 	pps->pic_init_qp = 26;

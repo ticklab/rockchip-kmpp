@@ -90,6 +90,7 @@ static void init_h264e_cfg_set(MppEncCfgSet *cfg, MppClientType type)
 	memset(h264, 0, sizeof(*h264));
 	h264->profile = H264_PROFILE_BASELINE;
 	h264->level = H264_LEVEL_3_1;
+	h264->scaling_list_mode = 1;
 
 	switch (type) {
 	case VPU_CLIENT_VEPU1 :

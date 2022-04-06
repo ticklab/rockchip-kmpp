@@ -423,7 +423,7 @@ MPP_RET h265e_set_pps(H265eCtx * ctx, h265_pps * pps, h265_sps * sps)
 	pps->pps_cr_qp_offset = codec->trans_cfg.cb_qp_offset;
 
 	pps->entropy_coding_sync_enabled_flag = 0;
-	pps->weighted_pred_flag = 0;
+	pps->weighted_pred_flag = 1;
 	pps->weighted_bipred_flag = 0;
 	pps->output_flag_present_flag = 0;
 	pps->sign_data_hiding_flag = 0;

@@ -160,6 +160,17 @@ RK_U32 mpp_dev_get_iova_address(MppDev ctx, MppBuffer mpp_buf, RK_U32 reg_idx)
 	return -EINVAL;
 }
 
+RK_U32 mpp_dev_get_iova_address2(MppDev ctx, struct dma_buf *dma_buf, RK_U32 reg_idx)
+{
+	MppDevImpl *p = (MppDevImpl *) ctx;
+	const MppDevApi *api = p->api;
+	void *impl_ctx = p->ctx;
+	mpp_assert(dma_buf);
+	if (api->get_address)
+		return api->get_address(impl_ctx, dma_buf, reg_idx);
+	return -EINVAL;
+}
+
 RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf, RK_U32 offset)
 {
 	MppDevImpl *p = (MppDevImpl *) ctx;
@@ -203,6 +214,18 @@ RK_U32 mpp_dev_release_iova_address(MppDev ctx, MppBuffer mpp_buf)
 	void *impl_ctx = p->ctx;
 	struct dma_buf *dma_buf = NULL;
 	dma_buf = mpp_buffer_get_dma(mpp_buf);
+	mpp_assert(dma_buf);
+	if (api->release_address && dma_buf)
+		api->release_address(impl_ctx, dma_buf);
+	return 0;
+}
+
+RK_U32 mpp_dev_release_iova_address2(MppDev ctx, struct dma_buf *dma_buf)
+{
+
+	MppDevImpl *p = (MppDevImpl *) ctx;
+	const MppDevApi *api = p->api;
+	void *impl_ctx = p->ctx;
 	mpp_assert(dma_buf);
 	if (api->release_address && dma_buf)
 		api->release_address(impl_ctx, dma_buf);

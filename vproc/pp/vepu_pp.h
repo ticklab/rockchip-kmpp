@@ -222,10 +222,12 @@ struct pp_chn_info_t {
 	int down_scale_en;
 	int frm_accum_interval;
 	int frm_accum_gop;
+	int smear_stride;
 
 	struct pp_buffer_t *buf_rfpw;
 	struct pp_buffer_t *buf_rfpr;
 	struct pp_buffer_t *buf_rfmwr; /* MD */
+	struct pp_buffer_t *buf_rfswr; /* smear */
 
 	struct pp_param_t param;
 	struct pp_output_t output;
