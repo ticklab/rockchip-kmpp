@@ -85,6 +85,9 @@ typedef struct HalH264eVepu540cCtx_t {
 	/* syntax for output to enc_impl */
 	EncRcTaskInfo hal_rc_cfg;
 
+	RK_U32 mb_num;
+	RK_U32 smear_cnt[5];
+
 	/* roi */
 	void *roi_data;
 
@@ -187,8 +190,8 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 	{                   /* setup default hardware config */
 		MppEncHwCfg *hw = &cfg->cfg->hw;
 
-		hw->qp_delta_row_i = 0;
-		hw->qp_delta_row = 1;
+		hw->qp_delta_row_i = 1;
+		hw->qp_delta_row = 2;
 
 		memcpy(hw->aq_thrd_i, h264_aq_tthd_default,
 		       sizeof(hw->aq_thrd_i));
@@ -1115,13 +1118,27 @@ static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 	rdo_noskip_par *p_rdo_noskip = NULL;
 	vepu540c_rdo_cfg *reg = &ctx->regs_set->reg_rdo;
 	H264eSlice *slice = ctx->slice;
+	RK_S32 delta_qp = 0;
+	RK_U32 *smear_cnt = ctx->smear_cnt;
+	RK_U32 mb_cnt = ctx->mb_num;
 	hal_h264e_dbg_func("enter\n");
 
 	reg->rdo_smear_cfg_comb.rdo_smear_en = 1;
-	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 6;
-	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = 0;
-	reg->rdo_smear_cfg_comb.rdo_smear_order_state = 0;
+	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 9;
 
+	if(smear_cnt[2] + smear_cnt[3] > smear_cnt[4] / 2)
+	    delta_qp = 1;
+	if(smear_cnt[4] < (mb_cnt >> 8))
+	    delta_qp -= 8;
+	else if(smear_cnt[4] < (mb_cnt >> 7))
+	    delta_qp -= 6;
+	else if(smear_cnt[4] < (mb_cnt >> 6))
+	    delta_qp -= 4;
+	else
+	    delta_qp -= 1;
+	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = delta_qp; 
+
+	reg->rdo_smear_cfg_comb.rdo_smear_order_state = 0;
 	if (H264_I_SLICE == slice->slice_type)
 		reg->rdo_smear_cfg_comb.stated_mode = 1;
 	else if (H264_I_SLICE == slice->last_slice_type)
@@ -1149,10 +1166,10 @@ static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 	reg->rdo_smear_madp_thd4_comb.rdo_smear_madp_around_thd5 = 24;
 	reg->rdo_smear_madp_thd5_comb.rdo_smear_madp_ref_thd0 = 96;
 	reg->rdo_smear_madp_thd5_comb.rdo_smear_madp_ref_thd1 = 48;
-	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd0 = 2;
-	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd1 = 5;
-	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd2 = 2;
-	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd3 = 5;
+	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd0 = 1;
+	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd1 = 3;
+	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd2 = 1;
+	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd3 = 3;
 	reg->rdo_smear_cnt_thd1_comb.rdo_smear_cnt_around_thd0 = 1;
 	reg->rdo_smear_cnt_thd1_comb.rdo_smear_cnt_around_thd1 = 4;
 	reg->rdo_smear_cnt_thd1_comb.rdo_smear_cnt_around_thd2 = 1;
@@ -1161,12 +1178,12 @@ static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 	reg->rdo_smear_cnt_thd2_comb.rdo_smear_cnt_around_thd5 = 3;
 	reg->rdo_smear_cnt_thd2_comb.rdo_smear_cnt_around_thd6 = 0;
 	reg->rdo_smear_cnt_thd2_comb.rdo_smear_cnt_around_thd7 = 3;
-	reg->rdo_smear_cnt_thd3_comb.rdo_smear_cnt_ref_thd0 = 0;
+	reg->rdo_smear_cnt_thd3_comb.rdo_smear_cnt_ref_thd0 = 1;
 	reg->rdo_smear_cnt_thd3_comb.rdo_smear_cnt_ref_thd1 = 3;
 	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_small_cur_th0 = 6;
-	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_big_cur_th0 = 11;
+	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_big_cur_th0 = 9;
 	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_small_cur_th1 = 6;
-	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_big_cur_th1 = 8;
+	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_big_cur_th1 = 9;
 	reg->rdo_smear_resi_thd1_comb.rdo_smear_resi_small_around_th0 = 6;
 	reg->rdo_smear_resi_thd1_comb.rdo_smear_resi_big_around_th0 = 11;
 	reg->rdo_smear_resi_thd1_comb.rdo_smear_resi_small_around_th1 = 6;
@@ -1892,17 +1909,17 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 	regs->reg_s3.RDO_QUANT.quant_f_bias_P = 341;
 
 	regs->reg_s3.iprd_tthdy4_0.iprd_tthdy4_0 = 1;
-	regs->reg_s3.iprd_tthdy4_0.iprd_tthdy4_1 = 4;
-	regs->reg_s3.iprd_tthdy4_1.iprd_tthdy4_2 = 9;
-	regs->reg_s3.iprd_tthdy4_1.iprd_tthdy4_3 = 36;
+	regs->reg_s3.iprd_tthdy4_0.iprd_tthdy4_1 = 3;
+	regs->reg_s3.iprd_tthdy4_1.iprd_tthdy4_2 = 6;
+	regs->reg_s3.iprd_tthdy4_1.iprd_tthdy4_3 = 8;
 	regs->reg_s3.iprd_tthdc8_0.iprd_tthdc8_0 = 1;
-	regs->reg_s3.iprd_tthdc8_0.iprd_tthdc8_1 = 4;
-	regs->reg_s3.iprd_tthdc8_1.iprd_tthdc8_2 = 9;
-	regs->reg_s3.iprd_tthdc8_1.iprd_tthdc8_3 = 36;
+	regs->reg_s3.iprd_tthdc8_0.iprd_tthdc8_1 = 3;
+	regs->reg_s3.iprd_tthdc8_1.iprd_tthdc8_2 = 6;
+	regs->reg_s3.iprd_tthdc8_1.iprd_tthdc8_3 = 8;
 	regs->reg_s3.iprd_tthdy8_0.iprd_tthdy8_0 = 1;
-	regs->reg_s3.iprd_tthdy8_0.iprd_tthdy8_1 = 4;
-	regs->reg_s3.iprd_tthdy8_1.iprd_tthdy8_2 = 9;
-	regs->reg_s3.iprd_tthdy8_1.iprd_tthdy8_3 = 36;
+	regs->reg_s3.iprd_tthdy8_0.iprd_tthdy8_1 = 3;
+	regs->reg_s3.iprd_tthdy8_1.iprd_tthdy8_2 = 6;
+	regs->reg_s3.iprd_tthdy8_1.iprd_tthdy8_3 = 8;
 	regs->reg_s3.iprd_tthd_ul.iprd_tthd_ul = 4;
 	regs->reg_s3.iprd_wgty8.iprd_wgty8_0 = 22;
 	regs->reg_s3.iprd_wgty8.iprd_wgty8_1 = 23;
@@ -1963,7 +1980,7 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 		regs->reg_s3.cime_sqi_cfg.cime_pmv_num = 1;
 		regs->reg_s3.cime_sqi_cfg.cime_fuse = 1;
 		regs->reg_s3.cime_sqi_cfg.itp_mode = 0;
-		regs->reg_s3.cime_sqi_cfg.move_lambda = 1;
+		regs->reg_s3.cime_sqi_cfg.move_lambda = 0;
 		regs->reg_s3.cime_sqi_cfg.rime_lvl_mrg = 0;
 		regs->reg_s3.cime_sqi_cfg.rime_prelvl_en = 0;
 		regs->reg_s3.cime_sqi_cfg.rime_prersu_en = 0;
@@ -1977,10 +1994,10 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 		regs->reg_s3.cime_madp_th.cime_madp_th = 16;
 
 		/* 0x176c */
-		regs->reg_s3.cime_multi.cime_multi0 = 16;
-		regs->reg_s3.cime_multi.cime_multi1 = 32;
-		regs->reg_s3.cime_multi.cime_multi2 = 96;
-		regs->reg_s3.cime_multi.cime_multi3 = 96;
+		regs->reg_s3.cime_multi.cime_multi0 = 8;
+		regs->reg_s3.cime_multi.cime_multi1 = 12;
+		regs->reg_s3.cime_multi.cime_multi2 = 16;
+		regs->reg_s3.cime_multi.cime_multi3 = 20;
 	}
 
 	/* RIME && FME */
@@ -1995,9 +2012,9 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 		regs->reg_s3.rime_madp_th.rime_madp_th1 = 16;
 
 		/* 0x1778 */
-		regs->reg_s3.rime_multi.rime_multi0 = 16;
-		regs->reg_s3.rime_multi.rime_multi1 = 32;
-		regs->reg_s3.rime_multi.rime_multi2 = 80;
+		regs->reg_s3.rime_multi.rime_multi0 = 4;
+		regs->reg_s3.rime_multi.rime_multi1 = 8;
+		regs->reg_s3.rime_multi.rime_multi2 = 12;
 
 		/* 0x177C */
 		regs->reg_s3.cmv_st_th.cmv_th0 = 64;
@@ -2412,6 +2429,14 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 	ctx->hal_rc_cfg.quality_real = rc_info->quality_real;
 	ctx->hal_rc_cfg.iblk4_prop = rc_info->iblk4_prop;
 	ctx->slice->last_slice_type = ctx->slice->slice_type;
+
+	ctx->mb_num = mbs;
+	ctx->smear_cnt[0] = regs_set->reg_st.st_smear_cnt.rdo_smear_cnt0 * 4;
+	ctx->smear_cnt[1] = regs_set->reg_st.st_smear_cnt.rdo_smear_cnt1 * 4;
+	ctx->smear_cnt[2] = regs_set->reg_st.st_smear_cnt.rdo_smear_cnt2 * 4;
+	ctx->smear_cnt[3] = regs_set->reg_st.st_smear_cnt.rdo_smear_cnt3 * 4;
+	ctx->smear_cnt[4] = ctx->smear_cnt[0] + ctx->smear_cnt[1]
+		+ ctx->smear_cnt[2] + ctx->smear_cnt[3];
 
 	task->hal_ret.data = &ctx->hal_rc_cfg;
 	task->hal_ret.number = 1;

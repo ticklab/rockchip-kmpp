@@ -63,6 +63,7 @@ typedef struct vepu540c_h265_fbk_t {
 	RK_U32 st_madi;
 	RK_U32 st_mb_num;
 	RK_U32 st_ctu_num;
+	RK_U32 st_smear_cnt[5];
 } vepu540c_h265_fbk;
 
 typedef struct H265eV540cHalContext_t {
@@ -77,6 +78,9 @@ typedef struct H265eV540cHalContext_t {
 
 	RK_S32 frame_type;
 	RK_S32 last_frame_type;
+
+	RK_U32 mb_num;
+	RK_U32 smear_cnt[5];
 
 	/* @frame_cnt starts from ZERO */
 	RK_U32 frame_cnt;
@@ -484,16 +488,30 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	rdo_skip_par *p_rdo_skip = NULL;
 	rdo_noskip_par *p_rdo_noskip = NULL;
 	pre_cst_par *p_pre_cst = NULL;
+	RK_S32 delta_qp = 0;
+	RK_U32 *smear_cnt = ctx->smear_cnt;
+	RK_U32 mb_cnt = ctx->mb_num;
 
 	reg->rdo_segment_cfg.rdo_segment_multi = 28;
 	reg->rdo_segment_cfg.rdo_segment_en = 1;
 	reg->rdo_smear_cfg_comb.rdo_smear_en = 1;
-	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 7;
-	reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 6;
-	reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 5;
-	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = 0;
-	reg->rdo_smear_cfg_comb.rdo_smear_order_state = 0;
+	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 9;
+	reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 8;
+	reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 8;    
 
+	if(smear_cnt[2] + smear_cnt[3] > smear_cnt[4] / 2)
+	    delta_qp = 1;
+	if(smear_cnt[4] < (mb_cnt >> 8))
+	    delta_qp -= 8;
+	else if(smear_cnt[4] < (mb_cnt >> 7))
+	    delta_qp -= 6;
+	else if(smear_cnt[4] < (mb_cnt >> 6))
+	    delta_qp -= 4;
+	else
+	    delta_qp -= 1;
+	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = delta_qp; 
+
+	reg->rdo_smear_cfg_comb.rdo_smear_order_state = 0;
 	if (INTRA_FRAME == ctx->frame_type)
 		reg->rdo_smear_cfg_comb.stated_mode = 1;
 	else if (INTRA_FRAME == ctx->last_frame_type)
@@ -521,10 +539,10 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	reg->rdo_smear_madp_thd4_comb.rdo_smear_madp_around_thd5 = 24;
 	reg->rdo_smear_madp_thd5_comb.rdo_smear_madp_ref_thd0 = 96;
 	reg->rdo_smear_madp_thd5_comb.rdo_smear_madp_ref_thd1 = 48;
-	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd0 = 2;
-	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd1 = 5;
-	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd2 = 2;
-	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd3 = 5;
+	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd0 = 1;
+	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd1 = 3;
+	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd2 = 1;
+	reg->rdo_smear_cnt_thd0_comb.rdo_smear_cnt_cur_thd3 = 3;
 	reg->rdo_smear_cnt_thd1_comb.rdo_smear_cnt_around_thd0 = 1;
 	reg->rdo_smear_cnt_thd1_comb.rdo_smear_cnt_around_thd1 = 4;
 	reg->rdo_smear_cnt_thd1_comb.rdo_smear_cnt_around_thd2 = 1;
@@ -533,12 +551,12 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	reg->rdo_smear_cnt_thd2_comb.rdo_smear_cnt_around_thd5 = 3;
 	reg->rdo_smear_cnt_thd2_comb.rdo_smear_cnt_around_thd6 = 0;
 	reg->rdo_smear_cnt_thd2_comb.rdo_smear_cnt_around_thd7 = 3;
-	reg->rdo_smear_cnt_thd3_comb.rdo_smear_cnt_ref_thd0 = 0;
+	reg->rdo_smear_cnt_thd3_comb.rdo_smear_cnt_ref_thd0 = 1;
 	reg->rdo_smear_cnt_thd3_comb.rdo_smear_cnt_ref_thd1 = 3;
 	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_small_cur_th0 = 6;
-	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_big_cur_th0 = 11;
+	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_big_cur_th0 = 9;
 	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_small_cur_th1 = 6;
-	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_big_cur_th1 = 8;
+	reg->rdo_smear_resi_thd0_comb.rdo_smear_resi_big_cur_th1 = 9;
 	reg->rdo_smear_resi_thd1_comb.rdo_smear_resi_small_around_th0 = 6;
 	reg->rdo_smear_resi_thd1_comb.rdo_smear_resi_big_around_th0 = 11;
 	reg->rdo_smear_resi_thd1_comb.rdo_smear_resi_small_around_th1 = 6;
@@ -735,7 +753,7 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 		regs->reg_wgt.cime_mvd_th.cime_mvd_th2 = 32;
 
 		/* 0x1768 */
-		regs->reg_wgt.cime_madp_th.cime_madp_th = 32;
+		regs->reg_wgt.cime_madp_th.cime_madp_th = 16;
 
 		/* 0x176c */
 		regs->reg_wgt.cime_multi.cime_multi0 = 8;
@@ -752,8 +770,8 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 		regs->reg_wgt.rime_mvd_th.fme_madp_th = 0;
 
 		/* 0x1774 */
-		regs->reg_wgt.rime_madp_th.rime_madp_th0 = 0;
-		regs->reg_wgt.rime_madp_th.rime_madp_th1 = 50;
+		regs->reg_wgt.rime_madp_th.rime_madp_th0 = 8;
+		regs->reg_wgt.rime_madp_th.rime_madp_th1 = 16;
 
 		/* 0x1778 */
 		regs->reg_wgt.rime_multi.rime_multi0 = 4;
@@ -994,10 +1012,10 @@ static MPP_RET vepu540c_h265_set_rc_regs(H265eV540cHalContext *ctx,
 		reg_base->reg213_rc_qp.rc_min_qp = rc_cfg->quality_min;
 		reg_base->reg214_rc_tgt.ctu_ebit = ctu_target_bits_mul_16;
 
-		reg_rc->rc_dthd_0_8[0] = 2 * negative_bits_thd;
+		reg_rc->rc_dthd_0_8[0] = 4 * negative_bits_thd;
 		reg_rc->rc_dthd_0_8[1] = negative_bits_thd;
 		reg_rc->rc_dthd_0_8[2] = positive_bits_thd;
-		reg_rc->rc_dthd_0_8[3] = 2 * positive_bits_thd;
+		reg_rc->rc_dthd_0_8[3] = 4 * positive_bits_thd;
 		reg_rc->rc_dthd_0_8[4] = 0x7FFFFFFF;
 		reg_rc->rc_dthd_0_8[5] = 0x7FFFFFFF;
 		reg_rc->rc_dthd_0_8[6] = 0x7FFFFFFF;
@@ -1994,6 +2012,13 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	fb->st_lvl4_intra_num += elem->st.st_pnum_i4.pnum_i4;
 	memcpy(&fb->st_cu_num_qp[0], &elem->st.st_b8_qp, 52 * sizeof(RK_U32));
 
+	fb->st_smear_cnt[0] = elem->st.st_smear_cnt.rdo_smear_cnt0 * 4;
+	fb->st_smear_cnt[1] = elem->st.st_smear_cnt.rdo_smear_cnt1 * 4;
+	fb->st_smear_cnt[2] = elem->st.st_smear_cnt.rdo_smear_cnt2 * 4;
+	fb->st_smear_cnt[3] = elem->st.st_smear_cnt.rdo_smear_cnt3 * 4;
+	fb->st_smear_cnt[4] = fb->st_smear_cnt[0] + fb->st_smear_cnt[1]
+	 	+ fb->st_smear_cnt[2] + fb->st_smear_cnt[3];
+
 	hal_rc_ret->bit_real += fb->out_strm_size * 8;
 
 	if (fb->st_mb_num)
@@ -2133,6 +2158,10 @@ static MPP_RET hal_h265e_v540c_get_task(void *hal, HalEncTask *task)
 	ctx->roi_data = mpp_frame_get_roi(task->frame);
 
 	ctx->osd_cfg.osd_data3 = mpp_frame_get_osd(task->frame);
+
+	ctx->mb_num = ctx->feedback.st_mb_num;
+
+	memcpy(ctx->smear_cnt, ctx->feedback.st_smear_cnt, sizeof(ctx->smear_cnt));
 
 	memset(&ctx->feedback, 0, sizeof(vepu540c_h265_fbk));
 
