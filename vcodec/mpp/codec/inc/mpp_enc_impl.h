@@ -122,7 +122,6 @@ typedef struct MppEncImpl_t {
 	ring_buf_pool *ring_pool;
 	RK_U32 ring_buf_size;
 	RK_U32 max_strm_cnt;
-    RK_U32 pkt_fail_cnt;
 } MppEncImpl;
 
 enum enc_status {

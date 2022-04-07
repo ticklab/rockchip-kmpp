@@ -18,7 +18,6 @@
 #include "mpp_packet_impl.h"
 #include "mpp_buffer.h"
 #include "mpp_maths.h"
-#include "mpp_packet_pool.h"
 
 static const char *module_name = MODULE_TAG;
 //static MppMemPool mpp_packet_pool = mpp_mem_pool_init(sizeof(MppPacketImpl));
@@ -45,12 +44,12 @@ MPP_RET mpp_packet_new(MppPacket * packet)
 		return MPP_ERR_NULL_PTR;
 	}
 
-	p = mpp_packet_mem_alloc();
+	p = (MppPacketImpl *) mpp_calloc(MppPacketImpl, 1);
+	*packet = p;
 	if (NULL == p) {
 		mpp_err_f("malloc failed\n");
 		return MPP_ERR_NULL_PTR;
 	}
-	*packet = p;
 
 	INIT_LIST_HEAD(&p->list);
 	kref_init(&p->ref);
@@ -69,21 +68,21 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 		return MPP_ERR_NULL_PTR;
 	}
 
-	p = mpp_packet_mem_alloc();
+	p = (MppPacketImpl *) mpp_calloc(MppPacketImpl, 1);
 
 	if (NULL == p) {
 		mpp_err_f("malloc failed\n");
 		return MPP_ERR_NULL_PTR;
 	}
-	
+
 	INIT_LIST_HEAD(&p->list);
 	kref_init(&p->ref);
-
 	if (min_size)
 		min_size = (min_size + SZ_1K) & (SZ_1K - 1);
 
 	if (ring_buf_get_free(pool, &p->buf, 128, min_size, 1)){
 		MPP_FREE(p);
+		mpp_err_f("ring buffer alloc failed \n");
 		return MPP_ERR_MALLOC;
 	}
 
@@ -182,9 +181,7 @@ MPP_RET mpp_packet_deinit(MppPacket * packet)
 		ring_buf_put_free(p->ring_pool, &p->buf);
 		p->ring_pool = NULL;
 	}
-
-	mpp_packet_mem_free(p);
-
+		mpp_free(*packet);
 	*packet = NULL;
 	return MPP_OK;
 }
