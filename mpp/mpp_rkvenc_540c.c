@@ -376,11 +376,10 @@ static struct rkvenc_hw_info rkvenc_rv1106_hw_info = {
  */
 /* rv1106 trans table */
 static const u16 trans_tbl_h264e_rv1106[] = {
-	4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+	7, 8, 9, 10, 11, 12, 13, 14,
 	15, 16, 17, 18, 19,20,21,22,23,
 	/* jpege */
-	100, 101, 102, 103, 104, 105, 106,
-	107, 108, 109, 110,
+	100, 101, 102, 103,
 };
 
 static const u16 trans_tbl_h264e_rv1106_osd[] = {
@@ -389,11 +388,10 @@ static const u16 trans_tbl_h264e_rv1106_osd[] = {
 };
 
 static const u16 trans_tbl_h265e_rv1106[] = {
-	4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+	7, 8, 9, 10, 11, 12, 13, 14,
 	15, 16, 17, 18, 19,20,21,22,23,
 	/* jpege */
-	100, 101, 102, 103, 104, 105, 106,
-	107, 108, 109, 110,
+	100, 101, 102, 103,
 };
 
 static const u16 trans_tbl_h265e_rv1106_osd[] = {
@@ -402,8 +400,7 @@ static const u16 trans_tbl_h265e_rv1106_osd[] = {
 };
 
 static const u16 trans_tbl_jpege_rv1106[] = {
-	100, 101, 102, 103, 104, 105, 106,
-	107, 108, 109, 110,
+	100, 101, 102, 103,
 };
 
 static const u16 trans_tbl_jpege_osd_rv1106[] = {

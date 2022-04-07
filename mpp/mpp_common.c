@@ -1799,19 +1799,6 @@ struct mpp_mem_region * mpp_task_get_mem_region(
 		mem_region->is_dup = true;
 		if (IS_ERR_OR_NULL(buffer)) {
 			buffer = mpp_iova_get_add_buffer (dma, iova);
-			/*
-			 * if the session is online, the iova may not import to dma,
-			 * so can not get valid buffer, skip it.
-			 */
-			if (buffer == NULL && iova) {
-				mem_region->hdl = NULL;
-				mem_region->iova = iova;
-				mem_region->len = 0;
-				mem_region->fd = 0;
-				mem_region->buf = NULL;
-				mem_region->is_dup = false;
-				goto __return;
-			}
 			if (IS_ERR_OR_NULL(buffer)) {
 				mpp_err("can't get iova %x\n", iova);
 				return ERR_PTR(-ENOMEM);
@@ -1829,7 +1816,6 @@ struct mpp_mem_region * mpp_task_get_mem_region(
             mem_region->is_dup = false;
         }
 	}
-__return:
 	task->mem_count++;
 	INIT_LIST_HEAD(&mem_region->reg_link);
 	list_add_tail(&mem_region->reg_link, &task->mem_region_list);
