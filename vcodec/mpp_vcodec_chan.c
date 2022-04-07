@@ -308,7 +308,7 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 			mpp_err("dma_buf_get fd %d failed\n", info->fd);
 			return -1;
 		}
-		buf = mpibuf_fn->dma_buf_import(dmabuf, info);
+		buf = mpibuf_fn->dma_buf_import(dmabuf, info, chan_id);
 		dma_buf_put(dmabuf);
 	}
 

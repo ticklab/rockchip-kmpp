@@ -42,7 +42,7 @@ struct vcodec_mpibuf_fn
     int (*buf_queue_destroy)( struct mpi_queue *queue);
     int (*buf_queue_push)(struct mpi_queue *queue, struct mpi_buf *buf);
     struct mpi_buf *(*buf_queue_pop)(struct mpi_queue *queue);
-    struct mpi_buf *(*dma_buf_import)(struct dma_buf *dma_buf,struct mpp_frame_infos *info);
+    struct mpi_buf *(*dma_buf_import)(struct dma_buf *dma_buf,struct mpp_frame_infos *info, int chan_id);
     void (*get_buf_frm_info)(struct mpi_buf *buf, struct mpp_frame_infos *info, RK_S32 chan_id);
     struct mpi_buf_pool *(*buf_pool_create)(size_t buf_size, unsigned int num_bufs);
     int (*buf_pool_destroy)(struct mpi_buf_pool *pool);

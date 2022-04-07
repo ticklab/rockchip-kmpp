@@ -690,7 +690,7 @@ MPP_RET mpp_enc_proc_export_osd_buf(MppEncOSDData3 *osd)
 		if (rgn->osd_buf.fd > 0) {
 			dmabuf = dma_buf_get(rgn->osd_buf.fd);
 			if (!IS_ERR(dmabuf)) {
-				buf = mpibuf_fn->dma_buf_import(dmabuf, &info);
+				buf = mpibuf_fn->dma_buf_import(dmabuf, &info, -1);
 				rgn->osd_buf.buf = buf;
 				dma_buf_put(dmabuf);
 			} else
@@ -701,7 +701,7 @@ MPP_RET mpp_enc_proc_export_osd_buf(MppEncOSDData3 *osd)
 		if (rgn->inv_cfg.inv_buf.fd > 0) {
 			dmabuf = dma_buf_get(rgn->inv_cfg.inv_buf.fd);
 			if (!IS_ERR(dmabuf)) {
-				buf = mpibuf_fn->dma_buf_import(dmabuf, &info);
+				buf = mpibuf_fn->dma_buf_import(dmabuf, &info, -1);
 				rgn->inv_cfg.inv_buf.buf = buf;
 				dma_buf_put(dmabuf);
 			} else
