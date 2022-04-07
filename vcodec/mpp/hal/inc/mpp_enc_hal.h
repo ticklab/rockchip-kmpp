@@ -62,24 +62,24 @@ typedef void *MppEncHal;
 extern "C" {
 #endif
 
-	MPP_RET mpp_enc_hal_init(MppEncHal * ctx, MppEncHalCfg * cfg);
-	MPP_RET mpp_enc_hal_deinit(MppEncHal ctx);
+MPP_RET mpp_enc_hal_init(MppEncHal * ctx, MppEncHalCfg * cfg);
+MPP_RET mpp_enc_hal_deinit(MppEncHal ctx);
 
 /* prepare after cfg */
-	MPP_RET mpp_enc_hal_prepare(MppEncHal ctx);
+MPP_RET mpp_enc_hal_prepare(MppEncHal ctx);
 
-	MPP_RET mpp_enc_hal_get_task(MppEncHal ctx, HalEncTask * task);
-	MPP_RET mpp_enc_hal_gen_regs(MppEncHal ctx, HalEncTask * task);
+MPP_RET mpp_enc_hal_get_task(MppEncHal ctx, HalEncTask * task);
+MPP_RET mpp_enc_hal_gen_regs(MppEncHal ctx, HalEncTask * task);
 
 // start / wait hardware
-	MPP_RET mpp_enc_hal_start(MppEncHal ctx, HalEncTask * task, HalEncTask * jpeg_task);
-	MPP_RET mpp_enc_hal_wait(MppEncHal ctx, HalEncTask * task);
-	MPP_RET mpp_enc_hal_part_start(MppEncHal ctx, HalEncTask * task);
-	MPP_RET mpp_enc_hal_part_wait(MppEncHal ctx, HalEncTask * task);
+MPP_RET mpp_enc_hal_start(MppEncHal ctx, HalEncTask * task, HalEncTask * jpeg_task);
+MPP_RET mpp_enc_hal_wait(MppEncHal ctx, HalEncTask * task);
+MPP_RET mpp_enc_hal_part_start(MppEncHal ctx, HalEncTask * task);
+MPP_RET mpp_enc_hal_part_wait(MppEncHal ctx, HalEncTask * task);
 
-	MPP_RET mpp_enc_hal_ret_task(MppEncHal ctx, HalEncTask * task, HalEncTask *jpeg_task);
+MPP_RET mpp_enc_hal_ret_task(MppEncHal ctx, HalEncTask * task, HalEncTask *jpeg_task);
 
-	MPP_RET mpp_enc_hal_check_part_mode(MppEncHal ctx);
+MPP_RET mpp_enc_hal_check_part_mode(MppEncHal ctx);
 
 #ifdef __cplusplus
 }

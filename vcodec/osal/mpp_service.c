@@ -89,9 +89,10 @@ const char *mpp_get_mpp_service_name(void)
 	if (mpp_service_name)
 		return mpp_service_name;
 
-	if (!access(mpp_service_dev[0], F_OK | R_OK | W_OK)) {
+	if (!access(mpp_service_dev[0], F_OK | R_OK | W_OK))
 		mpp_service_name = mpp_service_dev[0];
-	} else if (!access(mpp_service_dev[1], F_OK | R_OK | W_OK))
+
+	else if (!access(mpp_service_dev[1], F_OK | R_OK | W_OK))
 		mpp_service_name = mpp_service_dev[1];
 
 	return mpp_service_name;
@@ -177,7 +178,7 @@ void check_mpp_service_cap(RK_U32 * codec_type, RK_U32 * hw_ids,
 		*codec_type = hw_support;
 	}
 	cap->support_cmd = !access("/proc/mpp_service/supports-cmd", F_OK) ||
-	    !access("/proc/mpp_service/support_cmd", F_OK);
+			   !access("/proc/mpp_service/support_cmd", F_OK);
 	if (cap->support_cmd) {
 		for (i = 0; i < query_count; i++, cmd_butt++) {
 			const MppServiceQueryCfg *cfg = &query_cfg[i];
@@ -210,30 +211,30 @@ void check_mpp_service_cap(RK_U32 * codec_type, RK_U32 * hw_ids,
 			fd = open(mpp_get_mpp_service_name(), O_RDWR);
 			if (fd < 0) {
 				mpp_err
-				    ("open mpp_service to check cmd capability failed\n");
+				("open mpp_service to check cmd capability failed\n");
 				break;
 			}
 			/* set client type first */
 			ret =
-			    mpp_service_ioctl(fd, MPP_CMD_INIT_CLIENT_TYPE,
-					      sizeof(val), &val);
+				mpp_service_ioctl(fd, MPP_CMD_INIT_CLIENT_TYPE,
+						  sizeof(val), &val);
 			if (ret) {
 				mpp_err("check valid client type %d failed\n",
 					i);
 			} else {
 				/* then get hw_id */
 				ret =
-				    mpp_service_ioctl(fd, MPP_CMD_QUERY_HW_ID,
-						      sizeof(val), &val);
+					mpp_service_ioctl(fd, MPP_CMD_QUERY_HW_ID,
+							  sizeof(val), &val);
 				if (!ret) {
 					mpp_dev_dbg_probe
-					    ("client %-10s hw_id %08x\n",
-					     mpp_service_hw_name[i], val);
+					("client %-10s hw_id %08x\n",
+					 mpp_service_hw_name[i], val);
 					hw_ids[i] = val;
 				} else
 					mpp_err
-					    ("check valid client %-10s for hw_id failed\n",
-					     mpp_service_hw_name[i]);
+					("check valid client %-10s for hw_id failed\n",
+					 mpp_service_hw_name[i]);
 			}
 			close(fd);
 		}
@@ -272,18 +273,18 @@ typedef struct MppDevMppService_t {
 	const MppServiceCmdCap *cap;
 	RK_U32 support_set_info;
 	RK_U32 support_set_rcb_info;
-    struct vcodec_mppdev_svr_fn *mppdev_ops;
+	struct vcodec_mppdev_svr_fn *mppdev_ops;
 } MppDevMppService;
 
 MPP_RET mpp_service_init(void *ctx, MppClientType type)
 {
 	MppDevMppService *p = (MppDevMppService *) ctx;
 	MPP_RET ret = MPP_OK;
-    p->mppdev_ops = get_mppdev_svr_ops();
-    if(!p->mppdev_ops){
+	p->mppdev_ops = get_mppdev_svr_ops();
+	if (!p->mppdev_ops) {
 		mpp_err("get_mppdev_svr_ops fail");
 		return MPP_NOK;
-    }
+	}
 	if (p->mppdev_ops->chnl_open)
 		p->chnl = p->mppdev_ops->chnl_open(type);
 
@@ -453,7 +454,7 @@ RK_U32 mpp_service_iova_address(void *ctx, struct dma_buf * buf, RK_U32 offset)
 
 	if (p->mppdev_ops->chnl_get_iova_addr)
 		iova_address =
-		    p->mppdev_ops->chnl_get_iova_addr(p->chnl, buf, offset);
+			p->mppdev_ops->chnl_get_iova_addr(p->chnl, buf, offset);
 	return iova_address;
 }
 

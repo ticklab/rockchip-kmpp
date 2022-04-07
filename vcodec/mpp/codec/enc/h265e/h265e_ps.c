@@ -29,32 +29,58 @@ typedef struct H265levelspec_t {
 
 H265levelspec levels[] = {
 	{36864, 552960, 128, MAX_UINT, 350, MAX_UINT, 2, H265_LEVEL1, "1", 10},
-	{122880, 3686400, 1500, MAX_UINT, 1500, MAX_UINT, 2, H265_LEVEL2, "2",
-	 20},
-	{245760, 7372800, 3000, MAX_UINT, 3000, MAX_UINT, 2, H265_LEVEL2_1,
-	 "2.1", 21},
-	{552960, 16588800, 6000, MAX_UINT, 6000, MAX_UINT, 2, H265_LEVEL3, "3",
-	 30},
-	{983040, 33177600, 10000, MAX_UINT, 10000, MAX_UINT, 2, H265_LEVEL3_1,
-	 "3.1", 31},
-	{2228224, 66846720, 12000, 30000, 12000, 30000, 4, H265_LEVEL4, "4",
-	 40},
-	{2228224, 133693440, 20000, 50000, 20000, 50000, 4, H265_LEVEL4_1,
-	 "4.1", 41},
-	{8912896, 267386880, 25000, 100000, 25000, 100000, 6, H265_LEVEL5, "5",
-	 50},
-	{8912896, 534773760, 40000, 160000, 40000, 160000, 8, H265_LEVEL5_1,
-	 "5.1", 51},
-	{8912896, 1069547520, 60000, 240000, 60000, 240000, 8, H265_LEVEL5_2,
-	 "5.2", 52},
-	{35651584, 1069547520, 60000, 240000, 60000, 240000, 8, H265_LEVEL6,
-	 "6", 60},
-	{35651584, 2139095040, 120000, 480000, 120000, 480000, 8, H265_LEVEL6_1,
-	 "6.1", 61},
-	{35651584, 4278190080U, 240000, 800000, 240000, 800000, 6,
-	 H265_LEVEL6_2, "6.2", 62},
-	{MAX_UINT, MAX_UINT, MAX_UINT, MAX_UINT, MAX_UINT, MAX_UINT, 1,
-	 H265_LEVEL8_5, "8.5", 85},
+	{
+		122880, 3686400, 1500, MAX_UINT, 1500, MAX_UINT, 2, H265_LEVEL2, "2",
+		20
+	},
+	{
+		245760, 7372800, 3000, MAX_UINT, 3000, MAX_UINT, 2, H265_LEVEL2_1,
+		"2.1", 21
+	},
+	{
+		552960, 16588800, 6000, MAX_UINT, 6000, MAX_UINT, 2, H265_LEVEL3, "3",
+		30
+	},
+	{
+		983040, 33177600, 10000, MAX_UINT, 10000, MAX_UINT, 2, H265_LEVEL3_1,
+		"3.1", 31
+	},
+	{
+		2228224, 66846720, 12000, 30000, 12000, 30000, 4, H265_LEVEL4, "4",
+		40
+	},
+	{
+		2228224, 133693440, 20000, 50000, 20000, 50000, 4, H265_LEVEL4_1,
+		"4.1", 41
+	},
+	{
+		8912896, 267386880, 25000, 100000, 25000, 100000, 6, H265_LEVEL5, "5",
+		50
+	},
+	{
+		8912896, 534773760, 40000, 160000, 40000, 160000, 8, H265_LEVEL5_1,
+		"5.1", 51
+	},
+	{
+		8912896, 1069547520, 60000, 240000, 60000, 240000, 8, H265_LEVEL5_2,
+		"5.2", 52
+	},
+	{
+		35651584, 1069547520, 60000, 240000, 60000, 240000, 8, H265_LEVEL6,
+		"6", 60
+	},
+	{
+		35651584, 2139095040, 120000, 480000, 120000, 480000, 8, H265_LEVEL6_1,
+		"6.1", 61
+	},
+	{
+		35651584, 4278190080U, 240000, 800000, 240000, 800000, 6,
+		H265_LEVEL6_2, "6.2", 62
+	},
+	{
+		MAX_UINT, MAX_UINT, MAX_UINT, MAX_UINT, MAX_UINT, MAX_UINT, 1,
+		H265_LEVEL8_5, "8.5", 85
+	},
 };
 
 void init_zscan2raster(RK_S32 maxDepth, RK_S32 depth, RK_U32 startVal,
@@ -82,9 +108,8 @@ void init_raster2zscan(RK_U32 maxCUSize, RK_U32 maxDepth, RK_U32 * raster2zscan,
 	RK_U32 numPartInCUSize = (RK_U32) maxCUSize / unitSize;
 	RK_U32 i;
 
-	for (i = 0; i < numPartInCUSize * numPartInCUSize; i++) {
+	for (i = 0; i < numPartInCUSize * numPartInCUSize; i++)
 		raster2zscan[zscan2raster[i]] = i;
-	}
 }
 
 void init_raster2pelxy(RK_U32 maxCUSize, RK_U32 maxDepth, RK_U32 * raster2pelx,
@@ -112,9 +137,8 @@ void init_raster2pelxy(RK_U32 maxCUSize, RK_U32 maxDepth, RK_U32 * raster2pelx,
 		tempx += numPartInCUSize;
 	}
 
-	for (i = 1; i < numPartInCUSize * numPartInCUSize; i++) {
+	for (i = 1; i < numPartInCUSize * numPartInCUSize; i++)
 		tempy[i] = (i / numPartInCUSize) * unitSize;
-	}
 }
 
 MPP_RET h265e_set_vps(H265eCtx * ctx, h265_vps * vps)
@@ -122,7 +146,7 @@ MPP_RET h265e_set_vps(H265eCtx * ctx, h265_vps * vps)
 	RK_S32 i;
 	MppEncH265Cfg *codec = &ctx->cfg->codec.h265;
 	profile_tier_level *profileTierLevel =
-	    &vps->profile_tier_level.general_PTL;
+		&vps->profile_tier_level.general_PTL;
 	MppEncPrepCfg *prep = &ctx->cfg->prep;
 	RK_U32 maxlumas = prep->width * prep->height;
 	RK_S32 level_idc = H265_LEVEL_NONE;
@@ -136,10 +160,10 @@ MPP_RET h265e_set_vps(H265eCtx * ctx, h265_vps * vps)
 	for (i = 0; i < MAX_SUB_LAYERS; i++) {
 		vps->vps_num_reorder_pics[i] = 0;
 		vps->vps_max_dec_pic_buffering_minus1[i] =
-		    MPP_MIN(MAX_REFS,
-			    MPP_MAX((vps->vps_num_reorder_pics[i] + 3),
-				    codec->num_ref) +
-			    vps->vps_num_reorder_pics[i]) - 1;
+			MPP_MIN(MAX_REFS,
+				MPP_MAX((vps->vps_num_reorder_pics[i] + 3),
+					codec->num_ref) +
+				vps->vps_num_reorder_pics[i]) - 1;
 		vps->vps_max_latency_increase_plus1[i] = 0;
 	}
 	memset(profileTierLevel->profile_compatibility_flag, 0,
@@ -156,11 +180,11 @@ MPP_RET h265e_set_vps(H265eCtx * ctx, h265_vps * vps)
 	}
 
 	profileTierLevel->profile_space = 0;
-	if (codec->level < level_idc) {
+	if (codec->level < level_idc)
 		profileTierLevel->general_level_idc = level_idc;
-	} else {
+
+	else
 		profileTierLevel->general_level_idc = codec->level;
-	}
 	profileTierLevel->tier_flag = codec->tier ? 1 : 0;
 	profileTierLevel->profile_idc = codec->profile;
 
@@ -206,9 +230,8 @@ MPP_RET h265e_set_sps(H265eCtx * ctx, h265_sps * sps, h265_vps * vps)
 
 	addCUDepth = 0;
 	while ((RK_U32) (codec->max_cu_size >> maxCUDepth) >
-	       (1u << (tuQTMinLog2Size + addCUDepth))) {
+	       (1u << (tuQTMinLog2Size + addCUDepth)))
 		addCUDepth++;
-	}
 
 	maxCUDepth += addCUDepth;
 	addCUDepth++;
@@ -264,7 +287,7 @@ MPP_RET h265e_set_sps(H265eCtx * ctx, h265_sps * sps, h265_vps * vps)
 	}
 	sps->log2_min_coding_block_size_minus3 = log2MinCUSize - 3;
 	sps->log2_diff_max_min_coding_block_size =
-	    sps->max_cu_depth - addCUDepth;
+		sps->max_cu_depth - addCUDepth;
 
 	sps->pcm_log2_max_size = 5;
 	sps->pcm_enabled_flag = 0;
@@ -272,7 +295,7 @@ MPP_RET h265e_set_sps(H265eCtx * ctx, h265_sps * sps, h265_vps * vps)
 
 	sps->long_term_ref_pics_present_flag = 0;
 	sps->log2_diff_max_min_transform_block_size =
-	    tuQTMaxLog2Size - tuQTMinLog2Size;
+		tuQTMaxLog2Size - tuQTMinLog2Size;
 	sps->log2_min_transform_block_size_minus2 = tuQTMinLog2Size - 2;
 	sps->max_transform_hierarchy_depth_inter = 1;	//tuQTMaxInterDepth
 	sps->max_transform_hierarchy_depth_intra = 1;	//tuQTMaxIntraDepth
@@ -282,15 +305,15 @@ MPP_RET h265e_set_sps(H265eCtx * ctx, h265_sps * sps, h265_vps * vps)
 	sps->bit_depth_chroma_minus8 = 0;
 
 	sps->sample_adaptive_offset_enabled_flag =
-	    !codec->sao_cfg.slice_sao_chroma_disable
-	    || !codec->sao_cfg.slice_sao_luma_disable;
+		!codec->sao_cfg.slice_sao_chroma_disable
+		|| !codec->sao_cfg.slice_sao_luma_disable;
 
 	sps->vps_max_sub_layers_minus1 = 0;
 	sps->vps_temporal_id_nesting_flag = 1;
 
 	for (i = 0; i < sps->vps_max_sub_layers_minus1 + 1; i++) {
 		sps->vps_max_dec_pic_buffering_minus1[i] =
-		    vps->vps_max_dec_pic_buffering_minus1[i];
+			vps->vps_max_dec_pic_buffering_minus1[i];
 		sps->vps_num_reorder_pics[i] = vps->vps_num_reorder_pics[i];
 	}
 
@@ -299,22 +322,21 @@ MPP_RET h265e_set_sps(H265eCtx * ctx, h265_sps * sps, h265_vps * vps)
 
 	sps->pcm_loop_filter_disable_flag = 0;
 	sps->scaling_list_enabled_flag =
-	    codec->trans_cfg.defalut_ScalingList_enable == 0 ? 0 : 1;
+		codec->trans_cfg.defalut_ScalingList_enable == 0 ? 0 : 1;
 
 	sps->bits_for_poc = 16;
 	sps->num_long_term_ref_pic_sps = 0;
 	sps->long_term_ref_pics_present_flag = 0;
 	sps->sps_temporal_mvp_enable_flag = codec->tmvp_enable;
 	sps->sps_strong_intra_smoothing_enable_flag =
-	    !codec->pu_cfg.strg_intra_smth_disable;
+		!codec->pu_cfg.strg_intra_smth_disable;
 	if (cpb_info->max_lt_cnt) {
 		sps->num_long_term_ref_pic_sps = cpb_info->max_lt_cnt;
 		sps->long_term_ref_pics_present_flag = 1;
 		sps->sps_temporal_mvp_enable_flag = 0;
 		codec->tmvp_enable = 0;
-	} else if (cpb_info->max_st_tid) {
+	} else if (cpb_info->max_st_tid)
 		sps->sps_temporal_mvp_enable_flag = 0;
-	}
 	sps->profile_tier_level = &vps->profile_tier_level;
 	sps->vui_parameters_present_flag = 1;
 	if (sps->vui_parameters_present_flag) {
@@ -362,7 +384,7 @@ MPP_RET h265e_set_sps(H265eCtx * ctx, h265_sps * sps, h265_vps * vps)
 		sps->vui.log2_max_mv_length_vertical = 15;
 		if (vui->vui_aspect_ratio) {
 			sps->vui.aspect_ratio_info_present_flag =
-			    ! !vui->vui_aspect_ratio;
+				! !vui->vui_aspect_ratio;
 			sps->vui.aspect_ratio_idc = vui->vui_aspect_ratio;
 		}
 		sps->vui.vui_timing_info_present_flag = 1;
@@ -370,9 +392,8 @@ MPP_RET h265e_set_sps(H265eCtx * ctx, h265_sps * sps, h265_vps * vps)
 		sps->vui.vui_time_scale = i_timebase_den;
 	}
 
-	for (i = 0; i < MAX_SUB_LAYERS; i++) {
+	for (i = 0; i < MAX_SUB_LAYERS; i++)
 		sps->vps_max_latency_increase_plus1[i] = 0;
-	}
 	//  sps->m_scalingList = NULL;
 	memset(sps->lt_ref_pic_poc_lsb_sps, 0,
 	       sizeof(sps->lt_ref_pic_poc_lsb_sps));
@@ -396,8 +417,8 @@ MPP_RET h265e_set_pps(H265eCtx * ctx, h265_pps * pps, h265_sps * sps)
 	}
 
 	pps->pps_slice_chroma_qp_offsets_present_flag =
-	    (! !codec->trans_cfg.cb_qp_offset)
-	    || (! !codec->trans_cfg.cr_qp_offset);
+		(! !codec->trans_cfg.cb_qp_offset)
+		|| (! !codec->trans_cfg.cr_qp_offset);
 
 	pps->sps = sps;
 	if (pps->pps_slice_chroma_qp_offsets_present_flag) {
@@ -415,19 +436,19 @@ MPP_RET h265e_set_pps(H265eCtx * ctx, h265_pps * pps, h265_sps * sps)
 	pps->sign_data_hiding_flag = 0;
 	pps->init_qp_minus26 = codec->intra_qp - 26;
 	pps->loop_filter_across_slices_enabled_flag =
-	    codec->slice_cfg.loop_filter_across_slices_enabled_flag;
+		codec->slice_cfg.loop_filter_across_slices_enabled_flag;
 	pps->deblocking_filter_control_present_flag =
-	    !codec->dblk_cfg.slice_deblocking_filter_disabled_flag;
+		!codec->dblk_cfg.slice_deblocking_filter_disabled_flag;
 	if (pps->deblocking_filter_control_present_flag) {
 		pps->deblocking_filter_override_enabled_flag = 0;
 		pps->pps_disable_deblocking_filter_flag =
-		    (! !codec->dblk_cfg.slice_beta_offset_div2)
-		    || (! !codec->dblk_cfg.slice_tc_offset_div2);
+			(! !codec->dblk_cfg.slice_beta_offset_div2)
+			|| (! !codec->dblk_cfg.slice_tc_offset_div2);
 		if (!pps->pps_disable_deblocking_filter_flag) {
 			pps->pps_beta_offset_div2 =
-			    codec->dblk_cfg.slice_beta_offset_div2;
+				codec->dblk_cfg.slice_beta_offset_div2;
 			pps->pps_tc_offset_div2 =
-			    codec->dblk_cfg.slice_tc_offset_div2;
+				codec->dblk_cfg.slice_tc_offset_div2;
 		}
 	} else {
 		pps->deblocking_filter_override_enabled_flag = 0;
@@ -441,9 +462,9 @@ MPP_RET h265e_set_pps(H265eCtx * ctx, h265_pps * pps, h265_sps * sps)
 	pps->num_ref_idx_l0_default_active_minus1 = 1;
 	pps->num_ref_idx_l1_default_active_minus1 = 1;
 	pps->transquant_bypass_enable_flag =
-	    codec->trans_cfg.transquant_bypass_enabled_flag;
+		codec->trans_cfg.transquant_bypass_enabled_flag;
 	pps->transform_skip_enabled_flag =
-	    codec->trans_cfg.transform_skip_enabled_flag;
+		codec->trans_cfg.transform_skip_enabled_flag;
 
 	pps->entropy_coding_sync_enabled_flag = 0;
 	pps->sign_data_hiding_flag = 0;
@@ -462,11 +483,11 @@ MPP_RET h265e_set_pps(H265eCtx * ctx, h265_pps * pps, h265_sps * sps)
 		const char *soc_name = mpp_get_soc_name();
 		/* check tile support on rk3566 and rk3568 */
 		if (strstr(soc_name, "rk3566") || strstr(soc_name, "rk3568")) {
-			if (sps->pic_width_in_luma_samples <= 3840) {
+			if (sps->pic_width_in_luma_samples <= 3840)
 				pps->num_tile_columns_minus1 = 1;
-			} else {
+
+			else
 				pps->num_tile_columns_minus1 = 2;
-			}
 
 			if (pps->num_tile_columns_minus1) {
 				pps->tiles_enabled_flag = 1;

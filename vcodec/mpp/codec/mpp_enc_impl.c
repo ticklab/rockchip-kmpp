@@ -150,11 +150,11 @@ static void update_enc_hal_info(MppEncImpl *enc)
 	if (NULL == enc->hal_info || NULL == enc->dev)
 		return;
 
-		//hal_info_from_enc_cfg(enc->hal_info, &enc->cfg);
+	//hal_info_from_enc_cfg(enc->hal_info, &enc->cfg);
 
-		//hal_info_get(enc->hal_info, data, &size);
+	//hal_info_get(enc->hal_info, data, &size);
 #if 0
-    if (size) {
+	if (size) {
 		size /= sizeof(data[0]);
 		for (i = 0; i < size; i++)
 			mpp_dev_ioctl(enc->dev, MPP_DEV_SET_INFO, &data[i]);
@@ -276,9 +276,8 @@ static RK_S32 check_resend_hdr(MpiCmd cmd, void *param, MppEncCfgSet *cfg)
 static RK_S32 check_rc_cfg_update(MpiCmd cmd, MppEncCfgSet *cfg)
 {
 	if (cmd == MPP_ENC_SET_RC_CFG || cmd == MPP_ENC_SET_PREP_CFG ||
-	    cmd == MPP_ENC_SET_REF_CFG) {
+	    cmd == MPP_ENC_SET_REF_CFG)
 		return 1;
-	}
 
 	if (cmd == MPP_ENC_SET_CFG) {
 		RK_U32 change = cfg->prep.change;
@@ -312,9 +311,8 @@ static RK_S32 check_hal_info_update(MpiCmd cmd)
 {
 	if (cmd == MPP_ENC_SET_CFG || cmd == MPP_ENC_SET_RC_CFG ||
 	    cmd == MPP_ENC_SET_CODEC_CFG || cmd == MPP_ENC_SET_PREP_CFG ||
-	    cmd == MPP_ENC_SET_REF_CFG) {
+	    cmd == MPP_ENC_SET_REF_CFG)
 		return 1;
-	}
 
 	return 0;
 }
@@ -602,9 +600,8 @@ static MPP_RET mpp_enc_proc_ref_cfg(MppEncImpl *enc, void *param)
 	MppEncRefParam *ref_p = (MppEncRefParam *)param;
 	MPP_RET ret = MPP_OK;
 
-	if (ref_p->cfg_mode && NULL == src) {
+	if (ref_p->cfg_mode && NULL == src)
 		mpp_enc_ref_cfg_init(&src);
-	}
 
 	if (NULL == dst) {
 		mpp_enc_ref_cfg_init(&dst);
@@ -632,21 +629,18 @@ static MPP_RET mpp_enc_proc_ref_cfg(MppEncImpl *enc, void *param)
 	}
 	if (src) {
 		ret = mpp_enc_ref_cfg_copy(dst, src);
-		if (ret) {
+		if (ret)
 			mpp_err_f("failed to copy ref cfg ret %d\n", ret);
-		}
 
 		ret = mpp_enc_refs_set_cfg(enc->refs, dst);
-		if (ret) {
+		if (ret)
 			mpp_err_f("failed to set ref cfg ret %d\n", ret);
-		}
 
 		if (mpp_enc_refs_update_hdr(enc->refs))
 			enc->hdr_status.val = 0;
 
-		if (ref_p->cfg_mode && src) {
+		if (ref_p->cfg_mode && src)
 			mpp_enc_ref_cfg_deinit(&src);
-		}
 	}
 	return ret;
 }
@@ -654,19 +648,16 @@ static MPP_RET mpp_enc_proc_ref_cfg(MppEncImpl *enc, void *param)
 MPP_RET mpp_enc_unref_osd_buf(MppEncOSDData3 *osd)
 {
 	RK_U32 i = 0;
-	if (!osd || !osd->change) {
+	if (!osd || !osd->change)
 		return MPP_OK;
-	}
 
 	for (i = 0; i < osd->num_region; i++) {
 		MppEncOSDRegion3 *rgn = &osd->region[i];
-		if (rgn->osd_buf.buf) {
+		if (rgn->osd_buf.buf)
 			mpi_buf_unref(rgn->osd_buf.buf);
-		}
 
-		if (rgn->inv_cfg.inv_buf.buf) {
+		if (rgn->inv_cfg.inv_buf.buf)
 			mpi_buf_unref(rgn->inv_cfg.inv_buf.buf);
-		}
 	}
 	return MPP_OK;
 }
@@ -776,9 +767,8 @@ MPP_RET mpp_enc_proc_cfg(MppEncImpl *enc, MpiCmd cmd, void *param)
 			mpp_err("NOTE: MPP_ENC_GET_HDR_SYNC needs MppPacket input\n");
 
 			*(MppPacket *)param = enc->hdr_pkt;
-		} else {
+		} else
 			mpp_packet_copy((MppPacket)param, enc->hdr_pkt);
-		}
 
 		enc->hdr_status.added_by_ctrl = 1;
 	} break;
@@ -882,9 +872,8 @@ static void update_rc_cfg_log(MppEncImpl *impl, const char *fmt, ...)
 static void update_user_datas(MppEncImpl *enc, MppPacket packet,
 			      HalEncTask *hal_task)
 {
-	if (enc->rb_userdata.free_cnt >= MAX_USRDATA_CNT) {
+	if (enc->rb_userdata.free_cnt >= MAX_USRDATA_CNT)
 		return;
-	}
 
 	while (enc->rb_userdata.free_cnt < MAX_USRDATA_CNT) {
 		RK_U32 i = enc->rb_userdata.read_pos % MAX_USRDATA_CNT;
@@ -1081,9 +1070,8 @@ MPP_RET mpp_enc_proc_rc_update(MppEncImpl *enc)
 static MPP_RET mpp_enc_check_frm_pkt(MppEncImpl *enc)
 {
 	enc->frm_buf = NULL;
-	if (NULL == enc->packet) {
+	if (NULL == enc->packet)
 		mpp_packet_new(&enc->packet);
-	}
 
 	if (enc->frame) {
 		RK_U32 hor_stride = 0, ver_stride = 0;
@@ -1093,9 +1081,8 @@ static MPP_RET mpp_enc_check_frm_pkt(MppEncImpl *enc)
 		hor_stride = mpp_frame_get_hor_stride(enc->frame);
 		ver_stride = mpp_frame_get_ver_stride(enc->frame);
 		if (hor_stride != prep->hor_stride ||
-		    ver_stride != prep->ver_stride) {
+		    ver_stride != prep->ver_stride)
 			mpp_err("frame stride set equal cfg stride");
-		}
 		enc->task_pts = pts;
 		enc->frm_buf = frm_buf;
 
@@ -1120,8 +1107,8 @@ MPP_RET mpp_enc_alloc_output_from_bufpool(MppEncImpl *enc)
 		RK_U32 width = MPP_ALIGN(prep->width, 16);
 		RK_U32 height = MPP_ALIGN(prep->height, 16);
 		RK_U32 size = (enc->coding == MPP_VIDEO_CodingMJPEG) ?
-				      (width * height * 3 / 2) :
-					    (width * height);
+			      (width * height * 3 / 2) :
+			      (width * height);
 
 		MppPacketImpl *pkt = (MppPacketImpl *)enc->packet;
 		MppBuffer buffer = NULL;
@@ -1181,8 +1168,8 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 	RK_U32 width = MPP_ALIGN(prep->width, 16);
 	RK_U32 height = MPP_ALIGN(prep->height, 16);
 	RK_U32 size = (enc->coding == MPP_VIDEO_CodingMJPEG) ?
-			      (width * height) :
-				    (width * height / 2);
+		      (width * height) :
+		      (width * height / 2);
 	if (enc->ring_pool && !enc->ring_pool->init_done) {
 		if (!enc->ring_buf_size)
 			enc->ring_buf_size = size;
@@ -1258,14 +1245,14 @@ static MPP_RET mpp_enc_proc_two_pass(MppEncImpl *enc, EncTask *task)
 
 		enc_dbg_detail("task %d hal start\n", frm->seq_idx);
 		ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, NULL, enc,
-				ret);
+			      ret);
 
-			mpp_err("task %d hal wait\n", frm->seq_idx);
+		mpp_err("task %d hal wait\n", frm->seq_idx);
 		ENC_RUN_FUNC2(mpp_enc_hal_wait, hal, hal_task, enc, ret);
 
-			//enc_dbg_detail("task %d hal ret task\n", frm->seq_idx);
+		//enc_dbg_detail("task %d hal ret task\n", frm->seq_idx);
 		ENC_RUN_FUNC3(mpp_enc_hal_ret_task, hal, hal_task, NULL, enc,
-				ret);
+			      ret);
 
 		//recover status & packet
 		mpp_packet_set_length(packet, pkt_len);
@@ -1277,14 +1264,14 @@ static MPP_RET mpp_enc_proc_two_pass(MppEncImpl *enc, EncTask *task)
 
 		enc_dbg_detail("task %d two pass mode leave\n", frm->seq_idx);
 	}
-	TASK_DONE:
+TASK_DONE:
 	return ret;
 }
 
 static void mpp_enc_rc_info_backup(MppEncImpl *enc)
 {
 	if (enc->online || !enc->cfg.rc.debreath_en || enc->ref_buf_shared)
-	return;
+		return;
 
 	enc->rc_info_prev = enc->rc_task.info;
 }
@@ -1404,9 +1391,8 @@ static MPP_RET mpp_enc_end(MppEncImpl *enc, EncTask *task, EncTask *jpeg_task)
 	HalEncTask *hal_task = &task->info.enc;
 	HalEncTask *jpeg_hal_task = NULL;
 	MPP_RET ret = MPP_OK;
-	if (jpeg_task) {
+	if (jpeg_task)
 		jpeg_hal_task = &jpeg_task->info.enc;
-	}
 	//  mpp_stopwatch_record(hal_task->stopwatch, "encode hal finish");
 
 	enc_dbg_detail("task %d rc hal end\n", frm->seq_idx);
@@ -1539,9 +1525,8 @@ static void mpp_enc_terminate_task(MppEncImpl *enc, EncTask *task)
 MPP_RET mpp_enc_impl_alloc_task(MppEncImpl *enc)
 {
 	enc->enc_task = (void *)mpp_calloc(EncTask, 1);
-	if (!enc->enc_task) {
+	if (!enc->enc_task)
 		return MPP_NOK;
-	}
 	enc->init_time = mpp_time();
 	enc->time_base = mpp_time();
 	enc->time_end = mpp_time();
@@ -1570,9 +1555,8 @@ MPP_RET mpp_enc_impl_get_roi_osd(MppEncImpl *enc, MppFrame frame)
 		enc->cfg.osd.change = 0;
 	}
 
-	if (!frame) {
+	if (!frame)
 		return MPP_OK;
-	}
 	if (enc->cur_roi.change) {
 		mpp_log("attch roi to frame");
 		mpp_frame_add_roi(frame, &enc->cur_roi);
@@ -1631,9 +1615,8 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 	hal_task->valid = 1;
 	mpp_assert(hal_task->valid);
 	ret = mpp_enc_alloc_output(enc);
-	if (ret) {
+	if (ret)
 		goto TASK_DONE;
-	}
 	hal_task->frame = enc->frame;
 	hal_task->input = enc->frm_buf;
 	hal_task->packet = enc->packet;
@@ -1675,13 +1658,12 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 	enc_dbg_detail("task %d enc start\n", frm->seq_idx);
 	ENC_RUN_FUNC2(enc_impl_start, enc->impl, hal_task, enc, ret);
 
-	if (frm_cfg->force_flag) {
+	if (frm_cfg->force_flag)
 		mpp_enc_refs_set_usr_cfg(enc->refs, frm_cfg);
-	}
 
 	mpp_enc_refs_stash(enc->refs);
 	ENC_RUN_FUNC2(mpp_enc_normal_cfg, enc, task, enc, ret);
- 	frm_cfg->force_flag = 0;
+	frm_cfg->force_flag = 0;
 TASK_DONE:
 	if (ret)
 		mpp_enc_terminate_task(enc, task);
@@ -1750,9 +1732,8 @@ TASK_DONE:
 	 */
 	enc_dbg_detail("task %d enqueue packet pts %lld\n", frm->seq_idx,
 		       enc->task_pts);
-	if (enc->frame) {
+	if (enc->frame)
 		mpp_frame_deinit(&enc->frame);
-	}
 	reset_enc_task(enc);
 	task->status.val = 0;
 	return ret;
@@ -1783,7 +1764,7 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 		hal_task->hw_length = 0;
 		status->rc_reenc = 1;
 
-		if (enc->online || enc->ref_buf_shared){
+		if (enc->online || enc->ref_buf_shared) {
 			enc_dbg_detail("shared status can't reenc drop request idr\n");
 			ret = MPP_NOK;
 			goto TASK_DONE;
@@ -1819,7 +1800,7 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 TASK_DONE:
 
 	//mpp_stopwatch_record(hal_task->stopwatch, "encode task done");
-	if (ret){
+	if (ret) {
 		enc->frame_force_drop++;
 		enc->frm_cfg.force_flag |= ENC_FORCE_IDR;
 		enc->hdr_status.val = 0;
@@ -1841,15 +1822,13 @@ TASK_DONE:
 	enc_dbg_detail("task %d enqueue packet pts %lld\n", frm->seq_idx,
 		       enc->task_pts);
 
-	if (enc->frame) {
+	if (enc->frame)
 		mpp_frame_deinit(&enc->frame);
-	}
 	mpp_enc_rc_info_backup(enc);
 	reset_enc_task(enc);
 	task->status.val = 0;
-	if (jpeg_ctx) {
+	if (jpeg_ctx)
 		mpp_enc_comb_end_jpeg(jpeg_ctx, jpeg_packet);
-	}
 	return ret;
 }
 
@@ -1863,11 +1842,11 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 		seq,
 		"\n--------venc chn attr 1---------------------------------------------------------------------------\n");
 	seq_printf(seq, "%8s%8s%8s%6s%9s%10s%10s%6s\n", "ID", "Width", "Height",
-			"Type", "ByFrame", "Sequence", "GopMode", "Prio");
+		   "Type", "ByFrame", "Sequence", "GopMode", "Prio");
 
 	seq_printf(seq, "%8d%8u%8u%6s%9s%10u%10s%6d\n", chl_id, cfg->prep.width,
-			cfg->prep.height, strof_coding_type(cfg->codec.coding), "y",
-			task->seq_idx, strof_gop_mode(enc->gop_mode), 0);
+		   cfg->prep.height, strof_coding_type(cfg->codec.coding), "y",
+		   task->seq_idx, strof_gop_mode(enc->gop_mode), 0);
 
 	seq_puts(
 		seq,
@@ -1886,16 +1865,16 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 		"\n--------ring buf status---------------------------------------------------------------------------\n");
 
 	seq_printf(seq, "%8s%8s%8s%8s%10s%10s%10s%10s\n", "ID", "w_pos", "r_pos",
-			"usd_len", "total_len", "min_size", "l_w_pos", "l_r_pos");
+		   "usd_len", "total_len", "min_size", "l_w_pos", "l_r_pos");
 	seq_printf(seq, "%8d%8d%8d%8d%10d%10d%10d%10d\n", chl_id, enc->ring_pool->w_pos,
-			enc->ring_pool->r_pos, enc->ring_pool->use_len, enc->ring_pool->len
-			,enc->ring_pool->min_buf_size, enc->ring_pool->l_w_pos, enc->ring_pool->l_r_pos);
+		   enc->ring_pool->r_pos, enc->ring_pool->use_len, enc->ring_pool->len
+		   , enc->ring_pool->min_buf_size, enc->ring_pool->l_w_pos, enc->ring_pool->l_r_pos);
 
 	seq_puts(
 		seq,
 		"\n--------hw status---------------------------------------------------------------------------------\n");
 	seq_printf(seq, "%8s%8s%12s%14s\n", "ID", "hw_run", "enc_status", "pkt_fail_cnt");
-	seq_printf(seq, "%8d%8d%12d%14u\n", chl_id,enc->hw_run, enc->enc_status, enc->pkt_fail_cnt);
+	seq_printf(seq, "%8d%8d%12d%14u\n", chl_id, enc->hw_run, enc->enc_status, enc->pkt_fail_cnt);
 
 	enc_impl_proc_debug(seq_file, enc->impl, chl_id);
 	rc_proc_show(seq_file, enc->rc_ctx, chl_id);

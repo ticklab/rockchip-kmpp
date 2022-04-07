@@ -86,45 +86,45 @@ MPP_RET mpp_dev_ioctl(MppDev ctx, RK_S32 cmd, void *param)
 		return ret;
 
 	switch (cmd) {
-	case MPP_DEV_REG_WR:{
-			if (api->reg_wr)
-				ret = api->reg_wr(impl_ctx, param);
-		}
-		break;
-	case MPP_DEV_REG_RD:{
-			if (api->reg_rd)
-				ret = api->reg_rd(impl_ctx, param);
-		}
-		break;
-	case MPP_DEV_REG_OFFSET:{
-			if (api->reg_offset)
-				ret = api->reg_offset(impl_ctx, param);
-		}
-		break;
-	case MPP_DEV_RCB_INFO:{
-			if (api->rcb_info)
-				ret = api->rcb_info(impl_ctx, param);
-		}
-		break;
-	case MPP_DEV_SET_INFO:{
-			if (api->set_info)
-				ret = api->set_info(impl_ctx, param);
-		}
-		break;
-	case MPP_DEV_CMD_SEND:{
-			if (api->cmd_send)
-				ret = api->cmd_send(impl_ctx);
-		}
-		break;
-	case MPP_DEV_CMD_POLL:{
-			if (api->cmd_poll)
-				ret = api->cmd_poll(impl_ctx);
-		}
-		break;
-	default:{
-			mpp_err_f("invalid cmd %d\n", cmd);
-		}
-		break;
+	case MPP_DEV_REG_WR: {
+		if (api->reg_wr)
+			ret = api->reg_wr(impl_ctx, param);
+	}
+	break;
+	case MPP_DEV_REG_RD: {
+		if (api->reg_rd)
+			ret = api->reg_rd(impl_ctx, param);
+	}
+	break;
+	case MPP_DEV_REG_OFFSET: {
+		if (api->reg_offset)
+			ret = api->reg_offset(impl_ctx, param);
+	}
+	break;
+	case MPP_DEV_RCB_INFO: {
+		if (api->rcb_info)
+			ret = api->rcb_info(impl_ctx, param);
+	}
+	break;
+	case MPP_DEV_SET_INFO: {
+		if (api->set_info)
+			ret = api->set_info(impl_ctx, param);
+	}
+	break;
+	case MPP_DEV_CMD_SEND: {
+		if (api->cmd_send)
+			ret = api->cmd_send(impl_ctx);
+	}
+	break;
+	case MPP_DEV_CMD_POLL: {
+		if (api->cmd_poll)
+			ret = api->cmd_poll(impl_ctx);
+	}
+	break;
+	default: {
+		mpp_err_f("invalid cmd %d\n", cmd);
+	}
+	break;
 	}
 
 	return ret;
@@ -149,7 +149,7 @@ RK_U32 mpp_dev_get_iova_address(MppDev ctx, MppBuffer mpp_buf, RK_U32 reg_idx)
 	void *impl_ctx = p->ctx;
 	struct dma_buf *dma_buf = NULL;
 	dma_buf = mpp_buffer_get_dma(mpp_buf);
-    mpp_assert(dma_buf);
+	mpp_assert(dma_buf);
 	if (api->get_address)
 		return api->get_address(impl_ctx, dma_buf, reg_idx);
 	return 0;
@@ -162,7 +162,7 @@ RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf, RK_U32 offset)
 	void *impl_ctx = p->ctx;
 	struct dma_buf *dma_buf = NULL;
 	dma_buf = mpi_buf_get_dma(mpi_buf);
-    mpp_assert(dma_buf);
+	mpp_assert(dma_buf);
 	if (api->get_address)
 		return api->get_address(impl_ctx, dma_buf, offset);
 	return 0;
@@ -177,7 +177,7 @@ RK_U32 mpp_dev_release_iova_address(MppDev ctx, MppBuffer mpp_buf)
 	void *impl_ctx = p->ctx;
 	struct dma_buf *dma_buf = NULL;
 	dma_buf = mpp_buffer_get_dma(mpp_buf);
-    mpp_assert(dma_buf);
+	mpp_assert(dma_buf);
 	if (api->release_address && dma_buf)
 		api->release_address(impl_ctx, dma_buf);
 	return 0;

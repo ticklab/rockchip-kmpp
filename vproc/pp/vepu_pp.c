@@ -35,9 +35,8 @@ static struct vcodec_mpibuf_fn * get_vmpibuf_func(void)
 	if (IS_ERR_OR_NULL(g_mpi_buf_fn)) {
 		pr_err("%s failed\n", __FUNCTION__);
 		return ERR_PTR(-ENOMEM);
-	} else {
+	} else
 		return g_mpi_buf_fn;
-	}
 }
 
 static struct pp_buffer_t * pp_malloc_buffer(struct pp_chn_info_t *info, u32 size)
@@ -58,7 +57,7 @@ static struct pp_buffer_t * pp_malloc_buffer(struct pp_chn_info_t *info, u32 siz
 				pp_buf->buf_dma = func->buf_get_dmabuf(pp_buf->buf);
 				if (pp_buf->buf_dma)
 					pp_buf->iova = info->api->get_address(info->dev_srv,
-					                pp_buf->buf_dma, 0);
+									      pp_buf->buf_dma, 0);
 			}
 		}
 	}
@@ -91,7 +90,7 @@ static int pp_allocate_buffer(struct pp_chn_info_t *info)
 	info->buf_rfpw = pp_malloc_buffer(info, w * h / 8);
 	info->buf_rfpr = pp_malloc_buffer(info, w * h / 8);
 	if (IS_ERR_OR_NULL(info->buf_rfpw) ||
-		IS_ERR_OR_NULL(info->buf_rfpr)) {
+	    IS_ERR_OR_NULL(info->buf_rfpr)) {
 		pp_err("failed\n");
 		ret = VEPU_PP_NOK;
 	}
@@ -112,9 +111,8 @@ static void pp_release_buffer(struct pp_chn_info_t *info)
 	pp_free_buffer(info, info->buf_rfpw);
 	pp_free_buffer(info, info->buf_rfpr);
 
-	if (info->md_en) {
+	if (info->md_en)
 		pp_free_buffer(info, info->buf_rfmwr);
-	}
 }
 
 int vepu_pp_create_chn(int chn, struct pp_chn_attr *attr)
@@ -144,9 +142,8 @@ int vepu_pp_create_chn(int chn, struct pp_chn_attr *attr)
 	if (info->dev_srv == NULL) {
 		pp_err("vepu pp vmalloc failed\n");
 		return VEPU_PP_NOK;
-	} else {
+	} else
 		memset(info->dev_srv, 0, info->api->ctx_size);
-	}
 
 	info->api->init(info->dev_srv, MPP_DEVICE_RKVENC_PP);
 
@@ -236,9 +233,9 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 
 		p->enc_pic_fmt.src_from_isp = !info->down_scale_en;
 		p->enc_pic_fmt.ref_pic0_updt_en = (info->smear_en || info->weightp_en) &&
-									   ((frm_cnt % gop) != (gop - 1));
-		p->enc_pic_fmt.ref_pic1_updt_en = (info->md_en && (frm_cnt % cfg->md_interval == 0)) || 
-					(info->od_en && (frm_cnt % cfg->od_interval == 0));
+						  ((frm_cnt % gop) != (gop - 1));
+		p->enc_pic_fmt.ref_pic1_updt_en = (info->md_en && (frm_cnt % cfg->md_interval == 0)) ||
+						  (info->od_en && (frm_cnt % cfg->od_interval == 0));
 
 		p->enc_pic_rsl.pic_wd8_m1 = info->width / 8 - 1;
 		p->enc_pic_rsl.pic_hd8_m1 = info->height / 8 - 1;
@@ -317,7 +314,7 @@ int vepu_pp_control(int chn, enum pp_cmd cmd, void *param)
 	info = &g_pp_ctx.chn_info[chn];
 
 	if (cmd == PP_CMD_SET_COMMON_CFG || cmd == PP_CMD_SET_MD_CFG ||
-		cmd == PP_CMD_SET_OD_CFG)
+	    cmd == PP_CMD_SET_OD_CFG)
 		vepu_pp_set_param(info, cmd, param);
 
 	if (cmd == PP_CMD_RUN_SYNC) {

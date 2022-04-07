@@ -16,8 +16,8 @@
 RK_S64 mpp_time(void)
 {
 	struct timespec64 time;
-    ktime_get_real_ts64(&time);
-    return (RK_S64)time.tv_sec * 1000000 + (RK_S64)time.tv_nsec / 1000;
+	ktime_get_real_ts64(&time);
+	return (RK_S64)time.tv_sec * 1000000 + (RK_S64)time.tv_nsec / 1000;
 }
 
 

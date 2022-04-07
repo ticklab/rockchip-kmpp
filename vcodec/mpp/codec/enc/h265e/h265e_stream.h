@@ -21,24 +21,24 @@ typedef struct H265eStream_t {
 extern "C" {
 #endif
 
-	MPP_RET h265e_stream_init(H265eStream * s);
-	MPP_RET h265e_stream_deinit(H265eStream * s);
-	MPP_RET h265e_stream_reset(H265eStream * s);
-	MPP_RET h265e_stream_realign(H265eStream * s);
-	MPP_RET h265e_stream_write_with_log(H265eStream * s,
-					    RK_U32 val, RK_S32 i_count,
-					    char *name);
-	MPP_RET h265e_stream_write1_with_log(H265eStream * s, RK_U32 val,
-					     char *name);
-	MPP_RET h265e_stream_write_ue_with_log(H265eStream * s, RK_U32 val,
-					       char *name);
-	MPP_RET h265e_stream_write_se_with_log(H265eStream * s, RK_S32 val,
-					       char *name);
-	MPP_RET h265e_stream_write32(H265eStream * s, RK_U32 i_bits,
+MPP_RET h265e_stream_init(H265eStream * s);
+MPP_RET h265e_stream_deinit(H265eStream * s);
+MPP_RET h265e_stream_reset(H265eStream * s);
+MPP_RET h265e_stream_realign(H265eStream * s);
+MPP_RET h265e_stream_write_with_log(H265eStream * s,
+				    RK_U32 val, RK_S32 i_count,
+				    char *name);
+MPP_RET h265e_stream_write1_with_log(H265eStream * s, RK_U32 val,
 				     char *name);
-	RK_S32 h265e_stream_size_se(RK_S32 val);
-	MPP_RET h265e_stream_rbsp_trailing(H265eStream * s);
-	MPP_RET h265e_stream_flush(H265eStream * s);
+MPP_RET h265e_stream_write_ue_with_log(H265eStream * s, RK_U32 val,
+				       char *name);
+MPP_RET h265e_stream_write_se_with_log(H265eStream * s, RK_S32 val,
+				       char *name);
+MPP_RET h265e_stream_write32(H265eStream * s, RK_U32 i_bits,
+			     char *name);
+RK_S32 h265e_stream_size_se(RK_S32 val);
+MPP_RET h265e_stream_rbsp_trailing(H265eStream * s);
+MPP_RET h265e_stream_flush(H265eStream * s);
 
 #ifdef __cplusplus
 }

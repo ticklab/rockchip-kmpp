@@ -18,8 +18,8 @@
 typedef union HalDecTaskFlag_t {
 	RK_U32 val;
 	struct {
-		RK_U32 eos:1;
-		RK_U32 info_change:1;
+		RK_U32 eos: 1;
+		RK_U32 info_change: 1;
 
 		/*
 		 * Different error flags for task
@@ -39,11 +39,11 @@ typedef union HalDecTaskFlag_t {
 		 * if used_for_ref is set then the frame will set errinfo flag
 		 * if used_for_ref is cleared then the frame will set discard flag.
 		 */
-		RK_U32 parse_err:1;
-		RK_U32 ref_err:1;
-		RK_U32 used_for_ref:1;
+		RK_U32 parse_err: 1;
+		RK_U32 ref_err: 1;
+		RK_U32 used_for_ref: 1;
 
-		RK_U32 wait_done:1;
+		RK_U32 wait_done: 1;
 	};
 } HalDecTaskFlag;
 

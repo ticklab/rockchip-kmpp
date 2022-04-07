@@ -78,7 +78,7 @@ mpp_dma_find_buffer(struct mpp_dma_session *dma, struct dma_buf *dmabuf)
 	}
 
 	list_for_each_entry_safe(buffer, n,
-					&dma->new_import_list, link) {
+				 &dma->new_import_list, link) {
 		/*
 			* fd may dup several and point the same dambuf.
 			* thus, here should be distinguish with the dmabuf.
@@ -116,19 +116,20 @@ mpp_iova_find_buffer(struct mpp_dma_session *dma, u32 iova)
 }
 
 struct mpp_dma_buffer *
-mpp_iova_get_add_buffer(struct mpp_dma_session *dma, u32 iova){
+mpp_iova_get_add_buffer(struct mpp_dma_session *dma, u32 iova)
+{
 	struct mpp_dma_buffer *out = NULL;
 	struct mpp_dma_buffer *buffer = NULL, *n;
 
 	mutex_lock(&dma->list_mutex);
 	list_for_each_entry_safe(buffer, n,
-						&dma->new_import_list, link) {
-			if (iova >= (u32)buffer->iova &&  iova <= (u32)buffer->iova + buffer->size - 1) {
-				out = buffer;
-				buffer->dma->buffer_count++;
-				list_move_tail(&buffer->link, &buffer->dma->used_list);
-				break;
-			}
+				 &dma->new_import_list, link) {
+		if (iova >= (u32)buffer->iova &&  iova <= (u32)buffer->iova + buffer->size - 1) {
+			out = buffer;
+			buffer->dma->buffer_count++;
+			list_move_tail(&buffer->link, &buffer->dma->used_list);
+			break;
+		}
 	}
 	mutex_unlock(&dma->list_mutex);
 	return out;
@@ -254,7 +255,7 @@ fail_dma_alloc:
 int mpp_dma_free(struct mpp_dma_buffer *buffer)
 {
 	dma_free_coherent(buffer->dev, buffer->size,
-			buffer->vaddr, buffer->iova);
+			  buffer->vaddr, buffer->iova);
 	buffer->vaddr = NULL;
 	buffer->iova = 0;
 	buffer->size = 0;
@@ -300,8 +301,8 @@ struct mpp_dma_buffer *mpp_dma_import_fd(struct mpp_iommu_info *iommu_info,
 	/* A new DMA buffer */
 	mutex_lock(&dma->list_mutex);
 	buffer = list_first_entry_or_null(&dma->unused_list,
-					   struct mpp_dma_buffer,
-					   link);
+					  struct mpp_dma_buffer,
+					  link);
 	if (!buffer) {
 		ret = -ENOMEM;
 		mutex_unlock(&dma->list_mutex);
@@ -356,8 +357,8 @@ fail:
 }
 
 struct mpp_dma_buffer *mpp_dma_import(struct mpp_iommu_info *iommu_info,
-		struct mpp_dma_session *dma,
-		struct dma_buf *dmabuf)
+				      struct mpp_dma_session *dma,
+				      struct dma_buf *dmabuf)
 {
 	int ret = 0;
 	struct sg_table *sgt;
@@ -386,8 +387,8 @@ struct mpp_dma_buffer *mpp_dma_import(struct mpp_iommu_info *iommu_info,
 	/* A new DMA buffer */
 	mutex_lock(&dma->list_mutex);
 	buffer = list_first_entry_or_null(&dma->unused_list,
-					   struct mpp_dma_buffer,
-					   link);
+					  struct mpp_dma_buffer,
+					  link);
 	if (!buffer) {
 		ret = -ENOMEM;
 		mutex_unlock(&dma->list_mutex);
@@ -441,17 +442,17 @@ fail:
 }
 
 struct mpp_dma_buffer *mpp_iova_get_buffer(struct mpp_dma_session *dma,
-					u32 iova)
+					   u32 iova)
 {
 	struct mpp_dma_buffer *buffer;
 
 	/* Check whether in dma session */
 	buffer = mpp_iova_find_buffer(dma, iova);
 	if (!IS_ERR_OR_NULL(buffer)) {
-	    return buffer;
+		return buffer;
 		dev_dbg(dma->dev, "missing the iova %x \n", iova);
 	}
-    return NULL;
+	return NULL;
 }
 
 
@@ -522,8 +523,8 @@ int mpp_dma_session_destroy(struct mpp_dma_session *dma)
 	}
 
 	list_for_each_entry_safe(buffer, n,
-						&dma->new_import_list,
-						link) {
+				 &dma->new_import_list,
+				 link) {
 		kref_put(&buffer->ref, mpp_dma_release_buffer);
 		if (kref_read(&buffer->ref) > 0)
 			kref_put(&buffer->ref, mpp_dma_release_buffer);
@@ -555,9 +556,8 @@ mpp_dma_session_create(struct device *dev, u32 max_buffers)
 		mpp_debug(DEBUG_IOCTL, "session_max_buffer %d must less than %d\n",
 			  max_buffers, MPP_SESSION_MAX_BUFFERS);
 		dma->max_buffers = MPP_SESSION_MAX_BUFFERS;
-	} else {
+	} else
 		dma->max_buffers = max_buffers;
-	}
 
 	for (i = 0; i < ARRAY_SIZE(dma->dma_bufs); i++) {
 		buffer = &dma->dma_bufs[i];

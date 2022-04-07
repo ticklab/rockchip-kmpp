@@ -215,7 +215,7 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 	mpp_packet_set_length(task->packet, task->length);
 
 	dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),
-	    DMA_TO_DEVICE, task->output->start_offset, task->length);
+				       DMA_TO_DEVICE, task->output->start_offset, task->length);
 	reg_ctl->reg0004_enc_strt.lkt_num = 0;
 	reg_ctl->reg0004_enc_strt.vepu_cmd = ctx->enc_mode;
 	reg_ctl->reg0005_enc_clr.safe_clr = 0x0;
@@ -255,21 +255,18 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 		RK_U32 i, j;
 
 		for (i = 0; i < 8; i++) {
-			for (j = 0; j < 8; j++) {
+			for (j = 0; j < 8; j++)
 				tbl[i * 8 + j] = 0x8000 / qtable[0][j * 8 + i];
-			}
 		}
 		tbl += 64;
 		for (i = 0; i < 8; i++) {
-			for (j = 0; j < 8; j++) {
+			for (j = 0; j < 8; j++)
 				tbl[i * 8 + j] = 0x8000 / qtable[1][j * 8 + i];
-			}
 		}
 		tbl += 64;
 		for (i = 0; i < 8; i++) {
-			for (j = 0; j < 8; j++) {
+			for (j = 0; j < 8; j++)
 				tbl[i * 8 + j] = 0x8000 / qtable[1][j * 8 + i];
-			}
 		}
 	}
 	task->jpeg_osd_reg = &regs->reg_osd_cfg.osd_jpeg_cfg;
@@ -356,9 +353,8 @@ MPP_RET hal_jpege_v540c_start(void *hal, HalEncTask * enc_task)
 	}
 
 	ret = mpp_dev_ioctl(ctx->dev, MPP_DEV_CMD_SEND, NULL);
-	if (ret) {
+	if (ret)
 		mpp_err_f("send cmd failed %d\n", ret);
-	}
 	hal_jpege_leave();
 	return ret;
 }
@@ -440,7 +436,7 @@ MPP_RET hal_jpege_v540c_get_task(void *hal, HalEncTask * task)
 
 	ctx->last_frame_type = ctx->frame_type;
 
-    ctx->osd_cfg.osd_data3 = mpp_frame_get_osd(task->frame);
+	ctx->osd_cfg.osd_data3 = mpp_frame_get_osd(task->frame);
 
 	hal_jpege_leave();
 

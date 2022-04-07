@@ -113,13 +113,13 @@ static MPP_RET hal_jpege_deinit(void *hal)
     }
 
 HAL_JPEGE_FUNC(prepare)
-    HAL_JPEGE_TASK_FUNC(get_task)
-    HAL_JPEGE_TASK_FUNC(gen_regs)
-    HAL_JPEGE_TASK_FUNC(start)
-    HAL_JPEGE_TASK_FUNC(wait)
-    HAL_JPEGE_TASK_FUNC(part_start)
-    HAL_JPEGE_TASK_FUNC(part_wait)
-    HAL_JPEGE_TASK_FUNC(ret_task)
+HAL_JPEGE_TASK_FUNC(get_task)
+HAL_JPEGE_TASK_FUNC(gen_regs)
+HAL_JPEGE_TASK_FUNC(start)
+HAL_JPEGE_TASK_FUNC(wait)
+HAL_JPEGE_TASK_FUNC(part_start)
+HAL_JPEGE_TASK_FUNC(part_wait)
+HAL_JPEGE_TASK_FUNC(ret_task)
 
 const MppEncHalApi hal_api_jpege_v2 = {
 	.name = "hal_jpege",

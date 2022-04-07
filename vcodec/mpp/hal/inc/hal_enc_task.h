@@ -75,9 +75,9 @@ typedef struct HalEncTask_t {
 	// current mv info output buffer (not used)
 	MppBuffer mv_info;
 	HalEncTaskFlag flags;
-    RK_U32 online;
-    void *jpeg_osd_reg;
-    void *jpeg_tlb_reg;
+	RK_U32 online;
+	void *jpeg_osd_reg;
+	void *jpeg_tlb_reg;
 } HalEncTask;
 
 #endif /* __HAL_ENC_TASK__ */

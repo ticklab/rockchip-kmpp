@@ -221,9 +221,8 @@ int mpp_power_off(struct mpp_dev *mpp)
 	    mpp_taskqueue_get_running_task(mpp->queue)) {
 		pm_runtime_mark_last_busy(mpp->dev);
 		pm_runtime_put_autosuspend(mpp->dev);
-	} else {
+	} else
 		pm_runtime_put_sync_suspend(mpp->dev);
-	}
 
 	return 0;
 }
@@ -278,7 +277,7 @@ static struct mpp_task_msgs *get_task_msgs(struct mpp_session *session)
 	spin_unlock_irqrestore(&session->lock_msgs, flags);
 
 	mpp_debug_func(DEBUG_TASK_INFO, "session %p:%d msgs cnt %d\n",
-			session, session->index, session->msgs_cnt);
+		       session, session->index, session->msgs_cnt);
 
 	return msgs;
 }
@@ -313,16 +312,19 @@ static void clear_task_msgs(struct mpp_session *session)
 
 	spin_lock_irqsave(&session->lock_msgs, flags);
 
-	list_for_each_entry_safe(msgs, n, &session->list_msgs, list_session)
+	list_for_each_entry_safe(msgs, n, &session->list_msgs, list_session) {
 		list_move_tail(&msgs->list_session, &list_to_free);
+	}
 
-	list_for_each_entry_safe(msgs, n, &session->list_msgs_idle, list_session)
+	list_for_each_entry_safe(msgs, n, &session->list_msgs_idle, list_session) {
 		list_move_tail(&msgs->list_session, &list_to_free);
+	}
 
 	spin_unlock_irqrestore(&session->lock_msgs, flags);
 
-	list_for_each_entry_safe(msgs, n, &list_to_free, list_session)
+	list_for_each_entry_safe(msgs, n, &list_to_free, list_session) {
 		kfree(msgs);
+	}
 }
 
 static int mpp_session_clear(struct mpp_dev *mpp,
@@ -720,9 +722,8 @@ static int mpp_task_run(struct mpp_dev *mpp,
 			dev_err(mpp->dev, "set grf failed\n");
 			return ret;
 		}
-	} else {
+	} else
 		mpp_set_grf(mpp->grf_info);
-	}
 
 	mpp_power_on(mpp);
 	mpp_time_record(task);
@@ -804,7 +805,7 @@ done:
 		struct mpp_session *session = NULL;
 
 		session = list_first_entry_or_null(&queue->session_detach, struct mpp_session,
-				session_link);
+						   session_link);
 		if (session) {
 			list_del_init(&session->session_link);
 			queue->detach_count--;
@@ -926,9 +927,8 @@ static int mpp_attach_service(struct mpp_dev *mpp, struct device *dev)
 			dev_err(dev, "resetgroup-node %d must less than %d\n",
 				reset_group_node, mpp->srv->reset_group_cnt);
 			return -ENODEV;
-		} else {
+		} else
 			mpp->reset_group = mpp->srv->reset_groups[reset_group_node];
-		}
 	}
 
 	return 0;
@@ -994,7 +994,7 @@ static void mpp_attach_workqueue(struct mpp_dev *mpp,
 	mpp->queue = queue;
 
 	mpp_dbg_core("%s attach queue as core %d\n",
-			dev_name(mpp->dev), mpp->core_id);
+		     dev_name(mpp->dev), mpp->core_id);
 
 	if (queue->task_capacity > mpp->task_capacity)
 		queue->task_capacity = mpp->task_capacity;
@@ -1119,9 +1119,10 @@ static int mpp_process_request(struct mpp_session *session,
 		struct mpp_hw_info *hw_info;
 
 		mpp = NULL;
-		if (session && session->mpp) {
+		if (session && session->mpp)
 			mpp = session->mpp;
-		} else {
+
+		else {
 			u32 client_type;
 
 			if (get_user(client_type, (u32 __user *)req->data))
@@ -1239,9 +1240,10 @@ static int mpp_process_request(struct mpp_session *session,
 		ret = readx_poll_timeout(atomic_read,
 					 &session->task_count,
 					 val, val == 0, 1000, 500000);
-		if (ret == -ETIMEDOUT) {
+		if (ret == -ETIMEDOUT)
 			mpp_err("wait task running time out\n");
-		} else {
+
+		else {
 			mpp = session->mpp;
 			if (!mpp)
 				return -EINVAL;
@@ -1349,9 +1351,8 @@ static void task_msgs_add(struct mpp_task_msgs *msgs, struct list_head *head)
 	if (!ret) {
 		INIT_LIST_HEAD(&msgs->list);
 		list_add_tail(&msgs->list, head);
-	} else {
+	} else
 		put_task_msgs(msgs);
-	}
 }
 
 static int mpp_collect_msgs(struct list_head *head, struct mpp_session *session,
@@ -1435,7 +1436,7 @@ next:
 		msgs->f = f;
 
 		mpp_debug(DEBUG_IOCTL, "fd %d, session %d msg_cnt %d\n",
-				bat_msg.fd, session->index, session->msgs_cnt);
+			  bat_msg.fd, session->index, session->msgs_cnt);
 
 session_switch_done:
 		/* session id should NOT be the last message */
@@ -1764,7 +1765,7 @@ int mpp_translate_reg_address(struct mpp_session *session,
 }
 
 struct mpp_mem_region * mpp_task_get_mem_region(
-		struct mpp_task *task, u32 iova)
+	struct mpp_task *task, u32 iova)
 {
 	struct mpp_mem_region *mem_region = NULL, *loop = NULL, *n;
 	struct mpp_dma_buffer *buffer = NULL;
@@ -1784,16 +1785,16 @@ struct mpp_mem_region * mpp_task_get_mem_region(
 	/* find fd whether had import */
 	list_for_each_entry_safe_reverse(loop, n, &task->mem_region_list, reg_link) {
 		if (iova >= (u32)loop->iova && iova <= (u32)loop->iova + loop->len - 1) {
-            found = true;
+			found = true;
 			break;
 		}
 	}
 
 	mem_region = &task->mem_regions[task->mem_count];
 
-    if (found) {
+	if (found) {
 		memcpy(mem_region, loop, sizeof(*loop));
-        mem_region->is_dup = true;
+		mem_region->is_dup = true;
 	} else {
 		buffer = mpp_iova_get_buffer(dma, iova);
 		mem_region->is_dup = true;
@@ -1812,9 +1813,8 @@ struct mpp_mem_region * mpp_task_get_mem_region(
 		mem_region->fd = 0;
 		mem_region->buf = buffer->dmabuf;
 
-        if(kref_read(&buffer->ref) > 1){
-            mem_region->is_dup = false;
-        }
+		if (kref_read(&buffer->ref) > 1)
+			mem_region->is_dup = false;
 	}
 	task->mem_count++;
 	INIT_LIST_HEAD(&mem_region->reg_link);
@@ -1824,8 +1824,8 @@ struct mpp_mem_region * mpp_task_get_mem_region(
 }
 
 int mpp_get_dma_attach_mem_info(struct mpp_session *session,
-			      struct mpp_task *task, int fmt,
-			      u32 *reg)
+				struct mpp_task *task, int fmt,
+				u32 *reg)
 {
 	int i;
 	int cnt;
@@ -1849,9 +1849,8 @@ int mpp_get_dma_attach_mem_info(struct mpp_session *session,
 		struct mpp_mem_region *mem_region = NULL;
 		iova_address = reg[tbl[i]];
 
-		if (iova_address == 0 || (int)(iova_address) == -1){
+		if (iova_address == 0 || (int)(iova_address) == -1)
 			continue;
-		}
 		mem_region = mpp_task_get_mem_region(task, iova_address);
 		if (IS_ERR(mem_region)) {
 			mpp_err("reg[%3d]: 0x%08x iova %d failed\n",
@@ -2039,9 +2038,8 @@ int mpp_task_dump_mem_region(struct mpp_dev *mpp,
 			mpp_err("reg[%3d]: %pad, size %lx\n",
 				mem->reg_idx, &mem->iova, mem->len);
 		}
-	} else {
+	} else
 		dev_err(mpp->dev, "no memory region mapped\n");
-	}
 
 	return 0;
 }
@@ -2295,9 +2293,8 @@ irqreturn_t mpp_dev_irq(int irq, void *param)
 			/* normal condition, set state and wake up isr thread */
 			set_bit(TASK_STATE_IRQ, &task->state);
 		}
-	} else {
+	} else
 		mpp_debug(DEBUG_IRQ_CHECK, "error, task is null\n");
-	}
 done:
 	return irq_ret;
 }
@@ -2370,7 +2367,7 @@ int mpp_time_diff(struct mpp_task *task)
 	mpp_debug(DEBUG_TIMING, "%s: pid: %d, session: %p, time: %lld us\n",
 		  dev_name(mpp->dev), task->session->pid, task->session,
 		  (end.tv_sec  - task->start.tv_sec)  * 1000000 +
-		  (end.tv_nsec - task->start.tv_nsec)/1000);
+		  (end.tv_nsec - task->start.tv_nsec) / 1000);
 
 	return 0;
 }
@@ -2433,22 +2430,22 @@ int mpp_set_clk_info_rate_hz(struct mpp_clk_info *clk_info,
 	switch (mode) {
 	case CLK_MODE_DEBUG:
 		clk_info->debug_rate_hz = val;
-	break;
+		break;
 	case CLK_MODE_REDUCE:
 		clk_info->reduce_rate_hz = val;
-	break;
+		break;
 	case CLK_MODE_NORMAL:
 		clk_info->normal_rate_hz = val;
-	break;
+		break;
 	case CLK_MODE_ADVANCED:
 		clk_info->advanced_rate_hz = val;
-	break;
+		break;
 	case CLK_MODE_DEFAULT:
 		clk_info->default_rate_hz = val;
-	break;
+		break;
 	default:
 		mpp_err("error mode %d\n", mode);
-	break;
+		break;
 	}
 
 	return 0;
@@ -2568,7 +2565,7 @@ static struct mpp_session *mpp_chnl_open(int client_type)
 		return NULL;
 	session = mpp_session_init();
 	if (!session)
-        	return NULL;
+		return NULL;
 	session->srv = g_srv;
 	session->k_space = 1;
 	session->process_task = mpp_process_task_default;
@@ -2581,19 +2578,19 @@ static struct mpp_session *mpp_chnl_open(int client_type)
 	}
 	client_type = array_index_nospec(client_type, MPP_DEVICE_BUTT);
 	mpp = g_srv->sub_devices[client_type];
-    	if (!mpp)
-        	return NULL;
+	if (!mpp)
+		return NULL;
 	session->device_type = (enum MPP_DEVICE_TYPE)client_type;
 	session->dma = mpp_dma_session_create(mpp->dev, mpp->session_max_buffers);
 	session->mpp = mpp;
 	if (mpp->dev_ops) {
 		if (mpp->dev_ops->process_task)
 			session->process_task =
-			mpp->dev_ops->process_task;
+				mpp->dev_ops->process_task;
 
 		if (mpp->dev_ops->wait_result)
 			session->wait_result =
-			mpp->dev_ops->wait_result;
+				mpp->dev_ops->wait_result;
 
 		if (mpp->dev_ops->deinit)
 			session->deinit = mpp->dev_ops->deinit;
@@ -2625,7 +2622,7 @@ static int mpp_chnl_release(struct mpp_session *session)
 	/* wait for task all done */
 	atomic_inc(&session->release_request);
 
-    if (session->mpp)
+	if (session->mpp)
 		mpp_session_detach_workqueue(session);
 	else
 		mpp_session_deinit(session);
@@ -2672,9 +2669,9 @@ static int mpp_chnl_add_req(struct mpp_session *session,  void *reqs)
 				struct mpp_dev *mpp = NULL;
 				struct mpp_task *task = NULL;
 				struct mpp_taskqueue *queue = NULL;
-					ret = mpp_process_task(session, &task_msgs);
-					if (ret)
-						return ret;
+				ret = mpp_process_task(session, &task_msgs);
+				if (ret)
+					return ret;
 
 				mpp = task_msgs.mpp;
 				task = task_msgs.task;
@@ -2703,14 +2700,14 @@ static u32 mpp_chnl_get_iova_addr(struct mpp_session *session,  struct dma_buf *
 	mpp = session->mpp;
 	mpp_iommu_down_read(mpp->iommu_info);
 	buffer = mpp_dma_import(mpp->iommu_info,
-		session->dma, buf);
+				session->dma, buf);
 	mpp_iommu_up_read(mpp->iommu_info);
 	if (IS_ERR_OR_NULL(buffer)) {
 		mpp_err("can not import dma buf %p reg_idx %d\n", buf, reg_idx);
 		return -EINVAL;
 	}
 	//mpp_err("dmabuf %p buffer->iova %x len %ld \n", buf, (u32)buffer->iova, buffer->size);
-    	return (u32)buffer->iova;
+	return (u32)buffer->iova;
 }
 
 static void mpp_chnl_release_iova_addr(struct mpp_session *session,  struct dma_buf *buf)
@@ -2720,14 +2717,13 @@ static void mpp_chnl_release_iova_addr(struct mpp_session *session,  struct dma_
 }
 
 
-struct vcodec_mppdev_svr_fn
-{
+struct vcodec_mppdev_svr_fn {
 	struct mpp_session *(*chnl_open)(int client_type);
 	int (*chnl_register)(struct mpp_session *session, void *fun, unsigned int chn_id);
 	int (*chnl_release)(struct mpp_session *session);
 	int (*chnl_add_req)(struct mpp_session *session,  void *reqs);
 	unsigned int (*chnl_get_iova_addr)(struct mpp_session *session,
-			struct dma_buf *buf, unsigned int reg_idx);
+					   struct dma_buf *buf, unsigned int reg_idx);
 	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
 };
 

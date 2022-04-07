@@ -15,12 +15,12 @@ mpp_vcodec-objs := vcodec/mpp_vcodec_base.o \
 		   vcodec/mpp_vcodec_event.o \
 		   vcodec/mpp_vcodec_flow.o \
 		   vcodec/mpp_vcodec_thread.o \
-		   vcodec/mpp_vcodec_driver.o 
+		   vcodec/mpp_vcodec_driver.o
 
 mpp_vcodec-$(VCODEC_TEST_ENABLE) += vcodec/mpp/base/mpp_trie.o \
 				    vcodec/mpp/base/mpp_enc_cfg.o \
 				    vcodec/mpp/base/mpp_cfg.o \
-				    vcodec/mpp_vcodec_test.o 
+				    vcodec/mpp_vcodec_test.o
 
 
 mpp_vcodec-objs += vcodec/osal/mpp_log.o \

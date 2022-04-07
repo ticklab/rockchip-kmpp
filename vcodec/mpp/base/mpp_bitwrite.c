@@ -197,9 +197,8 @@ void mpp_writer_put_ue(MppWriteCtx * ctx, RK_U32 val)
 		}
 
 		mpp_writer_put_bits(ctx, val, num_bits);
-	} else {
+	} else
 		mpp_writer_put_bits(ctx, val, 2 * num_bits - 1);
-	}
 }
 
 void mpp_writer_put_se(MppWriteCtx * ctx, RK_S32 val)

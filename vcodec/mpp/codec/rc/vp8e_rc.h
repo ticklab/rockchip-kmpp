@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-	extern const RcImplApi default_vp8e;
+extern const RcImplApi default_vp8e;
 
 #ifdef  __cplusplus
 }

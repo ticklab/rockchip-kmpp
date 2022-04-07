@@ -147,9 +147,8 @@ MPP_RET hal_task_check_empty(HalTaskGroup group, HalTaskStatus status)
 	HalTaskGroupImpl *p = (HalTaskGroupImpl *) group;
 	AutoMutex auto_lock(p->lock);
 	struct list_head *list = &p->list[status];
-	if (list_empty(list)) {
+	if (list_empty(list))
 		return MPP_OK;
-	}
 	return MPP_NOK;
 }
 
@@ -236,8 +235,7 @@ MPP_RET hal_task_info_init(HalTaskInfo * task, MppCtxType type)
 		p->input = -1;
 		memset(&task->dec.syntax, 0, sizeof(task->dec.syntax));
 		memset(task->dec.refer, -1, sizeof(task->dec.refer));
-	} else {
+	} else
 		memset(&task->enc, 0, sizeof(task->enc));
-	}
 	return MPP_OK;
 }

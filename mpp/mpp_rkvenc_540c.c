@@ -172,15 +172,15 @@ struct rkvenc_link_header {
 		u32 reserved        : 1;
 		u32 task_id         : 12;
 		u32 reserved1       : 16;
-	}node_cfg;
+	} node_cfg;
 	union {
 		u32 valid : 1;
 		u32 lkt_addr : 32;
-	}pic_cfg;
+	} pic_cfg;
 	union {
 		u32 valid : 1;
 		u32 lkt_addr : 32;
-	}rc_cfg;
+	} rc_cfg;
 	union {
 		u32 valid : 1;
 		u32 lkt_addr : 32;
@@ -377,7 +377,7 @@ static struct rkvenc_hw_info rkvenc_rv1106_hw_info = {
 /* rv1106 trans table */
 static const u16 trans_tbl_h264e_rv1106[] = {
 	7, 8, 9, 10, 11, 12, 13, 14,
-	15, 16, 17, 18, 19,20,21,22,23,
+	15, 16, 17, 18, 19, 20, 21, 22, 23,
 	/* jpege */
 	100, 101, 102, 103,
 };
@@ -389,7 +389,7 @@ static const u16 trans_tbl_h264e_rv1106_osd[] = {
 
 static const u16 trans_tbl_h265e_rv1106[] = {
 	7, 8, 9, 10, 11, 12, 13, 14,
-	15, 16, 17, 18, 19,20,21,22,23,
+	15, 16, 17, 18, 19, 20, 21, 22, 23,
 	/* jpege */
 	100, 101, 102, 103,
 };
@@ -567,14 +567,13 @@ static int rkvenc_set_class_reg(struct rkvenc_task *task, u32 addr, u32 *data)
 		base_s = hw->reg_msg[i].base_s;
 		base_e = hw->reg_msg[i].base_e;
 		if (addr >= base_s && addr < base_e) {
-			if((addr - base_s) == 0){
+			if ((addr - base_s) == 0)
 				task->reg[i].data = data;
-			}
 			break;
 		}
 	}
 	return 0;
-	}
+}
 
 
 static int rkvenc_extract_task_msg(struct mpp_session *session,
@@ -652,17 +651,17 @@ static int rkvenc_task_get_format(struct mpp_dev *mpp,
 		return -EINVAL;
 
 	offset = hw->fmt_reg.base - class_base;
-	val = class_reg[offset/sizeof(u32)];
+	val = class_reg[offset / sizeof(u32)];
 	task->fmt = (val >> bitpos) & ((1 << bitlen) - 1);
 
 	return 0;
 }
 
-static void *task_init(struct rkvenc_task *task){
+static void *task_init(struct rkvenc_task *task)
+{
 	int i = 0;
-	for(i = 0; i < RKVENC_CLASS_BUTT; i++){
+	for (i = 0; i < RKVENC_CLASS_BUTT; i++)
 		task->reg[i].valid = 0;
-	}
 	task->irq_status = 0;
 	task->w_req_cnt = 0;
 	task->r_req_cnt = 0;
@@ -793,16 +792,15 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 	struct rkvenc_task *task = NULL;
 	struct mpp_task *mpp_task;
 	struct mpp_dev *mpp = session->mpp;
-    u32 i = 0;
+	u32 i = 0;
 	mpp_debug_enter();
 
 
-    for (i = 0; i < MAX_TASK_CNT; i++){
-        task = (struct rkvenc_task *)session->task[i];
-        if (!task->mpp_task.state){
-            break;
-        }
-    }
+	for (i = 0; i < MAX_TASK_CNT; i++) {
+		task = (struct rkvenc_task *)session->task[i];
+		if (!task->mpp_task.state)
+			break;
+	}
 
 	if (!task)
 		return NULL;
@@ -811,7 +809,7 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 	mpp_task = &task->mpp_task;
 	mpp_task_init(session, mpp_task);
 	mpp_task->hw_info = mpp->var->hw_info;
-  	mpp_task->clbk_en = 1;
+	mpp_task->clbk_en = 1;
 	task->hw_info = to_rkvenc_info(mpp_task->hw_info);
 	/* extract reqs for current task */
 	ret = rkvenc_extract_task_msg(session, task, msgs, session->k_space);
@@ -851,12 +849,11 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 			}
 		}
 	}
-    /* check rec fbc is disable */
+	/* check rec fbc is disable */
 	{
 		u32 val = task->reg[RKVENC_CLASS_PIC].data[REC_FBC_DIS_CLASS_OFFSET];
-		if (val & 0x80000000) {
+		if (val & 0x80000000)
 			mpp_task->clbk_en = 0;
-		}
 	}
 
 	if (session->k_space) {
@@ -959,7 +956,7 @@ static int rkvenc_link_fill_table(struct rkvenc_link_dev *link,
 	}
 #endif
 	dma_sync_single_for_device(link->enc->mpp.dev, table->iova,
-				table->size, DMA_FROM_DEVICE);
+				   table->size, DMA_FROM_DEVICE);
 	dma_sync_single_for_cpu(link->enc->mpp.dev, table->iova,
 				table->size, DMA_FROM_DEVICE);
 	return 0;
@@ -1120,9 +1117,8 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 					enc_start_val = regs[j];
 					continue;
 				}
-				if (off == hw->dvbm_cfg) {
+				if (off == hw->dvbm_cfg)
 					dvbm_en = regs[j];
-				}
 				mpp_write_relaxed(mpp, off, regs[j]);
 			}
 		}
@@ -1157,7 +1153,7 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 		wmb();
 		/* link mode and one frame */
 		if (enc->link_run)
-		mpp_write(mpp, hw->enc_start_base, 0x201);
+			mpp_write(mpp, hw->enc_start_base, 0x201);
 	} break;
 	case RKVENC_MODE_LINK_ADD: {
 		u32 link_status = mpp_read(mpp, hw->link_status_base);
@@ -1172,13 +1168,13 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 			wmb();
 			/* link start mode */
 			if (enc->link_run)
-			mpp_write(mpp, hw->enc_start_base, 0x201);
+				mpp_write(mpp, hw->enc_start_base, 0x201);
 		} else {
 			task->task_no = atomic_inc_return(&enc->link_task_cnt);
 			wmb();
 			/* link add mode */
 			if (enc->link_run)
-			mpp_write(mpp, hw->enc_start_base, 0x301);
+				mpp_write(mpp, hw->enc_start_base, 0x301);
 		}
 	} break;
 	default:
@@ -1216,11 +1212,11 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 		void* dst;
 
 		dma_sync_single_for_device(mpp->dev, enc->out_addr,
-					10*1024, DMA_FROM_DEVICE);
+					   10 * 1024, DMA_FROM_DEVICE);
 		dma_sync_single_for_cpu(mpp->dev, enc->out_addr,
-					10*1024, DMA_FROM_DEVICE);
+					10 * 1024, DMA_FROM_DEVICE);
 		dma_sync_single_for_device(mpp->dev, enc->out_buf->iova,
-					enc->out_buf_top_off, DMA_FROM_DEVICE);
+					   enc->out_buf_top_off, DMA_FROM_DEVICE);
 		dma_sync_single_for_cpu(mpp->dev, enc->out_buf->iova,
 					enc->out_buf_top_off, DMA_FROM_DEVICE);
 		dst = phys_to_virt(enc->out_addr);
@@ -1253,11 +1249,11 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 				enc->out_offset += size;
 			}
 			dma_sync_single_for_device(mpp->dev, enc->out_addr,
-						10*1024, DMA_FROM_DEVICE);
+						   10 * 1024, DMA_FROM_DEVICE);
 			dma_sync_single_for_cpu(mpp->dev, enc->out_addr,
-						10*1024, DMA_FROM_DEVICE);
+						10 * 1024, DMA_FROM_DEVICE);
 			dma_sync_single_for_device(mpp->dev, enc->out_buf->iova,
-						enc->out_buf_top_off, DMA_FROM_DEVICE);
+						   enc->out_buf_top_off, DMA_FROM_DEVICE);
 			dma_sync_single_for_cpu(mpp->dev, enc->out_buf->iova,
 						enc->out_buf_top_off, DMA_FROM_DEVICE);
 			// if (test_bit(4, &mpp->irq_status)) {
@@ -1267,7 +1263,7 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 			// 	// pr_info("update top addr 0x%08x -> 0x%08x", old_adr, mpp_read(mpp, 0x2b0));
 			// 	mpp_write(mpp, 0x2bc, enc->out_buf->iova + enc->out_buf_pre_off + 0xd);
 			// } else
-				mpp_write(mpp, 0x2bc, enc->out_buf->iova + enc->out_buf_pre_off + 0xd);
+			mpp_write(mpp, 0x2bc, enc->out_buf->iova + enc->out_buf_pre_off + 0xd);
 		}
 		//pr_info("st_snum 0x%08x si_len 0x%08x size 0x%08x\n", st_snum,
 		//	mpp_read(mpp, 0x4038), mpp_read(mpp, 0x4000));
@@ -1290,7 +1286,7 @@ static int rkvenc_link_set_int_sta(struct rkvenc_link_dev *link,
 
 	tb_reg = (u32 *)task->table->vaddr;
 	int_sta_off = link->class_off[RKVENC_CLASS_CTL] + hw->int_sta_base;
-	tb_reg[int_sta_off/ sizeof(u32)] = irq_status;
+	tb_reg[int_sta_off / sizeof(u32)] = irq_status;
 
 	return 0;
 }
@@ -1372,7 +1368,7 @@ static int rkvenc_link_isr(struct mpp_dev *mpp,
 				clear_bit(TASK_STATE_HANDLE, &mpp_task->state);
 				clear_bit(TASK_STATE_IRQ, &mpp_task->state);
 			} else {
-				task->irq_status = mpp->irq_status;2
+				task->irq_status = mpp->irq_status; 2
 				rkvenc_link_set_int_sta(link, task, task->irq_status);
 				if (!atomic_read(&mpp_task->abort_request)) {
 					set_bit(TASK_STATE_DONE, &mpp_task->state);
@@ -1426,7 +1422,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 			/* dump register */
 			if (mpp_debug_unlikely(DEBUG_DUMP_ERR_REG)) {
 				mpp_debug(DEBUG_DUMP_ERR_REG, "irq_status: %08x\n",
-					task->irq_status);
+					  task->irq_status);
 				mpp_task_dump_hw_reg(mpp);
 			}
 		}
@@ -1452,7 +1448,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 			/* dump register */
 			if (mpp_debug_unlikely(DEBUG_DUMP_ERR_REG)) {
 				mpp_debug(DEBUG_DUMP_ERR_REG, "irq_status: %08x\n",
-					task->irq_status);
+					  task->irq_status);
 				// mpp_task_dump_hw_reg(mpp);
 			}
 		}
@@ -1463,7 +1459,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 		mutex_unlock(&enc->link->list_mutex);
 	} break;
 	case RKVENC_MODE_LINK_ADD: {
-		if(mpp->irq_status & 0x100 || mpp->dump_regs)
+		if (mpp->irq_status & 0x100 || mpp->dump_regs)
 			rkvenc_dump_dbg(mpp);
 		rkvenc_link_isr(mpp, enc, enc->link);
 	} break;
@@ -1493,7 +1489,7 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 		struct mpp_request *req;
 		struct mpp_request msg;
 
-		if(mpp->irq_status & 0x100 || mpp->dump_regs)
+		if (mpp->irq_status & 0x100 || mpp->dump_regs)
 			rkvenc_dump_dbg(mpp);
 
 		for (i = 0; i < task->r_req_cnt; i++) {
@@ -1567,7 +1563,7 @@ static int rkvenc_result(struct mpp_dev *mpp,
 	case RKVENC_MODE_ONEFRAME:
 	case RKVENC_MODE_LINK_ONEFRAME: {
 		;
-	}break;
+	} break;
 	case RKVENC_MODE_LINK_ADD: {
 		u32 i;
 		u32 *reg;
@@ -1583,9 +1579,8 @@ static int rkvenc_result(struct mpp_dev *mpp,
 					mpp_err("copy_to_user reg fail\n");
 					return -EIO;
 				}
-			}else{
+			} else
 				memcpy(req->data, (u8 *)reg, req->size);
-			}
 		}
 	} break;
 	default:
@@ -1599,9 +1594,9 @@ static int rkvenc_result(struct mpp_dev *mpp,
 
 static int rkvenc_free_task(struct mpp_session *session, struct mpp_task *mpp_task)
 {
-    struct rkvenc_task *task = to_rkvenc_task(mpp_task);
+	struct rkvenc_task *task = to_rkvenc_task(mpp_task);
 
-    mpp_task_finalize(session, mpp_task);
+	mpp_task_finalize(session, mpp_task);
 	rkvenc_invalid_class_msg(task);
 	return 0;
 }
@@ -1652,7 +1647,7 @@ static int rkvenc_free_session(struct mpp_session *session)
 {
 	if (session) {
 		u32 i = 0;
-		for (i = 0 ; i < MAX_TASK_CNT; i++){
+		for (i = 0 ; i < MAX_TASK_CNT; i++) {
 			struct rkvenc_task *task = (struct rkvenc_task *)session->task[i];
 			if (task) {
 				rkvenc_invalid_class_msg(task);
@@ -1666,7 +1661,7 @@ static int rkvenc_free_session(struct mpp_session *session)
 		struct rkvenc_dev *enc = to_rkvenc_dev(session->mpp);
 
 		mpp_power_on(session->mpp);
-		if (priv->dvbm_link){
+		if (priv->dvbm_link) {
 			rk_dvbm_unlink(enc->port);
 			priv->dvbm_link = 0;
 		}
@@ -1687,7 +1682,7 @@ static int rkvenc_init_session(struct mpp_session *session)
 	struct mpp_dev *mpp = NULL;
 	struct rkvenc_task *task = NULL;
 	int j = 0, ret = 0;
-    u32 i = 0;
+	u32 i = 0;
 
 	if (!session) {
 		mpp_err("session is null\n");
@@ -1702,23 +1697,23 @@ static int rkvenc_init_session(struct mpp_session *session)
 	init_rwsem(&priv->rw_sem);
 	session->priv = priv;
 
-    for(i = 0; i < MAX_TASK_CNT; i++) {
-    	task = kzalloc(sizeof(*task), GFP_KERNEL);
-    	if (!task)
-    		goto fail;
+	for (i = 0; i < MAX_TASK_CNT; i++) {
+		task = kzalloc(sizeof(*task), GFP_KERNEL);
+		if (!task)
+			goto fail;
 
-    	task->hw_info = to_rkvenc_info(mpp->var->hw_info);
-    	{
-    		struct rkvenc_hw_info *hw = task->hw_info;
+		task->hw_info = to_rkvenc_info(mpp->var->hw_info);
+		{
+			struct rkvenc_hw_info *hw = task->hw_info;
 
-    		for (j = 0; j < hw->reg_class; j++) {
-    			ret = rkvenc_alloc_class_msg(task, j);
-    			if (ret)
-    				goto fail;
-    		}
-    	}
-    	session->task[i] = task;
-    }
+			for (j = 0; j < hw->reg_class; j++) {
+				ret = rkvenc_alloc_class_msg(task, j);
+				if (ret)
+					goto fail;
+			}
+		}
+		session->task[i] = task;
+	}
 	return 0;
 
 fail:
@@ -1728,13 +1723,13 @@ fail:
 		rkvenc_invalid_class_msg(task);
 		kfree(task);
 	}
-    for (i = 0 ; i < MAX_TASK_CNT; i++){
+	for (i = 0 ; i < MAX_TASK_CNT; i++) {
 		struct rkvenc_task *task = (struct rkvenc_task *)session->task[i];
-        if (task) {
-    		rkvenc_invalid_class_msg(task);
-    		kfree(task);
-        }
-    }
+		if (task) {
+			rkvenc_invalid_class_msg(task);
+			kfree(task);
+		}
+	}
 	return -ENOMEM;
 }
 
@@ -1785,9 +1780,8 @@ static int rkvenc_dump_session(struct mpp_session *session, struct seq_file *seq
 			const char *name = (const char *)&priv->codec_info[i].val;
 
 			seq_printf(seq, "%8s|", name);
-		} else {
+		} else
 			seq_printf(seq, "%8s|", (const char *)"null");
-		}
 	}
 	seq_puts(seq, "\n");
 	up_read(&priv->rw_sem);
@@ -2123,9 +2117,9 @@ static int rkvenc_link_init(struct platform_device *pdev,
 
 	mpp_debug_enter();
 
-        /* read link table capacity */
-        ret = of_property_read_u32(np, "rockchip,task-capacity", &enc->task_capacity);
-        if (ret) {
+	/* read link table capacity */
+	ret = of_property_read_u32(np, "rockchip,task-capacity", &enc->task_capacity);
+	if (ret) {
 		/* only oneframe mode */
 		enc->link_mode = RKVENC_MODE_ONEFRAME;
 		return ret;
@@ -2133,7 +2127,7 @@ static int rkvenc_link_init(struct platform_device *pdev,
 	if (enc->task_capacity > 1) {
 		enc->link_mode = RKVENC_MODE_LINK_ADD;
 		dev_info(dev, "%d task capacity link mode detected\n", enc->task_capacity);
-        } else {
+	} else {
 		enc->task_capacity = 1;
 		enc->link_mode = RKVENC_MODE_LINK_ONEFRAME;
 	}
@@ -2203,14 +2197,15 @@ static int rkvenc_probe_default(struct platform_device *pdev)
 	rkvenc_procfs_init(mpp);
 	mpp_dev_register_srv(mpp, mpp->srv);
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
-        {
+	{
 		struct device_node *np_dvbm = NULL;
 		struct platform_device *pdev_dvbm = NULL;
 
 		np_dvbm = of_parse_phandle(dev->of_node, "dvbm", 0);
-		if (!np_dvbm || !of_device_is_available(np_dvbm)) {
+		if (!np_dvbm || !of_device_is_available(np_dvbm))
 			mpp_err("failed to get device node\n");
-		} else {
+
+		else {
 			pdev_dvbm = of_find_device_by_node(np_dvbm);
 			enc->port = rk_dvbm_get_port(pdev_dvbm, DVBM_VEPU_PORT);
 			of_node_put(np_dvbm);

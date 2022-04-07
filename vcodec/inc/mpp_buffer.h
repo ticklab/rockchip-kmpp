@@ -301,8 +301,10 @@ MPP_RET mpp_buffer_put_with_caller(MppBuffer buffer, const char *caller);
 MPP_RET mpp_buffer_inc_ref_with_caller(MppBuffer buffer, const char *caller);
 
 MPP_RET mpp_buffer_info_get_with_caller(MppBuffer buffer, MppBufferInfo *info, const char *caller);
-MPP_RET mpp_buffer_read_with_caller(MppBuffer buffer, size_t offset, void *data, size_t size, const char *caller);
-MPP_RET mpp_buffer_write_with_caller(MppBuffer buffer, size_t offset, void *data, size_t size, const char *caller);
+MPP_RET mpp_buffer_read_with_caller(MppBuffer buffer, size_t offset, void *data, size_t size,
+				    const char *caller);
+MPP_RET mpp_buffer_write_with_caller(MppBuffer buffer, size_t offset, void *data, size_t size,
+				     const char *caller);
 void   *mpp_buffer_get_ptr_with_caller(MppBuffer buffer, const char *caller);
 int     mpp_buffer_get_fd_with_caller(MppBuffer buffer, const char *caller);
 size_t  mpp_buffer_get_size_with_caller(MppBuffer buffer, const char *caller);

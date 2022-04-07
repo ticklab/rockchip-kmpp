@@ -207,11 +207,11 @@ typedef struct RcImplApi_t {
 	 */
 	MPP_RET         (*hal_start)(void *ctx, EncRcTask *task);
 	MPP_RET         (*hal_end)(void *ctx, EncRcTask *task);
-    /*
-     * proc_show - rc debug info show
-     *
-     */
-    void            (*proc_show)(void *seq_file, void *ctx, RK_S32 chl_id);
+	/*
+	 * proc_show - rc debug info show
+	 *
+	 */
+	void            (*proc_show)(void *seq_file, void *ctx, RK_S32 chl_id);
 } RcImplApi;
 
 

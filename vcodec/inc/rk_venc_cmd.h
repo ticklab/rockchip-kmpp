@@ -1100,15 +1100,15 @@ typedef struct MppEncROICfg_t {
 } MppEncROICfg;
 
 typedef struct MppEncROICfg2_t {
-    MppBuffer          base_cfg_buf;
-    MppBuffer          qp_cfg_buf;
-    MppBuffer          amv_cfg_buf;
-    MppBuffer          mv_cfg_buf;
-    RK_U32             roi_qp_en    : 1;
-    RK_U32             roi_amv_en   : 1;
-    RK_U32             roi_mv_en    : 1;
-    RK_U32             reserve_bits : 29;
-    RK_U32             reserve[3];
+	MppBuffer          base_cfg_buf;
+	MppBuffer          qp_cfg_buf;
+	MppBuffer          amv_cfg_buf;
+	MppBuffer          mv_cfg_buf;
+	RK_U32             roi_qp_en    : 1;
+	RK_U32             roi_amv_en   : 1;
+	RK_U32             roi_mv_en    : 1;
+	RK_U32             reserve_bits : 29;
+	RK_U32             reserve[3];
 } MppEncROICfg2;
 /*
  * Mpp OSD parameter
@@ -1209,55 +1209,55 @@ typedef struct MppEncOSDData2_t {
 } MppEncOSDData2;
 
 typedef struct MppOsdBuf_t {
-   RK_S32 fd;
-   MpiBuf buf;
-}MppOsdBuf;
+	RK_S32 fd;
+	MpiBuf buf;
+} MppOsdBuf;
 
 typedef struct EncOSDInvCfg_t {
-    RK_U32       yg_inv_en;
-    RK_U32       uvrb_inv_en;
-    RK_U32       alpha_inv_en;
-    RK_U32       inv_sel;
-    RK_U32       uv_sw_inv_en;
-    RK_U32       inv_size;
-    RK_U32       inv_stride;
-    MppOsdBuf    inv_buf;
+	RK_U32       yg_inv_en;
+	RK_U32       uvrb_inv_en;
+	RK_U32       alpha_inv_en;
+	RK_U32       inv_sel;
+	RK_U32       uv_sw_inv_en;
+	RK_U32       inv_size;
+	RK_U32       inv_stride;
+	MppOsdBuf    inv_buf;
 } EncOSDInvCfg;
 
 typedef struct EncOSDAlphaCfg_t {
-    RK_U32 alpha_swap;
-    RK_U32 bg_alpha;
-    RK_U32 fg_alpha;
-    RK_U32 fg_alpha_sel;
+	RK_U32 alpha_swap;
+	RK_U32 bg_alpha;
+	RK_U32 fg_alpha;
+	RK_U32 fg_alpha_sel;
 } EncOSDAlphaCfg;
 
 typedef struct EncOSDQpCfg_t {
-    RK_U32 qp_adj_en  ;
-    RK_U32 qp_adj_sel ;
-    RK_S32 qp         ;
-    RK_U32 qp_max     ;
-    RK_U32 qp_min     ;
-    RK_U32 qp_prj     ;
+	RK_U32 qp_adj_en  ;
+	RK_U32 qp_adj_sel ;
+	RK_S32 qp         ;
+	RK_U32 qp_max     ;
+	RK_U32 qp_min     ;
+	RK_U32 qp_prj     ;
 } EncOSDQpCfg;
 
 typedef struct MppEncOSDRegion3_t {
-    RK_U32          enable;
-    RK_U32          range_trns_en;
-    RK_U32          range_trns_sel;
-    RK_U32          fmt;
-    RK_U32          rbuv_swap;
-    RK_U32          lt_x;
-    RK_U32          lt_y;
-    RK_U32          rb_x;
-    RK_U32          rb_y;
-    RK_U32          stride;
-    RK_U32          ch_ds_mode;
-    RK_U32          osd_endn;
-    EncOSDInvCfg    inv_cfg;
-    EncOSDAlphaCfg  alpha_cfg;
-    EncOSDQpCfg     qp_cfg;
-    MppOsdBuf       osd_buf;
-    RK_U8           lut[8];  //vuy vuy alpha
+	RK_U32          enable;
+	RK_U32          range_trns_en;
+	RK_U32          range_trns_sel;
+	RK_U32          fmt;
+	RK_U32          rbuv_swap;
+	RK_U32          lt_x;
+	RK_U32          lt_y;
+	RK_U32          rb_x;
+	RK_U32          rb_y;
+	RK_U32          stride;
+	RK_U32          ch_ds_mode;
+	RK_U32          osd_endn;
+	EncOSDInvCfg    inv_cfg;
+	EncOSDAlphaCfg  alpha_cfg;
+	EncOSDQpCfg     qp_cfg;
+	MppOsdBuf       osd_buf;
+	RK_U8           lut[8];  //vuy vuy alpha
 } MppEncOSDRegion3;
 
 typedef struct MppEncOSDData3_t {

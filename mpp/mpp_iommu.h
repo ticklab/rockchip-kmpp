@@ -90,14 +90,14 @@ mpp_dma_import_fd(struct mpp_iommu_info *iommu_info,
 		  struct mpp_dma_session *dma, int fd);
 
 struct mpp_dma_buffer *mpp_dma_import(struct mpp_iommu_info *iommu_info,
-		struct mpp_dma_session *dma,struct dma_buf *dmabuf);
+				      struct mpp_dma_session *dma, struct dma_buf *dmabuf);
 
 int mpp_dma_release(struct mpp_dma_session *dma,
-		struct mpp_dma_buffer *buffer);
+		    struct mpp_dma_buffer *buffer);
 
 int mpp_dma_release_fd(struct mpp_dma_session *dma, int fd);
 int mpp_dma_release_dmabuf(struct mpp_dma_session *dma,
-		struct dma_buf *dmabuf);
+			   struct dma_buf *dmabuf);
 
 int mpp_dma_unmap_kernel(struct mpp_dma_session *dma,
 			 struct mpp_dma_buffer *buffer);
@@ -105,10 +105,10 @@ int mpp_dma_map_kernel(struct mpp_dma_session *dma,
 		       struct mpp_dma_buffer *buffer);
 
 struct mpp_dma_buffer *mpp_iova_get_buffer(struct mpp_dma_session *dma,
-		u32 iova);
+					   u32 iova);
 
 struct mpp_dma_buffer *mpp_iova_get_add_buffer(struct mpp_dma_session *dma,
-		u32 iova);
+					       u32 iova);
 
 struct mpp_iommu_info *
 mpp_iommu_probe(struct device *dev);

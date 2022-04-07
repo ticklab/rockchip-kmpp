@@ -75,14 +75,14 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 		mpp_err_f("malloc failed\n");
 		return MPP_ERR_NULL_PTR;
 	}
-	
+
 	INIT_LIST_HEAD(&p->list);
 	kref_init(&p->ref);
 
 	if (min_size)
 		min_size = (min_size + SZ_1K) & (SZ_1K - 1);
 
-	if (ring_buf_get_free(pool, &p->buf, 128, min_size, 1)){
+	if (ring_buf_get_free(pool, &p->buf, 128, min_size, 1)) {
 		MPP_FREE(p);
 		return MPP_ERR_MALLOC;
 	}
@@ -92,25 +92,25 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 	p->length = 0;
 	setup_mpp_packet_name(p);
 	p->ring_pool = pool;
-    *packet = p;
+	*packet = p;
 	return MPP_OK;
 }
 
-MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet){
+MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet)
+{
 	MppPacketImpl *p = NULL;
 	p = (MppPacketImpl *) packet;
 	p->buf.use_len = p->length;
 
-	if (p->ring_pool){
-		if(p->length > p->buf.size){
+	if (p->ring_pool) {
+		if (p->length > p->buf.size)
 			mpp_err("ring_buf used may be error");
-		}
 		ring_buf_put_use(p->ring_pool, &p->buf);
 	}
-	if(p->buf.buf)
-        	mpp_buffer_flush_for_cpu(&p->buf);
+	if (p->buf.buf)
+		mpp_buffer_flush_for_cpu(&p->buf);
 
-    return MPP_OK;
+	return MPP_OK;
 }
 
 MPP_RET mpp_packet_init(MppPacket * packet, void *data, size_t size)
@@ -178,7 +178,7 @@ MPP_RET mpp_packet_deinit(MppPacket * packet)
 	if (p->flag & MPP_PACKET_FLAG_INTERNAL)
 		mpp_free(p->data);
 
-	if (p->ring_pool){
+	if (p->ring_pool) {
 		ring_buf_put_free(p->ring_pool, &p->buf);
 		p->ring_pool = NULL;
 	}

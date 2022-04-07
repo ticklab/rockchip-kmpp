@@ -16,19 +16,19 @@
 extern "C" {
 #endif
 
-	MPP_RET rc_model_v2_init(void *ctx, RcCfg * cfg);
-	MPP_RET rc_model_v2_deinit(void *ctx);
+MPP_RET rc_model_v2_init(void *ctx, RcCfg * cfg);
+MPP_RET rc_model_v2_deinit(void *ctx);
 
-	MPP_RET rc_model_v2_check_reenc(void *ctx, EncRcTask * task);
+MPP_RET rc_model_v2_check_reenc(void *ctx, EncRcTask * task);
 
-	MPP_RET rc_model_v2_start(void *ctx, EncRcTask * task);
-	MPP_RET rc_model_v2_end(void *ctx, EncRcTask * task);
+MPP_RET rc_model_v2_start(void *ctx, EncRcTask * task);
+MPP_RET rc_model_v2_end(void *ctx, EncRcTask * task);
 
-	MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task);
-	MPP_RET rc_model_v2_hal_end(void *ctx, EncRcTask * task);
+MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task);
+MPP_RET rc_model_v2_hal_end(void *ctx, EncRcTask * task);
 
-    void rc_model_v2_proc_show(void *seq_file, void *ctx,
-                RK_S32 chl_id);
+void rc_model_v2_proc_show(void *seq_file, void *ctx,
+			   RK_S32 chl_id);
 
 #ifdef  __cplusplus
 }

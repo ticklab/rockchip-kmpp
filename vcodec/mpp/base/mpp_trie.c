@@ -191,16 +191,16 @@ MPP_RET mpp_trie_add_info(MppTrie trie, const char **info)
 		next = node->next[key0];
 
 		trie_dbg_set
-		    ("trie %p add %s at %2d char %c:%3d:%x:%x node %d -> %d\n",
-		     trie, s, i, key, key, key0, key1, idx, next);
+		("trie %p add %s at %2d char %c:%3d:%x:%x node %d -> %d\n",
+		 trie, s, i, key, key, key0, key1, idx, next);
 
 		if (!next) {
 			next = trie_get_node(p);
 			node->next[key0] = next;
 
 			trie_dbg_set
-			    ("trie %p add %s at %2d char %c:%3d node %d -> %d as new key0\n",
-			     trie, s, i, key, key, node->idx, next);
+			("trie %p add %s at %2d char %c:%3d node %d -> %d as new key0\n",
+			 trie, s, i, key, key, node->idx, next);
 		}
 
 		idx = next;
@@ -208,24 +208,24 @@ MPP_RET mpp_trie_add_info(MppTrie trie, const char **info)
 		next = node->next[key1];
 
 		trie_dbg_set
-		    ("trie %p add %s at %2d char %c:%3d:%x:%x node %d -> %d as key0\n",
-		     trie, s, i, key, key, key0, key1, idx, next);
+		("trie %p add %s at %2d char %c:%3d:%x:%x node %d -> %d as key0\n",
+		 trie, s, i, key, key, key0, key1, idx, next);
 
 		if (!next) {
 			next = trie_get_node(p);
 			node->next[key1] = next;
 
 			trie_dbg_set
-			    ("trie %p add %s at %2d char %c:%3d node %d -> %d as new child\n",
-			     trie, s, i, key, key, node->idx, next);
+			("trie %p add %s at %2d char %c:%3d node %d -> %d as new child\n",
+			 trie, s, i, key, key, node->idx, next);
 		}
 
 		idx = next;
 		node = p->nodes + idx;
 
 		trie_dbg_set
-		    ("trie %p add %s at %2d char %c:%3d:%x:%x node %d -> %d as key1\n",
-		     trie, s, i, key, key, key0, key1, idx, next);
+		("trie %p add %s at %2d char %c:%3d:%x:%x node %d -> %d as key1\n",
+		 trie, s, i, key, key, key0, key1, idx, next);
 	}
 
 	act_id = p->info_used++;
@@ -233,8 +233,8 @@ MPP_RET mpp_trie_add_info(MppTrie trie, const char **info)
 	p->info[act_id] = info;
 
 	trie_dbg_set
-	    ("trie %p add %d info %s at node %d pos %d action %p done\n", trie,
-	     i, s, idx, act_id, info);
+	("trie %p add %d info %s at node %d pos %d action %p done\n", trie,
+	 i, s, idx, act_id, info);
 
 	return MPP_OK;
 }

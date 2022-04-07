@@ -36,10 +36,10 @@ typedef enum Vepu541Fmt_e {
 	/* vepu540 add YUV400 support */
 	VEPU540_FMT_YUV400 = VEPU541_FMT_BUTT,	// 10
 	VEPU540C_FMT_AYUV2BPP,
-    VEPU540C_FMT_YUV444SP,
-    VEPU540C_FMT_YUV444P,
-    VEPU540C_FMT_ARGB4444,      //[15:0] : ARGB
-    VEPU540C_FMT_ARGB2BPP,
+	VEPU540C_FMT_YUV444SP,
+	VEPU540C_FMT_YUV444P,
+	VEPU540C_FMT_ARGB4444,      //[15:0] : ARGB
+	VEPU540C_FMT_ARGB2BPP,
 	VEPU540C_FMT_BUTT,	// 11
 
 } Vepu541Fmt;
@@ -70,25 +70,25 @@ typedef struct Vepu541RoiCfg_t {
 	 * 1 - The corresponding 16x16cu is forced to be intra
 	 * 0 - Not force to intra
 	 */
-	RK_U16 force_intra:1;
-	RK_U16 reserved:3;
+	RK_U16 force_intra: 1;
+	RK_U16 reserved: 3;
 	/*
 	 * Qp area index
 	 * The choosed qp area index.
 	 */
-	RK_U16 qp_area_idx:3;
+	RK_U16 qp_area_idx: 3;
 	/*
 	 * Area qp limit function enable flag
 	 * Force to be true in vepu541
 	 */
-	RK_U16 qp_area_en:1;
+	RK_U16 qp_area_en: 1;
 	/*
 	 * Qp_adj
 	 * Qp_adj
 	 * in absolute qp mode qp_adj is the final qp used by encoder
 	 * in relative qp mode qp_adj is a adjustment to final qp
 	 */
-	RK_S16 qp_adj:7;
+	RK_S16 qp_adj: 7;
 	/*
 	 * Qp_adj_mode
 	 * Qp adjustment mode
@@ -97,34 +97,34 @@ typedef struct Vepu541RoiCfg_t {
 	 * 0 - relative qp mode
 	 *     the 16x16 MB qp is adjusted by qp_adj value
 	 */
-	RK_U16 qp_adj_mode:1;
+	RK_U16 qp_adj_mode: 1;
 } Vepu541RoiCfg;
 
 typedef struct Vepu541OsdPos_t {
 	/* X coordinate/16 of OSD region's left-top point. */
-	RK_U32 osd_lt_x:8;
+	RK_U32 osd_lt_x: 8;
 	/* Y coordinate/16 of OSD region's left-top point. */
-	RK_U32 osd_lt_y:8;
+	RK_U32 osd_lt_y: 8;
 	/* X coordinate/16 of OSD region's right-bottom point. */
-	RK_U32 osd_rb_x:8;
+	RK_U32 osd_rb_x: 8;
 	/* Y coordinate/16 of OSD region's right-bottom point. */
-	RK_U32 osd_rb_y:8;
+	RK_U32 osd_rb_y: 8;
 } Vepu541OsdPos;
 
 typedef struct Vepu541B8NumQp_t {
-	RK_U32 b8num_qp:18;
-	RK_U32 reserved:14;
+	RK_U32 b8num_qp: 18;
+	RK_U32 reserved: 14;
 } Vepu541B8NumQp;
 
 typedef struct Vepu541OsdPltColor_t {
 	/* V component */
-	RK_U32 v:8;
+	RK_U32 v: 8;
 	/* U component */
-	RK_U32 u:8;
+	RK_U32 u: 8;
 	/* Y component */
-	RK_U32 y:8;
+	RK_U32 y: 8;
 	/* Alpha */
-	RK_U32 alpha:8;
+	RK_U32 alpha: 8;
 } Vepu541OsdPltColor;
 
 typedef struct Vepu541OsdCfg_t {
@@ -139,7 +139,7 @@ typedef struct Vepu541OsdCfg_t {
 extern "C" {
 #endif
 
-	MPP_RET vepu541_set_fmt(VepuFmtCfg * cfg, MppFrameFormat format);
+MPP_RET vepu541_set_fmt(VepuFmtCfg * cfg, MppFrameFormat format);
 
 /*
  * roi function
@@ -150,12 +150,12 @@ extern "C" {
  * vepu541_set_roi
  * Setup roi config buffeer for image with mb count mb_w * mb_h
  */
-	RK_S32 vepu541_get_roi_buf_size(RK_S32 w, RK_S32 h);
-	MPP_RET vepu541_set_roi(void *buf, MppEncROICfg * roi, RK_S32 w,
-				RK_S32 h);
+RK_S32 vepu541_get_roi_buf_size(RK_S32 w, RK_S32 h);
+MPP_RET vepu541_set_roi(void *buf, MppEncROICfg * roi, RK_S32 w,
+			RK_S32 h);
 
-	MPP_RET vepu541_set_osd(Vepu541OsdCfg * cfg);
-	MPP_RET vepu540_set_osd(Vepu541OsdCfg * cfg);
+MPP_RET vepu541_set_osd(Vepu541OsdCfg * cfg);
+MPP_RET vepu540_set_osd(Vepu541OsdCfg * cfg);
 
 #ifdef __cplusplus
 }

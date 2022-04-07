@@ -20,15 +20,15 @@ typedef void *MppTrie;
 extern "C" {
 #endif
 
-	MPP_RET mpp_trie_init(MppTrie * trie, RK_S32 node_count,
-			      RK_S32 info_count);
-	MPP_RET mpp_trie_deinit(MppTrie trie);
+MPP_RET mpp_trie_init(MppTrie * trie, RK_S32 node_count,
+		      RK_S32 info_count);
+MPP_RET mpp_trie_deinit(MppTrie trie);
 
-	MPP_RET mpp_trie_add_info(MppTrie trie, const char **info);
-	const char **mpp_trie_get_info(MppTrie trie, const char *name);
+MPP_RET mpp_trie_add_info(MppTrie trie, const char **info);
+const char **mpp_trie_get_info(MppTrie trie, const char *name);
 
-	RK_S32 mpp_trie_get_node_count(MppTrie trie);
-	RK_S32 mpp_trie_get_info_count(MppTrie trie);
+RK_S32 mpp_trie_get_node_count(MppTrie trie);
+RK_S32 mpp_trie_get_info_count(MppTrie trie);
 
 #ifdef __cplusplus
 }

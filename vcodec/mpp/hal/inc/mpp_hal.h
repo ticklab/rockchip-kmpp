@@ -60,19 +60,19 @@ typedef struct MppHalApi_t {
 	RK_U32 ctx_size;
 	RK_U32 flag;
 
-	 MPP_RET(*init) (void *ctx, MppHalCfg * cfg);
-	 MPP_RET(*deinit) (void *ctx);
+	MPP_RET(*init) (void *ctx, MppHalCfg * cfg);
+	MPP_RET(*deinit) (void *ctx);
 
 	// task preprocess function
-	 MPP_RET(*reg_gen) (void *ctx, HalTaskInfo * syn);
+	MPP_RET(*reg_gen) (void *ctx, HalTaskInfo * syn);
 
 	// hw operation function
-	 MPP_RET(*start) (void *ctx, HalTaskInfo * task);
-	 MPP_RET(*wait) (void *ctx, HalTaskInfo * task);
+	MPP_RET(*start) (void *ctx, HalTaskInfo * task);
+	MPP_RET(*wait) (void *ctx, HalTaskInfo * task);
 
-	 MPP_RET(*reset) (void *ctx);
-	 MPP_RET(*flush) (void *ctx);
-	 MPP_RET(*control) (void *ctx, MpiCmd cmd, void *param);
+	MPP_RET(*reset) (void *ctx);
+	MPP_RET(*flush) (void *ctx);
+	MPP_RET(*control) (void *ctx, MpiCmd cmd, void *param);
 } MppHalApi;
 
 typedef void *MppHal;
@@ -81,16 +81,16 @@ typedef void *MppHal;
 extern "C" {
 #endif
 
-	MPP_RET mpp_hal_init(MppHal * ctx, MppHalCfg * cfg);
-	MPP_RET mpp_hal_deinit(MppHal ctx);
+MPP_RET mpp_hal_init(MppHal * ctx, MppHalCfg * cfg);
+MPP_RET mpp_hal_deinit(MppHal ctx);
 
-	MPP_RET mpp_hal_reg_gen(MppHal ctx, HalTaskInfo * task);
-	MPP_RET mpp_hal_hw_start(MppHal ctx, HalTaskInfo * task);
-	MPP_RET mpp_hal_hw_wait(MppHal ctx, HalTaskInfo * task);
+MPP_RET mpp_hal_reg_gen(MppHal ctx, HalTaskInfo * task);
+MPP_RET mpp_hal_hw_start(MppHal ctx, HalTaskInfo * task);
+MPP_RET mpp_hal_hw_wait(MppHal ctx, HalTaskInfo * task);
 
-	MPP_RET mpp_hal_reset(MppHal ctx);
-	MPP_RET mpp_hal_flush(MppHal ctx);
-	MPP_RET mpp_hal_control(MppHal ctx, MpiCmd cmd, void *param);
+MPP_RET mpp_hal_reset(MppHal ctx);
+MPP_RET mpp_hal_flush(MppHal ctx);
+MPP_RET mpp_hal_control(MppHal ctx, MpiCmd cmd, void *param);
 
 #ifdef __cplusplus
 }

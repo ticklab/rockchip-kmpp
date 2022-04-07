@@ -25,14 +25,14 @@
 #include "mpp_packet_impl.h"
 #include "mpp_time.h"
 
-static MPP_RET frame_add_osd(MppFrame frame, MppEncOSDData3 *osd_data){
+static MPP_RET frame_add_osd(MppFrame frame, MppEncOSDData3 *osd_data)
+{
 	RK_U32 i = 0;
 	mpp_frame_add_osd(frame, (MppOsd)osd_data);
 
 	for (i = 0; i < osd_data->num_region; i++) {
-		if (osd_data->region[i].osd_buf.buf) {
+		if (osd_data->region[i].osd_buf.buf)
 			mpi_buf_unref(osd_data->region[i].osd_buf.buf);
-		}
 
 		if (osd_data->region[i].inv_cfg.inv_buf.buf) {
 			mpi_buf_unref(
@@ -64,9 +64,8 @@ static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 	mpp_frame_set_fmt(*frame, frm_info->fmt);
 	mpp_frame_set_offset_x(*frame, frm_info->offset_x);
 	mpp_frame_set_offset_y(*frame, frm_info->offset_y);
-	if (frm_info->osd_buf) {
+	if (frm_info->osd_buf)
 		frame_add_osd(*frame, (MppEncOSDData3 *)frm_info->osd_buf);
-	}
 	return MPP_OK;
 }
 
@@ -140,17 +139,15 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 					frm_info.jpeg_chan_id;
 
 				comb_chan = mpp_vcodec_get_chan_entry(
-					frm_info.jpeg_chan_id, MPP_CTX_ENC);
-				if (comb_chan->state != CHAN_STATE_RUN) {
+						    frm_info.jpeg_chan_id, MPP_CTX_ENC);
+				if (comb_chan->state != CHAN_STATE_RUN)
 					comb_chan = NULL;
-				}
 				if (comb_chan && comb_chan->handle) {
 					atomic_inc(&comb_chan->runing);
 					mpp_frame_init(&comb_frame);
 					mpp_frame_copy(comb_frame, frame);
-					if (frm_info.jpg_combo_osd_buf) {
+					if (frm_info.jpg_combo_osd_buf)
 						frame_add_osd(comb_frame, (MppEncOSDData3 *)frm_info.jpg_combo_osd_buf);
-					}
 					mpp_frame_set_buffer(comb_frame,
 							     frm_buf);
 				}
@@ -173,9 +170,9 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 						      comb_frame);
 				if (MPP_OK == ret) {
 					ret = mpp_enc_hw_start(
-						(MppEnc)chan_entry->handle,
-						(MppEnc)comb_chan->handle);
-					if (MPP_OK != ret){
+						      (MppEnc)chan_entry->handle,
+						      (MppEnc)comb_chan->handle);
+					if (MPP_OK != ret) {
 						mpp_err("combo start fail \n");
 						atomic_dec(&chan_entry->cfg.comb_runing);
 						atomic_dec(&comb_chan->runing);
@@ -187,24 +184,22 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 					atomic_dec(&chan_entry->cfg.comb_runing);
 					wake_up(&comb_chan->stop_wait);
 					ret = mpp_enc_hw_start(
-						    (MppEnc)chan_entry->handle,
-						    NULL);
+						      (MppEnc)chan_entry->handle,
+						      NULL);
 				}
 			} else {
 				ret = mpp_enc_hw_start((MppEnc)chan_entry->handle,
-						 NULL);
+						       NULL);
 			}
 		}
 
 		if (MPP_OK != ret) {
-			if(MPP_ERR_MALLOC == ret) {
+			if (MPP_ERR_MALLOC == ret)
 				mpp_err("strm buf full drop frame\n");
-			}
 			atomic_dec(&chan_entry->runing);
 			wake_up(&chan_entry->stop_wait);
-			if (comb_frame) {
+			if (comb_frame)
 				mpp_frame_deinit(&comb_frame);
-			}
 		}
 		cfg_end = mpp_time();
 		chan_entry->last_cfg_time = cfg_end - cfg_start;
@@ -221,7 +216,7 @@ void mpp_vcodec_enc_add_packet_list(struct mpp_chan *chan_entry,
 {
 	MppPacketImpl *p = NULL;
 	p = (MppPacketImpl *) packet;
-    mpp_vcodec_detail("packet size %zu", mpp_packet_get_length(packet));
+	mpp_vcodec_detail("packet size %zu", mpp_packet_get_length(packet));
 	mutex_lock(&chan_entry->stream_done_lock);
 	list_add_tail(&p->list, &chan_entry->stream_done);
 	atomic_inc(&chan_entry->stream_count);
@@ -249,7 +244,7 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 	}
 	if (atomic_read(&chan_entry->cfg.comb_runing)) {
 		comb_entry = mpp_vcodec_get_chan_entry(
-			chan_entry->binder_chan_id, MPP_CTX_ENC);
+				     chan_entry->binder_chan_id, MPP_CTX_ENC);
 		if (comb_entry && comb_entry->handle) {
 			chan_entry->last_jeg_combo_end = mpp_time();
 			ret = mpp_enc_int_process((MppEnc)chan_entry->handle,
@@ -268,9 +263,8 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 					  &packet, &jpeg_packet);
 	}
 
-	if (packet) {
+	if (packet)
 		mpp_vcodec_enc_add_packet_list(chan_entry, packet);
-	}
 
 	if (ret) {
 		mpp_err("enc handle int err");
@@ -303,13 +297,11 @@ void *mpp_vcodec_enc_routine(void *param)
 		/* get high prior chan id */
 		enc_chan_get_high_prior_chan();
 		next_chan = venc->curr_high_prior_chan;
-		if (next_chan >= MAX_ENC_NUM) {
+		if (next_chan >= MAX_ENC_NUM)
 			continue;
-		}
 
-		if (enc_chan_process_single_chan(next_chan) != MPP_OK) {
+		if (enc_chan_process_single_chan(next_chan) != MPP_OK)
 			break;
-		}
 	}
 	mpp_vcodec_detail("mpp_vcodec_enc_routine end return \n");
 	return NULL;

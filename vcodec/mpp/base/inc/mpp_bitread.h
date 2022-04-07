@@ -87,27 +87,27 @@
     } while (0)
 
 typedef struct bitread_ctx_t {
-    // Pointer to the next unread (not in curr_byte_) byte in the stream.
-    RK_U8 *data_;
-    // Bytes left in the stream (without the curr_byte_).
-    RK_U32 bytes_left_;
-    // Contents of the current byte; first unread bit starting at position
-    // 8 - num_remaining_bits_in_curr_byte_ from MSB.
-    RK_S64 curr_byte_;
-    // Number of bits remaining in curr_byte_
-    RK_S32 num_remaining_bits_in_curr_byte_;
-    // Used in emulation prevention three byte detection (see spec).
-    // Initially set to 0xffff to accept all initial two-byte sequences.
-    RK_S64 prev_two_bytes_;
-    // Number of emulation presentation bytes (0x000003) we met.
-    RK_S64 emulation_prevention_bytes_;
-    // count PPS SPS SEI read bits
-    RK_S32 used_bits;
-    RK_U8  *buf;
-    RK_S32 buf_len;
-    // ctx
-    MPP_RET   ret;
-    RK_S32    need_prevention_detection;
+	// Pointer to the next unread (not in curr_byte_) byte in the stream.
+	RK_U8 *data_;
+	// Bytes left in the stream (without the curr_byte_).
+	RK_U32 bytes_left_;
+	// Contents of the current byte; first unread bit starting at position
+	// 8 - num_remaining_bits_in_curr_byte_ from MSB.
+	RK_S64 curr_byte_;
+	// Number of bits remaining in curr_byte_
+	RK_S32 num_remaining_bits_in_curr_byte_;
+	// Used in emulation prevention three byte detection (see spec).
+	// Initially set to 0xffff to accept all initial two-byte sequences.
+	RK_S64 prev_two_bytes_;
+	// Number of emulation presentation bytes (0x000003) we met.
+	RK_S64 emulation_prevention_bytes_;
+	// count PPS SPS SEI read bits
+	RK_S32 used_bits;
+	RK_U8  *buf;
+	RK_S32 buf_len;
+	// ctx
+	MPP_RET   ret;
+	RK_S32    need_prevention_detection;
 } BitReadCtx_t;
 
 

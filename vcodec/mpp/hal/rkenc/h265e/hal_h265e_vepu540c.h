@@ -12,6 +12,7 @@
 #define __HAL_H265E_VEPU540C_H__
 
 #include "mpp_enc_hal.h"
- extern const MppEncHalApi hal_h265e_vepu540c;
+
+extern const MppEncHalApi hal_h265e_vepu540c;
 
 #endif /* __HAL_H265E_VEPU540C_H__ */

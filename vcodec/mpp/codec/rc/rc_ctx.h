@@ -90,12 +90,12 @@ typedef struct RcModelV2Ctx_t {
 	RK_S32 on_pskip;
 	RK_S32 qp_layer_id;
 	RK_S32 hier_frm_cnt[4];
-    RK_S32 qp;
-    RK_S32 min_qp;
-    RK_S32 max_qp;
+	RK_S32 qp;
+	RK_S32 min_qp;
+	RK_S32 max_qp;
 
-	 MPP_RET(*calc_ratio) (void *ctx, EncRcTaskInfo * cfg);
-	 MPP_RET(*re_calc_ratio) (void *ctx, EncRcTaskInfo * cfg);
+	MPP_RET(*calc_ratio) (void *ctx, EncRcTaskInfo * cfg);
+	MPP_RET(*re_calc_ratio) (void *ctx, EncRcTaskInfo * cfg);
 } RcModelV2Ctx;
 
 #ifdef  __cplusplus
@@ -103,16 +103,16 @@ extern "C" {
 #endif
 
 /* basic helper function */
-	MPP_RET bits_model_init(RcModelV2Ctx * ctx);
-	MPP_RET bits_model_deinit(RcModelV2Ctx * ctx);
+MPP_RET bits_model_init(RcModelV2Ctx * ctx);
+MPP_RET bits_model_deinit(RcModelV2Ctx * ctx);
 
-	MPP_RET bits_model_alloc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg,
-				 RK_S64 total_bits);
-	MPP_RET bits_model_update(RcModelV2Ctx * ctx, RK_S32 real_bit,
-				  RK_U32 madi);
+MPP_RET bits_model_alloc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg,
+			 RK_S64 total_bits);
+MPP_RET bits_model_update(RcModelV2Ctx * ctx, RK_S32 real_bit,
+			  RK_U32 madi);
 
-	MPP_RET calc_next_i_ratio(RcModelV2Ctx * ctx);
-	MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg);
+MPP_RET calc_next_i_ratio(RcModelV2Ctx * ctx);
+MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg);
 
 #ifdef  __cplusplus
 }

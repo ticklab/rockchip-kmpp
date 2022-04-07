@@ -80,18 +80,18 @@ typedef struct H265eExtraInfo_t {
 extern "C" {
 #endif
 
-	MPP_RET h265e_init_extra_info(void *extra_info);
-	MPP_RET h265e_deinit_extra_info(void *extra_info);
-	void h265e_rkv_nal_start(H265eExtraInfo * out, RK_S32 i_type,
-				 RK_S32 i_ref_idc);
+MPP_RET h265e_init_extra_info(void *extra_info);
+MPP_RET h265e_deinit_extra_info(void *extra_info);
+void h265e_rkv_nal_start(H265eExtraInfo * out, RK_S32 i_type,
+			 RK_S32 i_ref_idc);
 
-	void h265e_nal_end(H265eExtraInfo * out);
+void h265e_nal_end(H265eExtraInfo * out);
 
-	RK_U32 h265e_data_to_sei(void *dst, RK_U8 uuid[16], const void *payload,
-				 RK_S32 size);
+RK_U32 h265e_data_to_sei(void *dst, RK_U8 uuid[16], const void *payload,
+			 RK_S32 size);
 
-	MPP_RET h265e_set_extra_info(H265eCtx * ctx);
-	MPP_RET h265e_get_extra_info(H265eCtx * ctx, MppPacket pkt_out);
+MPP_RET h265e_set_extra_info(H265eCtx * ctx);
+MPP_RET h265e_get_extra_info(H265eCtx * ctx, MppPacket pkt_out);
 
 #ifdef __cplusplus
 }

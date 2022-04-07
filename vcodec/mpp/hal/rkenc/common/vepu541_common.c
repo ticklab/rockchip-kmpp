@@ -21,317 +21,317 @@ static const RK_S32 zeros[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	{			/* MPP_FMT_YUV420SP */
-	 .format = VEPU541_FMT_YUV420SP,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_YUV420SP,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV420SP_10BIT */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV422SP */
-	 .format = VEPU541_FMT_YUV422SP,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_YUV422SP,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV422SP_10BIT */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV420P */
-	 .format = VEPU541_FMT_YUV420P,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_YUV420P,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV420SP_VU   */
-	 .format = VEPU541_FMT_YUV420SP,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 1,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_YUV420SP,
+		.alpha_swap = 0,
+		.rbuv_swap = 1,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV422P */
-	 .format = VEPU541_FMT_YUV422P,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_YUV422P,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV422SP_VU */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV422_YUYV */
-	 .format = VEPU541_FMT_YUYV422,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_YUYV422,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV422_YVYU */
-	 .format = VEPU541_FMT_YUYV422,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 1,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_YUYV422,
+		.alpha_swap = 0,
+		.rbuv_swap = 1,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV422_UYVY */
-	 .format = VEPU541_FMT_UYVY422,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_UYVY422,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV422_VYUY */
-	 .format = VEPU541_FMT_UYVY422,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 1,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_UYVY422,
+		.alpha_swap = 0,
+		.rbuv_swap = 1,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV400 */
-	 .format = VEPU540_FMT_YUV400,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540_FMT_YUV400,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV440SP */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV411SP */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_YUV444SP */
-	 .format = VEPU540C_FMT_YUV444SP,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_YUV444SP,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 
-     {			/* MPP_FMT_YUV444P */
-	 .format = VEPU540C_FMT_YUV444P,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+	{			/* MPP_FMT_YUV444P */
+		.format = VEPU540C_FMT_YUV444P,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 
-     {         /* MPP_FMT_AYUV2BPP */
-	 .format = VEPU540C_FMT_AYUV2BPP,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+	{         /* MPP_FMT_AYUV2BPP */
+		.format = VEPU540C_FMT_AYUV2BPP,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 };
 
 static VepuFmtCfg vepu541_rgb_cfg[MPP_FMT_RGB_BUTT - MPP_FRAME_FMT_RGB] = {
 	{			/* MPP_FMT_RGB565 */
-	 .format = VEPU541_FMT_BGR565,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 1,
-	 .src_range = 0,
-	 .src_endian = 1,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_BGR565,
+		.alpha_swap = 0,
+		.rbuv_swap = 1,
+		.src_range = 0,
+		.src_endian = 1,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_BGR565 */
-	 .format = VEPU541_FMT_BGR565,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 1,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_BGR565,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 1,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_RGB555 */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_BGR555 */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_RGB444 */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_BGR444 */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_RGB888 */
-	 .format = VEPU541_FMT_BGR888,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_BGR888,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_BGR888 */
-	 .format = VEPU541_FMT_BGR888,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 1,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_BGR888,
+		.alpha_swap = 0,
+		.rbuv_swap = 1,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_RGB101010 */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_BGR101010 */
-	 .format = VEPU540C_FMT_BUTT,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU540C_FMT_BUTT,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_ARGB8888 */
-	 .format = VEPU541_FMT_BGRA8888,
-	 .alpha_swap = 1,
-	 .rbuv_swap = 1,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_BGRA8888,
+		.alpha_swap = 1,
+		.rbuv_swap = 1,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_ABGR8888 */
-	 .format = VEPU541_FMT_BGRA8888,
-	 .alpha_swap = 1,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_BGRA8888,
+		.alpha_swap = 1,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_BGRA8888 */
-	 .format = VEPU541_FMT_BGRA8888,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 0,
-	 .src_range = 0,
-	 .src_endian = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_BGRA8888,
+		.alpha_swap = 0,
+		.rbuv_swap = 0,
+		.src_range = 0,
+		.src_endian = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 	{			/* MPP_FMT_RGBA8888 */
-	 .format = VEPU541_FMT_BGRA8888,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 1,
-	 .src_endian = 0,
-	 .src_range = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+		.format = VEPU541_FMT_BGRA8888,
+		.alpha_swap = 0,
+		.rbuv_swap = 1,
+		.src_endian = 0,
+		.src_range = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 
-     {			/* MPP_FMT_ARGB4444 */
-	 .format = VEPU540C_FMT_ARGB4444,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 1,
-	 .src_endian = 0,
-	 .src_range = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
-	 {			/* MPP_FMT_ARGB1555 */
-	 .format = VEPU541_FMT_ARGB1555,
-	 .alpha_swap = 0,
-	 .rbuv_swap = 1,
-	 .src_endian = 0,
-	 .src_range = 0,
-	 .weight = zeros,
-	 .offset = zeros,
-	 },
+	{			/* MPP_FMT_ARGB4444 */
+		.format = VEPU540C_FMT_ARGB4444,
+		.alpha_swap = 0,
+		.rbuv_swap = 1,
+		.src_endian = 0,
+		.src_range = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
+	{			/* MPP_FMT_ARGB1555 */
+		.format = VEPU541_FMT_ARGB1555,
+		.alpha_swap = 0,
+		.rbuv_swap = 1,
+		.src_endian = 0,
+		.src_range = 0,
+		.weight = zeros,
+		.offset = zeros,
+	},
 };
 
 MPP_RET vepu541_set_fmt(VepuFmtCfg * cfg, MppFrameFormat format)
@@ -341,18 +341,21 @@ MPP_RET vepu541_set_fmt(VepuFmtCfg * cfg, MppFrameFormat format)
 
 	format &= MPP_FRAME_FMT_MASK;
 
-	if (MPP_FRAME_FMT_IS_YUV(format)) {
+	if (MPP_FRAME_FMT_IS_YUV(format))
 		fmt = &vepu541_yuv_cfg[format - MPP_FRAME_FMT_YUV];
-	} else if (MPP_FRAME_FMT_IS_RGB(format)) {
+
+	else if (MPP_FRAME_FMT_IS_RGB(format))
 		fmt = &vepu541_rgb_cfg[format - MPP_FRAME_FMT_RGB];
-	} else {
+
+	else {
 		memset(cfg, 0, sizeof(*cfg));
 		cfg->format = VEPU540C_FMT_BUTT;
 	}
 
-	if (fmt && fmt->format != VEPU540C_FMT_BUTT) {
+	if (fmt && fmt->format != VEPU540C_FMT_BUTT)
 		memcpy(cfg, fmt, sizeof(*cfg));
-	} else {
+
+	else {
 		mpp_err_f("unsupport frame format %x\n", format);
 		cfg->format = VEPU540C_FMT_BUTT;
 		ret = MPP_NOK;
@@ -503,22 +506,22 @@ typedef struct Vepu541OsdReg_t {
 	 */
 	struct {
 		/* OSD region enable, each bit controls corresponding OSD region. */
-		RK_U32 osd_e:8;
+		RK_U32 osd_e: 8;
 		/* OSD inverse color enable, each bit controls corresponding region. */
-		RK_U32 osd_inv_e:8;
+		RK_U32 osd_inv_e: 8;
 		/*
 		 * OSD palette clock selection.
 		 * 1'h0: Configure bus clock domain.
 		 * 1'h1: Core clock domain.
 		 */
-		RK_U32 osd_plt_cks:1;
+		RK_U32 osd_plt_cks: 1;
 		/*
 		 * OSD palette type.
 		 * 1'h1: Default type.
 		 * 1'h0: User defined type.
 		 */
-		RK_U32 osd_plt_typ:1;
-		RK_U32 reserved:14;
+		RK_U32 osd_plt_typ: 1;
+		RK_U32 reserved: 14;
 	} reg112;
 
 	/*
@@ -528,21 +531,21 @@ typedef struct Vepu541OsdReg_t {
 	 */
 	struct {
 		/* Color inverse theshold for OSD region0. */
-		RK_U32 osd_ithd_r0:4;
+		RK_U32 osd_ithd_r0: 4;
 		/* Color inverse theshold for OSD region1. */
-		RK_U32 osd_ithd_r1:4;
+		RK_U32 osd_ithd_r1: 4;
 		/* Color inverse theshold for OSD region2. */
-		RK_U32 osd_ithd_r2:4;
+		RK_U32 osd_ithd_r2: 4;
 		/* Color inverse theshold for OSD region3. */
-		RK_U32 osd_ithd_r3:4;
+		RK_U32 osd_ithd_r3: 4;
 		/* Color inverse theshold for OSD region4. */
-		RK_U32 osd_ithd_r4:4;
+		RK_U32 osd_ithd_r4: 4;
 		/* Color inverse theshold for OSD region5. */
-		RK_U32 osd_ithd_r5:4;
+		RK_U32 osd_ithd_r5: 4;
 		/* Color inverse theshold for OSD region6. */
-		RK_U32 osd_ithd_r6:4;
+		RK_U32 osd_ithd_r6: 4;
 		/* Color inverse theshold for OSD region7. */
-		RK_U32 osd_ithd_r7:4;
+		RK_U32 osd_ithd_r7: 4;
 	} reg113;
 
 	RK_U32 reg114;
@@ -589,16 +592,15 @@ static MPP_RET copy2osd2(MppEncOSDData2 * dst, MppEncOSDData * src1,
 	} else if (src2) {
 		memcpy(dst, src2, sizeof(MppEncOSDData2));
 		ret = MPP_OK;
-	} else {
+	} else
 		ret = MPP_NOK;
-	}
 	return ret;
 }
 
 MPP_RET vepu541_set_osd(Vepu541OsdCfg * cfg)
 {
 	Vepu541OsdReg *regs =
-	    (Vepu541OsdReg *) (cfg->reg_base + (size_t) VEPU541_OSD_CFG_OFFSET);
+		(Vepu541OsdReg *) (cfg->reg_base + (size_t) VEPU541_OSD_CFG_OFFSET);
 //    MppDev dev = cfg->dev;
 	MppEncOSDPltCfg *plt_cfg = cfg->plt_cfg;
 	MppEncOSDData2 osd;
@@ -669,7 +671,7 @@ MPP_RET vepu541_set_osd(Vepu541OsdCfg * cfg)
 				MppDevRegOffsetCfg trans_cfg;
 
 				trans_cfg.reg_idx =
-				    VEPU541_OSD_ADDR_IDX_BASE + i;
+					VEPU541_OSD_ADDR_IDX_BASE + i;
 				trans_cfg.offset = tmp->buf_offset;
 				mpp_dev_ioctl(cfg->dev, MPP_DEV_REG_OFFSET,
 					      &trans_cfg);
@@ -680,10 +682,10 @@ MPP_RET vepu541_set_osd(Vepu541OsdCfg * cfg)
 			if (buf_size < tmp->buf_offset + blk_len ||
 			    (tmp->buf_offset & 0xf)) {
 				mpp_err_f
-				    ("invalid osd cfg: %d x:y:w:h:off %d:%d:%d:%d:%x\n",
-				     i, tmp->start_mb_x, tmp->start_mb_y,
-				     tmp->num_mb_x, tmp->num_mb_y,
-				     tmp->buf_offset);
+				("invalid osd cfg: %d x:y:w:h:off %d:%d:%d:%d:%x\n",
+				 i, tmp->start_mb_x, tmp->start_mb_y,
+				 tmp->num_mb_x, tmp->num_mb_y,
+				 tmp->buf_offset);
 			}
 		}
 	}
@@ -713,28 +715,28 @@ typedef struct Vepu540OsdReg_t {
 		 * OSD color inverse enable of chroma component,
 		 * each bit controls corresponding region.
 		 */
-		RK_U32 osd_ch_inv_en:8;
+		RK_U32 osd_ch_inv_en: 8;
 		/*
 		 * OSD color inverse expression type
 		 * each bit controls corresponding region.
 		 * 1'h0: AND;
 		 * 1'h1: OR
 		 */
-		RK_U32 osd_itype:8;
+		RK_U32 osd_itype: 8;
 		/*
 		 * OSD color inverse expression switch for luma component
 		 * each bit controls corresponding region.
 		 * 1'h0: Expression need to determine the condition;
 		 * 1'h1: Expression don't need to determine the condition;
 		 */
-		RK_U32 osd_lu_inv_msk:8;
+		RK_U32 osd_lu_inv_msk: 8;
 		/*
 		 * OSD color inverse expression switch for chroma component
 		 * each bit controls corresponding region.
 		 * 1'h0: Expression need to determine the condition;
 		 * 1'h1: Expression don't need to determine the condition;
 		 */
-		RK_U32 osd_ch_inv_msk:8;
+		RK_U32 osd_ch_inv_msk: 8;
 	} reg094;
 
 	/* reg gap 095~111 */
@@ -747,22 +749,22 @@ typedef struct Vepu540OsdReg_t {
 	 */
 	struct {
 		/* OSD region enable, each bit controls corresponding OSD region. */
-		RK_U32 osd_e:8;
+		RK_U32 osd_e: 8;
 		/* OSD inverse color enable, each bit controls corresponding region. */
-		RK_U32 osd_lu_inv_en:8;
+		RK_U32 osd_lu_inv_en: 8;
 		/*
 		 * OSD palette clock selection.
 		 * 1'h0: Configure bus clock domain.
 		 * 1'h1: Core clock domain.
 		 */
-		RK_U32 osd_plt_cks:1;
+		RK_U32 osd_plt_cks: 1;
 		/*
 		 * OSD palette type.
 		 * 1'h1: Default type.
 		 * 1'h0: User defined type.
 		 */
-		RK_U32 osd_plt_typ:1;
-		RK_U32 reserved:14;
+		RK_U32 osd_plt_typ: 1;
+		RK_U32 reserved: 14;
 	} reg112;
 
 	/*
@@ -772,21 +774,21 @@ typedef struct Vepu540OsdReg_t {
 	 */
 	struct {
 		/* Color inverse theshold for OSD region0. */
-		RK_U32 osd_ithd_r0:4;
+		RK_U32 osd_ithd_r0: 4;
 		/* Color inverse theshold for OSD region1. */
-		RK_U32 osd_ithd_r1:4;
+		RK_U32 osd_ithd_r1: 4;
 		/* Color inverse theshold for OSD region2. */
-		RK_U32 osd_ithd_r2:4;
+		RK_U32 osd_ithd_r2: 4;
 		/* Color inverse theshold for OSD region3. */
-		RK_U32 osd_ithd_r3:4;
+		RK_U32 osd_ithd_r3: 4;
 		/* Color inverse theshold for OSD region4. */
-		RK_U32 osd_ithd_r4:4;
+		RK_U32 osd_ithd_r4: 4;
 		/* Color inverse theshold for OSD region5. */
-		RK_U32 osd_ithd_r5:4;
+		RK_U32 osd_ithd_r5: 4;
 		/* Color inverse theshold for OSD region6. */
-		RK_U32 osd_ithd_r6:4;
+		RK_U32 osd_ithd_r6: 4;
 		/* Color inverse theshold for OSD region7. */
-		RK_U32 osd_ithd_r7:4;
+		RK_U32 osd_ithd_r7: 4;
 	} reg113;
 
 	RK_U32 reg114;
@@ -810,7 +812,7 @@ typedef struct Vepu540OsdReg_t {
 MPP_RET vepu540_set_osd(Vepu541OsdCfg * cfg)
 {
 	Vepu540OsdReg *regs =
-	    (Vepu540OsdReg *) (cfg->reg_base + (size_t) VEPU540_OSD_CFG_OFFSET);
+		(Vepu540OsdReg *) (cfg->reg_base + (size_t) VEPU540_OSD_CFG_OFFSET);
 //    MppDev dev = cfg->dev;
 	MppEncOSDPltCfg *plt_cfg = cfg->plt_cfg;
 	MppEncOSDData2 osd;
@@ -884,7 +886,7 @@ MPP_RET vepu540_set_osd(Vepu541OsdCfg * cfg)
 				MppDevRegOffsetCfg trans_cfg;
 
 				trans_cfg.reg_idx =
-				    VEPU541_OSD_ADDR_IDX_BASE + k;
+					VEPU541_OSD_ADDR_IDX_BASE + k;
 				trans_cfg.offset = tmp->buf_offset;
 				mpp_dev_ioctl(dev, MPP_DEV_REG_OFFSET,
 					      &trans_cfg);
@@ -894,10 +896,10 @@ MPP_RET vepu540_set_osd(Vepu541OsdCfg * cfg)
 			if (buf_size < tmp->buf_offset + blk_len ||
 			    (tmp->buf_offset & 0xf)) {
 				mpp_err_f
-				    ("invalid osd cfg: %d x:y:w:h:off %d:%d:%d:%d:%x size %x\n",
-				     k, tmp->start_mb_x, tmp->start_mb_y,
-				     tmp->num_mb_x, tmp->num_mb_y,
-				     tmp->buf_offset, (RK_U32) buf_size);
+				("invalid osd cfg: %d x:y:w:h:off %d:%d:%d:%d:%x size %x\n",
+				 k, tmp->start_mb_x, tmp->start_mb_y,
+				 tmp->num_mb_x, tmp->num_mb_y,
+				 tmp->buf_offset, (RK_U32) buf_size);
 			}
 		}
 	}

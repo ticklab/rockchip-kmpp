@@ -49,12 +49,12 @@ typedef struct MppEncRefCfgImpl_t {
 extern "C" {
 #endif
 
-	MppEncRefCfg mpp_enc_ref_default(void);
-	MPP_RET mpp_enc_ref_cfg_copy(MppEncRefCfg dst, MppEncRefCfg src);
-	MppEncCpbInfo *mpp_enc_ref_cfg_get_cpb_info(MppEncRefCfg ref);
+MppEncRefCfg mpp_enc_ref_default(void);
+MPP_RET mpp_enc_ref_cfg_copy(MppEncRefCfg dst, MppEncRefCfg src);
+MppEncCpbInfo *mpp_enc_ref_cfg_get_cpb_info(MppEncRefCfg ref);
 
 #define check_is_mpp_enc_ref_cfg(ref) _check_is_mpp_enc_ref_cfg(__FUNCTION__, ref)
-	MPP_RET _check_is_mpp_enc_ref_cfg(const char *func, void *ref);
+MPP_RET _check_is_mpp_enc_ref_cfg(const char *func, void *ref);
 
 #ifdef __cplusplus
 }

@@ -225,7 +225,7 @@ RK_U32 mpp_enc_cfg_debug = 0;
     ENTRY(hw,   aq_step_p,      St,  RK_S32 *,          MPP_ENC_HW_CFG_CHANGE_AQ_STEP_P,        hw, aq_step_p)
 
 ENTRY_TABLE(EXPAND_AS_FUNC)
-    ENTRY_TABLE(EXPAND_AS_API)
+ENTRY_TABLE(EXPAND_AS_API)
 
 static MppCfgApi *cfg_apis[] = {
 	ENTRY_TABLE(EXPAND_AS_ARRAY)
@@ -256,12 +256,12 @@ void mpp_enc_cfg_api_init()
 	ret = mpp_trie_init(&gCfgApi, node_len, api_cnt);
 
 	mpp_log("mpp_trie_init ok %p", gCfgApi);
-	if (ret) {
+	if (ret)
 		mpp_err_f("failed to init enc cfg set trie\n");
-	} else {
-		for (i = 0; i < api_cnt; i++) {
+
+	else {
+		for (i = 0; i < api_cnt; i++)
 			mpp_trie_add_info(gCfgApi, &cfg_apis[i]->name);
-		}
 	}
 	mpp_log("mpp_enc_cfg_api_init");
 	if (node_len < mpp_trie_get_node_count(gCfgApi))

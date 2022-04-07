@@ -214,8 +214,8 @@ typedef enum {
 	MPP_FMT_YUV440SP        = (MPP_FRAME_FMT_YUV + 13), /* YYYY... UVUV...          */
 	MPP_FMT_YUV411SP        = (MPP_FRAME_FMT_YUV + 14), /* YYYY... UV...            */
 	MPP_FMT_YUV444SP        = (MPP_FRAME_FMT_YUV + 15), /* YYYY... UVUVUVUV...      */
-    MPP_FMT_YUV444P         = (MPP_FRAME_FMT_YUV + 16), /* YYYY... UVUVUVUV...      */
-    MPP_FMT_AYUV2BPP        = (MPP_FRAME_FMT_YUV + 17), /* YYYY... UVUVUVUV...      */
+	MPP_FMT_YUV444P         = (MPP_FRAME_FMT_YUV + 16), /* YYYY... UVUVUVUV...      */
+	MPP_FMT_AYUV2BPP        = (MPP_FRAME_FMT_YUV + 17), /* YYYY... UVUVUVUV...      */
 	MPP_FMT_YUV_BUTT,
 
 	MPP_FMT_RGB565          = (MPP_FRAME_FMT_RGB + 0),  /* 16-bit RGB               */
@@ -233,7 +233,7 @@ typedef enum {
 	MPP_FMT_BGRA8888        = (MPP_FRAME_FMT_RGB + 12), /* 32-bit RGB               */
 	MPP_FMT_RGBA8888        = (MPP_FRAME_FMT_RGB + 13), /* 32-bit RGB               */
 	MPP_FMT_ARGB4444        = (MPP_FRAME_FMT_RGB + 14), /* 16-bit RGB               */
-    MPP_FMT_ARGB1555        = (MPP_FRAME_FMT_RGB + 15), /* 2-bit RGB               */
+	MPP_FMT_ARGB1555        = (MPP_FRAME_FMT_RGB + 15), /* 2-bit RGB               */
 	MPP_FMT_RGB_BUTT,
 
 	MPP_FMT_BUTT,
@@ -370,7 +370,8 @@ void    mpp_frame_set_fmt(MppFrame frame, MppFrameFormat fmt);
 MppFrameRational mpp_frame_get_sar(const MppFrame frame);
 void    mpp_frame_set_sar(MppFrame frame, MppFrameRational sar);
 MppFrameMasteringDisplayMetadata mpp_frame_get_mastering_display(const MppFrame frame);
-void    mpp_frame_set_mastering_display(MppFrame frame, MppFrameMasteringDisplayMetadata mastering_display);
+void    mpp_frame_set_mastering_display(MppFrame frame,
+					MppFrameMasteringDisplayMetadata mastering_display);
 MppFrameContentLightMetadata mpp_frame_get_content_light(const MppFrame frame);
 void    mpp_frame_set_content_light(MppFrame frame, MppFrameContentLightMetadata content_light);
 MPP_RET mpp_frame_copy(MppFrame dst, MppFrame src);

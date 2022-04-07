@@ -45,8 +45,8 @@ void *mpp_osal_malloc(const char *caller, size_t size)
 	RK_U32 debug = 0;
 	size_t size_align = MEM_ALIGNED(size);
 	size_t size_real =
-	    (debug & MEM_EXT_ROOM) ? (size_align +
-				      2 * MEM_ALIGN) : (size_align);
+		(debug & MEM_EXT_ROOM) ? (size_align +
+					  2 * MEM_ALIGN) : (size_align);
 
 	return vmalloc(size_real);
 

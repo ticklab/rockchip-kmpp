@@ -51,7 +51,7 @@ static MPP_RET hal_h265ev2_init(void *hal, MppEncHalCfg * cfg)
 #endif
 
 #ifdef RKVEC540C_HEVC
-    api = &hal_h265e_vepu540c;
+	api = &hal_h265e_vepu540c;
 #endif
 
 	mpp_assert(api);
@@ -120,9 +120,8 @@ static MPP_RET hal_h265ev2_comb_start(void *hal,
 	if (!hw_ctx || !api)
 		return MPP_OK;
 
-	if (!api->comb_start) {
+	if (!api->comb_start)
 		return api->start(hw_ctx, task);
-	}
 
 	return api->comb_start(hw_ctx, task, jpeg_task);
 }
@@ -138,21 +137,20 @@ static MPP_RET hal_h265ev2_comb_ret_task(void *hal,
 	if (!hw_ctx || !api)
 		return MPP_OK;
 
-	if (!api->comb_ret_task) {
+	if (!api->comb_ret_task)
 		return api->ret_task(hw_ctx, task);
-	}
 
 	return api->comb_ret_task(hw_ctx, task, jpeg_task);
 }
 
 HAL_H265E_FUNC(prepare)
-    HAL_H265E_TASK_FUNC(get_task)
-    HAL_H265E_TASK_FUNC(gen_regs)
-    HAL_H265E_TASK_FUNC(start)
-    HAL_H265E_TASK_FUNC(wait)
-    HAL_H265E_TASK_FUNC(part_start)
-    HAL_H265E_TASK_FUNC(part_wait)
-    HAL_H265E_TASK_FUNC(ret_task)
+HAL_H265E_TASK_FUNC(get_task)
+HAL_H265E_TASK_FUNC(gen_regs)
+HAL_H265E_TASK_FUNC(start)
+HAL_H265E_TASK_FUNC(wait)
+HAL_H265E_TASK_FUNC(part_start)
+HAL_H265E_TASK_FUNC(part_wait)
+HAL_H265E_TASK_FUNC(ret_task)
 
 const MppEncHalApi hal_api_h265e_v2 = {
 	.name = "hal_h265e",

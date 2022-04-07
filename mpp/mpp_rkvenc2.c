@@ -505,9 +505,8 @@ static int rkvenc_extract_task_msg(struct mpp_session *session,
 						mpp_err("copy_from_user reg failed\n");
 						return -EIO;
 					}
-				}else {
+				} else
 					memcpy(data, wreq->data, wreq->size);
-				}
 				task->reg[j].valid = 1;
 				task->w_req_cnt++;
 			}
@@ -568,7 +567,7 @@ static int rkvenc_task_get_format(struct mpp_dev *mpp,
 		return -EINVAL;
 
 	offset = hw->fmt_reg.base - class_base;
-	val = class_reg[offset/sizeof(u32)];
+	val = class_reg[offset / sizeof(u32)];
 	task->fmt = (val >> bitpos) & ((1 << bitlen) - 1);
 
 	return 0;
@@ -661,11 +660,11 @@ static void rkvenc2_setup_task_id(u32 session_id, struct rkvenc_task *task)
 	task->reg[RKVENC_CLASS_PIC].data[DCHS_CLASS_OFFSET] = val;
 	task->dchs_id.val = (((u64)session_id << 32) | val);
 }
-static void *task_init(struct rkvenc_task *task){
+static void *task_init(struct rkvenc_task *task)
+{
 	int i = 0;
-	for(i = 0; i < RKVENC_CLASS_BUTT; i++){
+	for (i = 0; i < RKVENC_CLASS_BUTT; i++)
 		task->reg[i].valid = 0;
-	}
 	task->irq_status = 0;
 	task->w_req_cnt = 0;
 	task->r_req_cnt = 0;
@@ -678,14 +677,13 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 	struct rkvenc_task *task = NULL;
 	struct mpp_task *mpp_task;
 	struct mpp_dev *mpp = session->mpp;
-    u32 i = 0;
+	u32 i = 0;
 	mpp_debug_enter();
 
-	for (i = 0; i < MAX_TASK_CNT; i++){
-	task = (struct rkvenc_task *)session->task[i];
-	if (!task->mpp_task.state){
-		break;
-	}
+	for (i = 0; i < MAX_TASK_CNT; i++) {
+		task = (struct rkvenc_task *)session->task[i];
+		if (!task->mpp_task.state)
+			break;
 	}
 
 	if (!task)
@@ -695,7 +693,7 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 	mpp_task = &task->mpp_task;
 	mpp_task_init(session, mpp_task);
 	mpp_task->hw_info = mpp->var->hw_info;
-	 mpp_task->clbk_en = 1;
+	mpp_task->clbk_en = 1;
 	task->hw_info = to_rkvenc_info(mpp_task->hw_info);
 	/* extract reqs for current task */
 	ret = rkvenc_extract_task_msg(session, task, msgs, session->k_space);
@@ -1074,9 +1072,8 @@ static int rkvenc_result(struct mpp_dev *mpp,
 				mpp_err("copy_to_user reg fail\n");
 				return -EIO;
 			}
-		}else{
+		} else
 			memcpy(req->data, (u8 *)reg, req->size);
-		}
 	}
 
 	mpp_debug_leave();
@@ -1142,7 +1139,7 @@ static int rkvenc_free_session(struct mpp_session *session)
 {
 	if (session) {
 		u32 i = 0;
-		for (i = 0 ; i < MAX_TASK_CNT; i++){
+		for (i = 0 ; i < MAX_TASK_CNT; i++) {
 			struct rkvenc_task *task = (struct rkvenc_task *)session->task[i];
 			if (task) {
 				rkvenc_free_class_msg(task);
@@ -1180,7 +1177,7 @@ static int rkvenc_init_session(struct mpp_session *session)
 	init_rwsem(&priv->rw_sem);
 	session->priv = priv;
 
-	for(i = 0; i < MAX_TASK_CNT; i++) {
+	for (i = 0; i < MAX_TASK_CNT; i++) {
 		task = kzalloc(sizeof(*task), GFP_KERNEL);
 		if (!task)
 			goto fail;
@@ -1207,7 +1204,7 @@ fail:
 		kfree(task);
 	}
 
-	for (i = 0 ; i < MAX_TASK_CNT; i++){
+	for (i = 0 ; i < MAX_TASK_CNT; i++) {
 		struct rkvenc_task *task = (struct rkvenc_task *)session->task[i];
 		if (task) {
 			rkvenc_free_class_msg(task);
@@ -1264,9 +1261,8 @@ static int rkvenc_dump_session(struct mpp_session *session, struct seq_file *seq
 			const char *name = (const char *)&priv->codec_info[i].val;
 
 			seq_printf(seq, "%8s|", name);
-		} else {
+		} else
 			seq_printf(seq, "%8s|", (const char *)"null");
-		}
 	}
 	seq_puts(seq, "\n");
 	up_read(&priv->rw_sem);
@@ -1864,9 +1860,10 @@ static int rkvenc_remove(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct device_node *np = dev->of_node;
 
-	if (strstr(np->name, "ccu")) {
+	if (strstr(np->name, "ccu"))
 		dev_info(dev, "remove ccu\n");
-	} else if (strstr(np->name, "core")) {
+
+	else if (strstr(np->name, "core")) {
 		struct mpp_dev *mpp = dev_get_drvdata(dev);
 		struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
 

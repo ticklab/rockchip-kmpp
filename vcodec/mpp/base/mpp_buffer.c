@@ -119,9 +119,8 @@ struct dma_buf *mpi_buf_get_dma_with_caller(MpiBuf buffer, const char *caller)
 		return NULL;
 	}
 
-	if (!buffer) {
+	if (!buffer)
 		return NULL;
-	}
 
 	if (mpibuf_fn->buf_get_dmabuf)
 		dmabuf = mpibuf_fn->buf_get_dmabuf(buffer);
@@ -308,9 +307,8 @@ int mpp_buffer_get_fd_with_caller(MppBuffer buffer, const char *caller)
 	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
 	int fd = -1;
 	mpp_log("p->info.fd %d", p->info.fd);
-	if (p->info.fd > 0) {
+	if (p->info.fd > 0)
 		return p->info.fd;
-	}
 	if (NULL == p) {
 		mpp_err("mpp_buffer_get_fd invalid NULL input from %s\n",
 			caller);

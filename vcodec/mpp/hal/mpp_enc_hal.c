@@ -63,7 +63,7 @@ MPP_RET mpp_enc_hal_init(MppEncHal * ctx, MppEncHalCfg * cfg)
 	}
 
 	for (i = 0; i < MPP_ARRAY_ELEMS(hw_enc_apis); i++) {
-        if (cfg->coding == hw_enc_apis[i]->coding) {
+		if (cfg->coding == hw_enc_apis[i]->coding) {
 			MPP_RET ret = MPP_OK;
 
 			p->coding = cfg->coding;
@@ -154,9 +154,8 @@ MPP_RET mpp_enc_hal_start(void *hal, HalEncTask *task, HalEncTask *jpeg_task)
 	p = (MppEncHalImpl *)hal;
 	if (!p->api || !p->api->start)
 		return MPP_OK;
-	if (jpeg_task && p->api->comb_start) {
+	if (jpeg_task && p->api->comb_start)
 		return p->api->comb_start(p->ctx, task, jpeg_task);
-	}
 	return p->api->start(p->ctx, task);
 }
 
@@ -172,9 +171,8 @@ MPP_RET mpp_enc_hal_ret_task(void *hal, HalEncTask *task, HalEncTask *jpeg_task)
 	p = (MppEncHalImpl *)hal;
 	if (!p->api || !p->api->ret_task)
 		return MPP_OK;
-	if (jpeg_task && p->api->comb_ret_task) {
+	if (jpeg_task && p->api->comb_ret_task)
 		return p->api->comb_ret_task(p->ctx, task, jpeg_task);
-	}
 	return p->api->ret_task(p->ctx, task);
 }
 
@@ -195,9 +193,9 @@ MPP_RET mpp_enc_hal_ret_task(void *hal, HalEncTask *task, HalEncTask *jpeg_task)
     }
 
 MPP_ENC_HAL_TASK_FUNC(get_task)
-    MPP_ENC_HAL_TASK_FUNC(gen_regs)
-   // MPP_ENC_HAL_TASK_FUNC(start)
-    MPP_ENC_HAL_TASK_FUNC(wait)
-    MPP_ENC_HAL_TASK_FUNC(part_start)
-    MPP_ENC_HAL_TASK_FUNC(part_wait)
-  //  MPP_ENC_HAL_TASK_FUNC(ret_task)
+MPP_ENC_HAL_TASK_FUNC(gen_regs)
+// MPP_ENC_HAL_TASK_FUNC(start)
+MPP_ENC_HAL_TASK_FUNC(wait)
+MPP_ENC_HAL_TASK_FUNC(part_start)
+MPP_ENC_HAL_TASK_FUNC(part_wait)
+//  MPP_ENC_HAL_TASK_FUNC(ret_task)

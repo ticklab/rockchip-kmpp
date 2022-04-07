@@ -16,9 +16,9 @@
 extern "C" {
 #endif
 
-    MPP_RET mpi_enc_gen_ref_cfg(MppEncRefCfg ref, RK_S32 gop_mode);
-    MPP_RET mpi_enc_gen_smart_gop_ref_cfg(MppEncRefCfg ref, MppEncRefParam *para);
-    MPP_RET mpi_enc_gen_hir_skip_ref(MppEncRefCfg ref, MppEncRefParam *para);
+MPP_RET mpi_enc_gen_ref_cfg(MppEncRefCfg ref, RK_S32 gop_mode);
+MPP_RET mpi_enc_gen_smart_gop_ref_cfg(MppEncRefCfg ref, MppEncRefParam *para);
+MPP_RET mpi_enc_gen_hir_skip_ref(MppEncRefCfg ref, MppEncRefParam *para);
 
 #ifdef __cplusplus
 }

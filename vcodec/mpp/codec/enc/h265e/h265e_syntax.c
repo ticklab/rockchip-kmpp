@@ -30,105 +30,105 @@ static void fill_picture_parameters(const H265eCtx * h, H265ePicParams * pp)
 	pp->mpp_format = cfg->prep.format;
 
 	pp->wFormatAndSequenceInfoFlags = (sps->chroma_format_idc << 0) |
-	    (sps->separate_colour_plane_flag << 2) |
-	    ((sps->bit_depth_luma_minus8) << 3) |
-	    ((sps->bit_depth_chroma_minus8) << 6) |
-	    ((sps->bits_for_poc - 4) << 9) | (0 << 13) | (0 << 14) | (0 << 15);
+					  (sps->separate_colour_plane_flag << 2) |
+					  ((sps->bit_depth_luma_minus8) << 3) |
+					  ((sps->bit_depth_chroma_minus8) << 6) |
+					  ((sps->bits_for_poc - 4) << 9) | (0 << 13) | (0 << 14) | (0 << 15);
 
 	pp->sps_max_dec_pic_buffering_minus1 =
-	    sps->vps_max_dec_pic_buffering_minus1[sps->
-						  vps_max_sub_layers_minus1];
+		sps->vps_max_dec_pic_buffering_minus1[sps->
+						      vps_max_sub_layers_minus1];
 	pp->log2_min_luma_coding_block_size_minus3 =
-	    sps->log2_min_coding_block_size_minus3;
+		sps->log2_min_coding_block_size_minus3;
 	pp->log2_diff_max_min_luma_coding_block_size =
-	    sps->log2_diff_max_min_coding_block_size;
+		sps->log2_diff_max_min_coding_block_size;
 
 	pp->log2_min_transform_block_size_minus2 =
-	    sps->log2_min_transform_block_size_minus2;
+		sps->log2_min_transform_block_size_minus2;
 	pp->log2_diff_max_min_transform_block_size =
-	    sps->log2_diff_max_min_transform_block_size;
+		sps->log2_diff_max_min_transform_block_size;
 
 	pp->max_transform_hierarchy_depth_inter =
-	    sps->max_transform_hierarchy_depth_inter;
+		sps->max_transform_hierarchy_depth_inter;
 	pp->max_transform_hierarchy_depth_intra =
-	    sps->max_transform_hierarchy_depth_intra;
+		sps->max_transform_hierarchy_depth_intra;
 
 	pp->num_short_term_ref_pic_sets =
-	    sps->rps_list.num_short_term_ref_pic_sets;
+		sps->rps_list.num_short_term_ref_pic_sets;
 	pp->num_long_term_ref_pics_sps = sps->num_long_term_ref_pic_sps;
 
 	pp->sample_adaptive_offset_enabled_flag =
-	    sps->sample_adaptive_offset_enabled_flag;
+		sps->sample_adaptive_offset_enabled_flag;
 
 	pp->num_ref_idx_l0_default_active_minus1 =
-	    pps->num_ref_idx_l0_default_active_minus1 - 1;
+		pps->num_ref_idx_l0_default_active_minus1 - 1;
 	pp->num_ref_idx_l1_default_active_minus1 =
-	    pps->num_ref_idx_l1_default_active_minus1 - 1;
+		pps->num_ref_idx_l1_default_active_minus1 - 1;
 	pp->init_qp_minus26 = pps->init_qp_minus26;
 
 	pp->CodingParamToolFlags = (sps->scaling_list_enabled_flag << 0) |
-	    (sps->amp_enabled_flag << 1) |
-	    (sps->sample_adaptive_offset_enabled_flag << 2) |
-	    (sps->pcm_enabled_flag << 3) |
-	    ((sps->pcm_enabled_flag ? (sps->pcm_bit_depth_luma - 1) : 0) << 4) |
-	    ((sps->
-	      pcm_enabled_flag ? (sps->pcm_bit_depth_chroma -
-				  1) : 0) << 8) | ((sps->
-						    pcm_enabled_flag ? (sps->
-									pcm_log2_min_size
-									-
-									3) : 0)
-						   << 12) | ((sps->
-							      pcm_enabled_flag
-							      ? (sps->
-								 pcm_log2_max_size
-								 -
-								 sps->
-								 pcm_log2_min_size)
-							      : 0) << 14) |
-	    (sps->pcm_loop_filter_disable_flag << 16) | (sps->
-							 long_term_ref_pics_present_flag
-							 << 17) | (sps->
-								   sps_temporal_mvp_enable_flag
-								   << 18) |
-	    (sps->
-	     sps_strong_intra_smoothing_enable_flag << 19) | (0 << 20) | (pps->
-									  output_flag_present_flag
-									  << 21)
-	    | (pps->num_extra_slice_header_bits << 22) | (pps->
-							  sign_data_hiding_flag
-							  << 25) | (pps->
-								    cabac_init_present_flag
-								    << 26) | (0
-									      <<
-									      27);
+				   (sps->amp_enabled_flag << 1) |
+				   (sps->sample_adaptive_offset_enabled_flag << 2) |
+				   (sps->pcm_enabled_flag << 3) |
+				   ((sps->pcm_enabled_flag ? (sps->pcm_bit_depth_luma - 1) : 0) << 4) |
+				   ((sps->
+				     pcm_enabled_flag ? (sps->pcm_bit_depth_chroma -
+							 1) : 0) << 8) | ((sps->
+									   pcm_enabled_flag ? (sps->
+											       pcm_log2_min_size
+											       -
+											       3) : 0)
+									  << 12) | ((sps->
+										     pcm_enabled_flag
+										     ? (sps->
+											pcm_log2_max_size
+											-
+											sps->
+											pcm_log2_min_size)
+										     : 0) << 14) |
+				   (sps->pcm_loop_filter_disable_flag << 16) | (sps->
+										long_term_ref_pics_present_flag
+										<< 17) | (sps->
+											  sps_temporal_mvp_enable_flag
+											  << 18) |
+				   (sps->
+				    sps_strong_intra_smoothing_enable_flag << 19) | (0 << 20) | (pps->
+												 output_flag_present_flag
+												 << 21)
+				   | (pps->num_extra_slice_header_bits << 22) | (pps->
+										 sign_data_hiding_flag
+										 << 25) | (pps->
+											   cabac_init_present_flag
+											   << 26) | (0
+												     <<
+												     27);
 
 	pp->CodingSettingPicturePropertyFlags =
-	    (pps->constrained_intra_pred_flag << 0) | (pps->
-						       transform_skip_enabled_flag
-						       << 1) | (pps->
-								cu_qp_delta_enabled_flag
-								<< 2) | (pps->
-									 pps_slice_chroma_qp_offsets_present_flag
-									 << 3) |
-	    (pps->weighted_pred_flag << 4) | (pps->
-					      weighted_bipred_flag << 5) |
-	    (pps->transquant_bypass_enable_flag << 6) | (pps->
-							 tiles_enabled_flag <<
-							 7) | (pps->
-							       entropy_coding_sync_enabled_flag
-							       << 8) | (pps->
-									uniform_spacing_flag
-									<< 9) |
-	    (pps->loop_filter_across_tiles_enabled_flag << 10) | (pps->
-								  loop_filter_across_slices_enabled_flag
-								  << 11) |
-	    (pps->deblocking_filter_override_enabled_flag << 12) | (pps->
-								    pps_disable_deblocking_filter_flag
-								    << 13) |
-	    (pps->lists_modification_present_flag << 14) | (pps->
-							    slice_segment_header_extension_present_flag
-							    << 15);
+		(pps->constrained_intra_pred_flag << 0) | (pps->
+							   transform_skip_enabled_flag
+							   << 1) | (pps->
+								    cu_qp_delta_enabled_flag
+								    << 2) | (pps->
+									     pps_slice_chroma_qp_offsets_present_flag
+									     << 3) |
+		(pps->weighted_pred_flag << 4) | (pps->
+						  weighted_bipred_flag << 5) |
+		(pps->transquant_bypass_enable_flag << 6) | (pps->
+							     tiles_enabled_flag <<
+							     7) | (pps->
+								   entropy_coding_sync_enabled_flag
+								   << 8) | (pps->
+									    uniform_spacing_flag
+									    << 9) |
+		(pps->loop_filter_across_tiles_enabled_flag << 10) | (pps->
+								      loop_filter_across_slices_enabled_flag
+								      << 11) |
+		(pps->deblocking_filter_override_enabled_flag << 12) | (pps->
+									pps_disable_deblocking_filter_flag
+									<< 13) |
+		(pps->lists_modification_present_flag << 14) | (pps->
+								slice_segment_header_extension_present_flag
+								<< 15);
 
 	pp->pps_cb_qp_offset = pps->pps_cb_qp_offset;
 	pp->pps_cr_qp_offset = pps->pps_cr_qp_offset;
@@ -136,7 +136,7 @@ static void fill_picture_parameters(const H265eCtx * h, H265ePicParams * pp)
 	pp->pps_beta_offset_div2 = pps->pps_beta_offset_div2;
 	pp->pps_tc_offset_div2 = pps->pps_tc_offset_div2;
 	pp->log2_parallel_merge_level_minus2 =
-	    pps->log2_parallel_merge_level_minus2;
+		pps->log2_parallel_merge_level_minus2;
 	if (pps->tiles_enabled_flag) {
 		RK_U8 i = 0;
 
@@ -148,11 +148,11 @@ static void fill_picture_parameters(const H265eCtx * h, H265ePicParams * pp)
 
 		for (i = 0; i < pp->num_tile_columns_minus1; i++)
 			pp->column_width_minus1[i] =
-			    pps->tile_column_width_array[i];
+				pps->tile_column_width_array[i];
 
 		for (i = 0; i < pp->num_tile_rows_minus1; i++)
 			pp->row_height_minus1[i] =
-			    pps->tile_row_height_array[i];
+				pps->tile_row_height_array[i];
 	}
 }
 
@@ -165,11 +165,11 @@ static void fill_slice_parameters(const H265eCtx * h, H265eSlicParams * sp)
 		sp->sli_splt_cpst = 1;
 		sp->sli_splt = 1;
 		sp->sli_splt_mode = codec->slice_cfg.split_mode;
-		if (codec->slice_cfg.split_mode) {
+		if (codec->slice_cfg.split_mode)
 			sp->sli_splt_cnum_m1 = codec->slice_cfg.slice_size - 1;
-		} else {
+
+		else
 			sp->sli_splt_byte = codec->slice_cfg.slice_size;
-		}
 		sp->sli_max_num_m1 = 50;
 		sp->sli_flsh = 1;
 	}
@@ -184,16 +184,16 @@ static void fill_slice_parameters(const H265eCtx * h, H265eSlicParams * sp)
 	sp->num_refidx_l0_act = 1;
 
 	sp->num_refidx_act_ovrd =
-	    (((RK_U32) slice->num_ref_idx[0] !=
-	      slice->pps->num_ref_idx_l0_default_active_minus1)
-	     || (slice->slice_type == B_SLICE
-		 && (RK_U32) slice->num_ref_idx[1] !=
-		 slice->pps->num_ref_idx_l1_default_active_minus1));
+		(((RK_U32) slice->num_ref_idx[0] !=
+		  slice->pps->num_ref_idx_l0_default_active_minus1)
+		 || (slice->slice_type == B_SLICE
+		     && (RK_U32) slice->num_ref_idx[1] !=
+		     slice->pps->num_ref_idx_l1_default_active_minus1));
 
 	sp->sli_sao_chrm_flg = slice->sps->sample_adaptive_offset_enabled_flag
-	    && slice->sao_enable_flag_chroma;
+			       && slice->sao_enable_flag_chroma;
 	sp->sli_sao_luma_flg = slice->sps->sample_adaptive_offset_enabled_flag
-	    && slice->sao_enable_flag;
+			       && slice->sao_enable_flag;
 
 	sp->sli_tmprl_mvp_en = slice->tmprl_mvp_en;
 	sp->pic_out_flg = slice->pic_output_flag;
@@ -206,7 +206,7 @@ static void fill_slice_parameters(const H265eCtx * h, H265eSlicParams * sp)
 	sp->sli_tc_ofst_div2 = slice->pps_tc_offset_div2;
 	sp->sli_beta_ofst_div2 = slice->pps_beta_offset_div2;
 	sp->sli_lp_fltr_acrs_sli =
-	    slice->loop_filter_across_slices_enabled_flag;
+		slice->loop_filter_across_slices_enabled_flag;
 	sp->sli_dblk_fltr_dis = slice->deblocking_filter_disable;
 	sp->dblk_fltr_ovrd_flg = slice->deblocking_filter_override_flag;
 	sp->sli_cb_qp_ofst = slice->slice_qp_delta_cb;
@@ -216,8 +216,8 @@ static void fill_slice_parameters(const H265eCtx * h, H265eSlicParams * sp)
 	sp->col_ref_idx = 0;
 	sp->col_frm_l0_flg = slice->col_from_l0_flag;
 	sp->sli_poc_lsb =
-	    (slice->poc - slice->last_idr +
-	     (1 << slice->sps->bits_for_poc)) % (1 << slice->sps->bits_for_poc);
+		(slice->poc - slice->last_idr +
+		 (1 << slice->sps->bits_for_poc)) % (1 << slice->sps->bits_for_poc);
 
 	sp->sli_hdr_ext_len = slice->slice_header_extension_length;
 }
@@ -256,9 +256,8 @@ RK_S32 fill_ref_parameters(const H265eCtx * h, H265eSlicParams * sp)
 	}
 
 	for (i = 0; i < rps->num_of_pictures; i++) {
-		if (rps->refed[i]) {
+		if (rps->refed[i])
 			sp->tot_poc_num++;
-		}
 	}
 
 	if (slice->sps->long_term_ref_pics_present_flag) {
@@ -277,7 +276,7 @@ RK_S32 fill_ref_parameters(const H265eCtx * h, H265eSlicParams * sp)
 		     k > rps->num_of_pictures - rps->num_long_term_pic - 1;
 		     k--) {
 			RK_U32 lsb =
-			    rps->poc[k] % (1 << slice->sps->bits_for_poc);
+				rps->poc[k] % (1 << slice->sps->bits_for_poc);
 			RK_U32 find_flag = 0;
 			for (i = 0;
 			     i < (RK_S32) slice->sps->num_long_term_ref_pic_sps;
@@ -292,23 +291,21 @@ RK_S32 fill_ref_parameters(const H265eCtx * h, H265eSlicParams * sp)
 				}
 			}
 
-			if (find_flag) {
+			if (find_flag)
 				numLtrpInSPS++;
-			} else {
+
+			else
 				counter++;
-			}
 		}
 
 		numLtrpInSH -= numLtrpInSPS;
 
 		while (slice->sps->num_long_term_ref_pic_sps >
-		       (RK_U32) (1 << bitsForLtrpInSPS)) {
+		       (RK_U32) (1 << bitsForLtrpInSPS))
 			bitsForLtrpInSPS++;
-		}
 
-		if (slice->sps->num_long_term_ref_pic_sps > 0) {
+		if (slice->sps->num_long_term_ref_pic_sps > 0)
 			sp->num_lt_sps = numLtrpInSPS;
-		}
 		sp->num_lt_pic = numLtrpInSH;
 		// Note that the LSBs of the LT ref. pic. POCs must be sorted before.
 		// Not sorted here because LT ref indices will be used in setRefPicList()
@@ -328,29 +325,28 @@ RK_S32 fill_ref_parameters(const H265eCtx * h, H265eSlicParams * sp)
 		for (i = rps->num_of_pictures - 1; i > offset - 1; i--) {
 			RK_U32 deltaFlag = 0;
 			if ((i == rps->num_of_pictures - 1)
-			    || (i == rps->num_of_pictures - 1 - numLtrpInSPS)) {
+			    || (i == rps->num_of_pictures - 1 - numLtrpInSPS))
 				deltaFlag = 1;
-			}
 			poc_lsb_lt[numLongTerm - 1 - (i - offset)] =
-			    rps->poc_lsblt[i];
+				rps->poc_lsblt[i];
 			used_by_lt_flg[numLongTerm - 1 - (i - offset)] =
-			    rps->refed[i];
+				rps->refed[i];
 			dlt_poc_msb_prsnt[numLongTerm - 1 - (i - offset)] =
-			    rps->delta_poc_msb_present_flag[i];
+				rps->delta_poc_msb_present_flag[i];
 
 			if (rps->delta_poc_msb_present_flag[i]) {
 				if (deltaFlag) {
 					dlt_poc_msb_cycl[numLongTerm - 1 -
 							 (i - offset)] =
-					    rps->delta_poc_msb_cycle_lt[i];
+								 rps->delta_poc_msb_cycle_lt[i];
 				} else {
 					RK_S32 differenceInDeltaMSB =
-					    rps->delta_poc_msb_cycle_lt[i] -
-					    prevDeltaMSB;
+						rps->delta_poc_msb_cycle_lt[i] -
+						prevDeltaMSB;
 					mpp_assert(differenceInDeltaMSB >= 0);
 					dlt_poc_msb_cycl[numLongTerm - 1 -
 							 (i - offset)] =
-					    differenceInDeltaMSB;
+								 differenceInDeltaMSB;
 				}
 			}
 			prevDeltaMSB = rps->delta_poc_msb_cycle_lt[i];
@@ -373,29 +369,29 @@ RK_S32 fill_ref_parameters(const H265eCtx * h, H265eSlicParams * sp)
 	sp->lst_entry_l0 = 0;
 	sp->ref_pic_lst_mdf_l0 = 0;
 
-	if (slice->slice_type == I_SLICE) {
+	if (slice->slice_type == I_SLICE)
 		numRpsCurrTempList = 0;
-	} else {
+
+	else {
 		ref_num =
-		    rps->num_negative_pic + rps->num_positive_pic +
-		    rps->num_long_term_pic;
+			rps->num_negative_pic + rps->num_positive_pic +
+			rps->num_long_term_pic;
 		for (i = 0; i < ref_num; i++) {
-			if (rps->used[i]) {
+			if (rps->used[i])
 				numRpsCurrTempList++;
-			}
 		}
 	}
 
 	if (slice->pps->lists_modification_present_flag
 	    && numRpsCurrTempList > 1) {
 		h265_rpl_modification *rpl_modification =
-		    &slice->rpl_modification;
+			&slice->rpl_modification;
 		if (slice->slice_type != I_SLICE) {
 			sp->ref_pic_lst_mdf_l0 =
-			    rpl_modification->rpl_modification_flag_l0 ? 1 : 0;
+				rpl_modification->rpl_modification_flag_l0 ? 1 : 0;
 			if (sp->ref_pic_lst_mdf_l0) {
 				sp->lst_entry_l0 =
-				    rpl_modification->ref_pic_set_idx_l0[0];
+					rpl_modification->ref_pic_set_idx_l0[0];
 			}
 		}
 	}

@@ -22,27 +22,27 @@
 typedef union MppEncHeaderStatus_u {
 	RK_U32 val;
 	struct {
-		RK_U32 ready:1;
+		RK_U32 ready: 1;
 
-		RK_U32 added_by_ctrl:1;
-		RK_U32 added_by_mode:1;
-		RK_U32 added_by_change:1;
+		RK_U32 added_by_ctrl: 1;
+		RK_U32 added_by_mode: 1;
+		RK_U32 added_by_change: 1;
 	};
 } MppEncHeaderStatus;
 
 typedef struct RcApiStatus_t {
-	RK_U32 rc_api_inited:1;
-	RK_U32 rc_api_updated:1;
-	RK_U32 rc_api_user_cfg:1;
+	RK_U32 rc_api_inited: 1;
+	RK_U32 rc_api_updated: 1;
+	RK_U32 rc_api_user_cfg: 1;
 } RcApiStatus;
 
-typedef struct MppUserDataRb_t{
-    RK_U8 read_pos;
-    RK_U8 write_pos;
-    RK_U8 free_cnt;
-    RK_U8 len[MAX_USRDATA_CNT];
-    RK_U8 data[MAX_USRDATA_CNT][1024];
-}MppUserDataRb;
+typedef struct MppUserDataRb_t {
+	RK_U8 read_pos;
+	RK_U8 write_pos;
+	RK_U8 free_cnt;
+	RK_U8 len[MAX_USRDATA_CNT];
+	RK_U8 data[MAX_USRDATA_CNT][1024];
+} MppUserDataRb;
 
 
 typedef struct MppEncImpl_t {
@@ -139,15 +139,15 @@ enum enc_status {
 #ifdef __cplusplus
 extern "C" {
 #endif
-	MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame);
-	MPP_RET mpp_enc_proc_cfg(MppEncImpl * enc, MpiCmd cmd, void *param);
-	MPP_RET mpp_enc_impl_alloc_task(MppEncImpl * enc);
-	MPP_RET mpp_enc_impl_free_task(MppEncImpl * enc);
-	MPP_RET mpp_enc_proc_rc_update(MppEncImpl * enc);
-	MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet, MppPacket * jpeg_packet);
-	MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx);
-	void    mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id);
-    MPP_RET mpp_enc_unref_osd_buf(MppEncOSDData3 *osd);
+MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame);
+MPP_RET mpp_enc_proc_cfg(MppEncImpl * enc, MpiCmd cmd, void *param);
+MPP_RET mpp_enc_impl_alloc_task(MppEncImpl * enc);
+MPP_RET mpp_enc_impl_free_task(MppEncImpl * enc);
+MPP_RET mpp_enc_proc_rc_update(MppEncImpl * enc);
+MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet, MppPacket * jpeg_packet);
+MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx);
+void    mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id);
+MPP_RET mpp_enc_unref_osd_buf(MppEncOSDData3 *osd);
 #ifdef __cplusplus
 }
 #endif

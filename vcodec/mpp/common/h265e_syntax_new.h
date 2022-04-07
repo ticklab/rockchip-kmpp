@@ -27,14 +27,14 @@ typedef struct H265ePicParams_t {
 	RK_U32 mpp_format;
 	union {
 		struct {
-			RK_U16 chroma_format_idc:2;
-			RK_U16 separate_colour_plane_flag:1;
-			RK_U16 bit_depth_luma_minus8:3;
-			RK_U16 bit_depth_chroma_minus8:3;
-			RK_U16 log2_max_pic_order_cnt_lsb_minus4:4;
-			RK_U16 NoPicReorderingFlag:1;
-			RK_U16 NoBiPredFlag:1;
-			RK_U16 ReservedBits1:1;
+			RK_U16 chroma_format_idc: 2;
+			RK_U16 separate_colour_plane_flag: 1;
+			RK_U16 bit_depth_luma_minus8: 3;
+			RK_U16 bit_depth_chroma_minus8: 3;
+			RK_U16 log2_max_pic_order_cnt_lsb_minus4: 4;
+			RK_U16 NoPicReorderingFlag: 1;
+			RK_U16 NoBiPredFlag: 1;
+			RK_U16 ReservedBits1: 1;
 		};
 		RK_U16 wFormatAndSequenceInfoFlags;
 	};
@@ -54,47 +54,47 @@ typedef struct H265ePicParams_t {
 
 	union {
 		struct {
-			RK_U32 scaling_list_enabled_flag:1;
-			RK_U32 amp_enabled_flag:1;
-			RK_U32 sample_adaptive_offset_enabled_flag:1;
-			RK_U32 pcm_enabled_flag:1;
-			RK_U32 pcm_sample_bit_depth_luma_minus1:4;
-			RK_U32 pcm_sample_bit_depth_chroma_minus1:4;
-			RK_U32 log2_min_pcm_luma_coding_block_size_minus3:2;
-			RK_U32 log2_diff_max_min_pcm_luma_coding_block_size:2;
-			RK_U32 pcm_loop_filter_disabled_flag:1;
-			RK_U32 long_term_ref_pics_present_flag:1;
-			RK_U32 sps_temporal_mvp_enabled_flag:1;
-			RK_U32 strong_intra_smoothing_enabled_flag:1;
-			RK_U32 dependent_slice_segments_enabled_flag:1;
-			RK_U32 output_flag_present_flag:1;
-			RK_U32 num_extra_slice_header_bits:3;
-			RK_U32 sign_data_hiding_enabled_flag:1;
-			RK_U32 cabac_init_present_flag:1;
-			RK_U32 ReservedBits3:5;
+			RK_U32 scaling_list_enabled_flag: 1;
+			RK_U32 amp_enabled_flag: 1;
+			RK_U32 sample_adaptive_offset_enabled_flag: 1;
+			RK_U32 pcm_enabled_flag: 1;
+			RK_U32 pcm_sample_bit_depth_luma_minus1: 4;
+			RK_U32 pcm_sample_bit_depth_chroma_minus1: 4;
+			RK_U32 log2_min_pcm_luma_coding_block_size_minus3: 2;
+			RK_U32 log2_diff_max_min_pcm_luma_coding_block_size: 2;
+			RK_U32 pcm_loop_filter_disabled_flag: 1;
+			RK_U32 long_term_ref_pics_present_flag: 1;
+			RK_U32 sps_temporal_mvp_enabled_flag: 1;
+			RK_U32 strong_intra_smoothing_enabled_flag: 1;
+			RK_U32 dependent_slice_segments_enabled_flag: 1;
+			RK_U32 output_flag_present_flag: 1;
+			RK_U32 num_extra_slice_header_bits: 3;
+			RK_U32 sign_data_hiding_enabled_flag: 1;
+			RK_U32 cabac_init_present_flag: 1;
+			RK_U32 ReservedBits3: 5;
 		};
 		RK_U32 CodingParamToolFlags;
 	};
 
 	union {
 		struct {
-			RK_U32 constrained_intra_pred_flag:1;
-			RK_U32 transform_skip_enabled_flag:1;
-			RK_U32 cu_qp_delta_enabled_flag:1;
-			RK_U32 pps_slice_chroma_qp_offsets_present_flag:1;
-			RK_U32 weighted_pred_flag:1;
-			RK_U32 weighted_bipred_flag:1;
-			RK_U32 transquant_bypass_enabled_flag:1;
-			RK_U32 tiles_enabled_flag:1;
-			RK_U32 entropy_coding_sync_enabled_flag:1;
-			RK_U32 uniform_spacing_flag:1;
-			RK_U32 loop_filter_across_tiles_enabled_flag:1;
-			RK_U32 pps_loop_filter_across_slices_enabled_flag:1;
-			RK_U32 deblocking_filter_override_enabled_flag:1;
-			RK_U32 pps_deblocking_filter_disabled_flag:1;
-			RK_U32 lists_modification_present_flag:1;
-			RK_U32 slice_segment_header_extension_present_flag:1;
-			RK_U32 ReservedBits4:16;
+			RK_U32 constrained_intra_pred_flag: 1;
+			RK_U32 transform_skip_enabled_flag: 1;
+			RK_U32 cu_qp_delta_enabled_flag: 1;
+			RK_U32 pps_slice_chroma_qp_offsets_present_flag: 1;
+			RK_U32 weighted_pred_flag: 1;
+			RK_U32 weighted_bipred_flag: 1;
+			RK_U32 transquant_bypass_enabled_flag: 1;
+			RK_U32 tiles_enabled_flag: 1;
+			RK_U32 entropy_coding_sync_enabled_flag: 1;
+			RK_U32 uniform_spacing_flag: 1;
+			RK_U32 loop_filter_across_tiles_enabled_flag: 1;
+			RK_U32 pps_loop_filter_across_slices_enabled_flag: 1;
+			RK_U32 deblocking_filter_override_enabled_flag: 1;
+			RK_U32 pps_deblocking_filter_disabled_flag: 1;
+			RK_U32 lists_modification_present_flag: 1;
+			RK_U32 slice_segment_header_extension_present_flag: 1;
+			RK_U32 ReservedBits4: 16;
 		};
 		RK_U32 CodingSettingPicturePropertyFlags;
 	};
@@ -117,36 +117,36 @@ typedef struct H265ePicParams_t {
 typedef struct H265eSlicParams_t {
 	union {
 		struct {
-			RK_U32 sli_splt:1;
-			RK_U32 sli_splt_mode:1;
-			RK_U32 sli_splt_cpst:1;
-			RK_U32 sli_flsh:1;
-			RK_U32 cbc_init_flg:1;
-			RK_U32 mvd_l1_zero_flg:1;
-			RK_U32 merge_up_flag:1;
-			RK_U32 merge_left_flag:1;
-			RK_U32 ref_pic_lst_mdf_l0:1;
-			RK_U32 num_refidx_act_ovrd:1;
-			RK_U32 sli_sao_chrm_flg:1;
-			RK_U32 sli_sao_luma_flg:1;
-			RK_U32 sli_tmprl_mvp_en:1;
-			RK_U32 pic_out_flg:1;
-			RK_U32 dpdnt_sli_seg_flg:1;
-			RK_U32 no_out_pri_pic:1;
-			RK_U32 sli_lp_fltr_acrs_sli:1;
-			RK_U32 sli_dblk_fltr_dis:1;
-			RK_U32 dblk_fltr_ovrd_flg:1;
-			RK_U32 col_ref_idx:1;
-			RK_U32 col_frm_l0_flg:1;
-			RK_U32 st_ref_pic_flg:1;
-			RK_U32 num_pos_pic:1;
-			RK_U32 dlt_poc_msb_prsnt0:1;
-			RK_U32 dlt_poc_msb_prsnt1:1;
-			RK_U32 dlt_poc_msb_prsnt2:1;
-			RK_U32 used_by_lt_flg0:1;
-			RK_U32 used_by_lt_flg1:1;
-			RK_U32 used_by_lt_flg2:1;
-			RK_U32 ReservedBits:3;
+			RK_U32 sli_splt: 1;
+			RK_U32 sli_splt_mode: 1;
+			RK_U32 sli_splt_cpst: 1;
+			RK_U32 sli_flsh: 1;
+			RK_U32 cbc_init_flg: 1;
+			RK_U32 mvd_l1_zero_flg: 1;
+			RK_U32 merge_up_flag: 1;
+			RK_U32 merge_left_flag: 1;
+			RK_U32 ref_pic_lst_mdf_l0: 1;
+			RK_U32 num_refidx_act_ovrd: 1;
+			RK_U32 sli_sao_chrm_flg: 1;
+			RK_U32 sli_sao_luma_flg: 1;
+			RK_U32 sli_tmprl_mvp_en: 1;
+			RK_U32 pic_out_flg: 1;
+			RK_U32 dpdnt_sli_seg_flg: 1;
+			RK_U32 no_out_pri_pic: 1;
+			RK_U32 sli_lp_fltr_acrs_sli: 1;
+			RK_U32 sli_dblk_fltr_dis: 1;
+			RK_U32 dblk_fltr_ovrd_flg: 1;
+			RK_U32 col_ref_idx: 1;
+			RK_U32 col_frm_l0_flg: 1;
+			RK_U32 st_ref_pic_flg: 1;
+			RK_U32 num_pos_pic: 1;
+			RK_U32 dlt_poc_msb_prsnt0: 1;
+			RK_U32 dlt_poc_msb_prsnt1: 1;
+			RK_U32 dlt_poc_msb_prsnt2: 1;
+			RK_U32 used_by_lt_flg0: 1;
+			RK_U32 used_by_lt_flg1: 1;
+			RK_U32 used_by_lt_flg2: 1;
+			RK_U32 ReservedBits: 3;
 		};
 		RK_U32 CodingSliceFlags;
 	};
@@ -210,7 +210,7 @@ typedef struct H265eSyntax_new_t {
 extern "C" {
 #endif
 
-	RK_S32 h265e_syntax_fill(void *ctx);
+RK_S32 h265e_syntax_fill(void *ctx);
 
 #ifdef __cplusplus
 }

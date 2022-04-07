@@ -49,33 +49,33 @@ typedef void *MppEncRefs;
 extern "C" {
 #endif
 
-	MPP_RET mpp_enc_refs_init(MppEncRefs * refs);
-	MPP_RET mpp_enc_refs_deinit(MppEncRefs * refs);
+MPP_RET mpp_enc_refs_init(MppEncRefs * refs);
+MPP_RET mpp_enc_refs_deinit(MppEncRefs * refs);
 
-	MPP_RET mpp_enc_refs_set_cfg(MppEncRefs refs, MppEncRefCfg ref_cfg);
-	MPP_RET mpp_enc_refs_set_usr_cfg(MppEncRefs refs,
-					 MppEncRefFrmUsrCfg * force);
-	MPP_RET mpp_enc_refs_set_rc_igop(MppEncRefs refs, RK_S32 igop);
+MPP_RET mpp_enc_refs_set_cfg(MppEncRefs refs, MppEncRefCfg ref_cfg);
+MPP_RET mpp_enc_refs_set_usr_cfg(MppEncRefs refs,
+				 MppEncRefFrmUsrCfg * force);
+MPP_RET mpp_enc_refs_set_rc_igop(MppEncRefs refs, RK_S32 igop);
 
 /* return hdr need update or not */
-	RK_S32 mpp_enc_refs_update_hdr(MppEncRefs refs);
+RK_S32 mpp_enc_refs_update_hdr(MppEncRefs refs);
 
 /* get dpb size */
-	MPP_RET mpp_enc_refs_get_cpb_info(MppEncRefs refs,
-					  MppEncCpbInfo * info);
+MPP_RET mpp_enc_refs_get_cpb_info(MppEncRefs refs,
+				  MppEncCpbInfo * info);
 /* get status for next frame */
-	MPP_RET mpp_enc_refs_get_cpb(MppEncRefs refs, EncCpbStatus * status);
+MPP_RET mpp_enc_refs_get_cpb(MppEncRefs refs, EncCpbStatus * status);
 /* dryrun and check all configure */
-	MPP_RET mpp_enc_refs_dryrun(MppEncRefs refs);
+MPP_RET mpp_enc_refs_dryrun(MppEncRefs refs);
 
-	MPP_RET mpp_enc_refs_stash(MppEncRefs refs);
-	MPP_RET mpp_enc_refs_rollback(MppEncRefs refs);
+MPP_RET mpp_enc_refs_stash(MppEncRefs refs);
+MPP_RET mpp_enc_refs_rollback(MppEncRefs refs);
 
 RK_S32  mpp_enc_refs_next_frm_is_intra(MppEncRefs refs);
 MPP_RET mpp_enc_refs_get_cpb_pass1(MppEncRefs refs, EncCpbStatus *status);
 #define dump_frm(frm)   _dump_frm(frm, __FUNCTION__, __LINE__)
 
-	void _dump_frm(EncFrmStatus * frm, const char *func, RK_S32 line);
+void _dump_frm(EncFrmStatus * frm, const char *func, RK_S32 line);
 
 #ifdef __cplusplus
 }

@@ -105,9 +105,9 @@ static MPP_RET h265e_encapsulate_nals(H265eExtraInfo * out)
 
 	for (i = 0; i < nal_num; i++) {
 		nal[i].b_long_startcode = !i ||
-		    nal[i].i_type == NAL_VPS ||
-		    nal[i].i_type == NAL_SPS ||
-		    nal[i].i_type == NAL_PPS || i_avcintra_class;
+					  nal[i].i_type == NAL_VPS ||
+					  nal[i].i_type == NAL_SPS ||
+					  nal[i].i_type == NAL_PPS || i_avcintra_class;
 		h265e_nal_encode(nal_buffer, &nal[i]);
 		nal_buffer += nal[i].i_payload;
 	}
@@ -147,9 +147,8 @@ static MPP_RET h265e_sei_write(H265eStream * s, RK_U8 uuid[16],
 	h265e_stream_write_with_log(s, payload_size - i, 8,
 				    "sei_last_payload_size_byte");
 
-	for (i = 0; i < uuid_len; i++) {
+	for (i = 0; i < uuid_len; i++)
 		h265e_stream_write_with_log(s, uuid[i], 8, "sei_uuid_byte");
-	}
 
 	for (i = 0; i < data_len; i++)
 		h265e_stream_write_with_log(s, (RK_U32) payload[i], 8,
@@ -195,9 +194,8 @@ static void code_profile_tier_level(H265eStream * s,
 				    int max_sub_layers_minus1)
 {
 	RK_S32 i;
-	if (profile_present_flag) {
+	if (profile_present_flag)
 		code_profile_tier(s, &ptl->general_PTL);
-	}
 	h265e_stream_write_with_log(s, ptl->general_PTL.general_level_idc, 8,
 				    "general_level_idc");
 
@@ -318,9 +316,8 @@ static MPP_RET h265e_vps_write(h265_vps * vps, H265eStream * s)
 		h265e_stream_write_ue_with_log(s, vps->vps_num_hrd_parameters,
 					       "vps_num_hrd_parameters");
 #if 0
-		if (vps->m_numHrdParameters > 0) {
+		if (vps->m_numHrdParameters > 0)
 			vps->createHrdParamBuffer();
-		}
 		for (uint32_t i = 0; i < vps->getNumHrdParameters(); i++) {
 			// Only applicable for version 1
 			vps->setHrdOpSetIdx(0, i);
@@ -669,9 +666,8 @@ static MPP_RET h265e_sps_write(h265_sps * sps, H265eStream * s)
 
 	h265e_stream_write1_with_log(s, sps->vui_parameters_present_flag,
 				     "vui_parameters_present_flag");
-	if (sps->vui_parameters_present_flag) {
+	if (sps->vui_parameters_present_flag)
 		codeVUI(s, &sps->vui);
-	}
 	h265e_stream_write1_with_log(s, 0, "sps_extension_flag");
 	h265e_stream_rbsp_trailing(s);
 	h265e_stream_flush(s);
@@ -746,8 +742,10 @@ static MPP_RET h265e_pps_write(h265_pps * pps, h265_sps * sps, H265eStream * s)
 				     1 : 0,
 				     "pps_slice_chroma_qp_offsets_present_flag");
 
-	h265e_stream_write1_with_log(s, pps->weighted_pred_flag ? 1 : 0, "weighted_pred_flag");	// Use of Weighting Prediction (P_SLICE)
-	h265e_stream_write1_with_log(s, pps->weighted_bipred_flag ? 1 : 0, "weighted_bipred_flag");	// Use of Weighting Bi-Prediction (B_SLICE)
+	h265e_stream_write1_with_log(s, pps->weighted_pred_flag ? 1 : 0,
+				     "weighted_pred_flag");	// Use of Weighting Prediction (P_SLICE)
+	h265e_stream_write1_with_log(s, pps->weighted_bipred_flag ? 1 : 0,
+				     "weighted_bipred_flag");	// Use of Weighting Bi-Prediction (B_SLICE)
 	h265e_stream_write1_with_log(s,
 				     pps->transquant_bypass_enable_flag ? 1 : 0,
 				     "transquant_bypass_enable_flag");

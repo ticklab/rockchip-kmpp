@@ -168,37 +168,37 @@ const char *strof_profle(MppCodingType coding, RK_U32 profile)
 	};
 
 	switch (coding) {
-	case MPP_VIDEO_CodingAVC:{
-			if (profile == H264_PROFILE_BASELINE)
-				return h264_profile_str[0];
-			else if (profile == H264_PROFILE_MAIN)
-				return h264_profile_str[1];
-			else if (profile == H264_PROFILE_HIGH)
-				return h264_profile_str[2];
-			else if (profile == H264_PROFILE_HIGH10)
-				return h264_profile_str[3];
-			else
-				return unknown_str[0];
-		}
-		break;
-	case MPP_VIDEO_CodingHEVC:{
-			if (profile < 2)
-				return h265_profile_str[0];
-			else
-				return unknown_str[0];
-		}
-		break;
-	case MPP_VIDEO_CodingMJPEG:{
-			return jpeg_profile_str[0];
-		}
-		break;
-	case MPP_VIDEO_CodingVP8:{
-			return vp8_profile_str[0];
-		}
-		break;
-	default:{
-		}
-		break;
+	case MPP_VIDEO_CodingAVC: {
+		if (profile == H264_PROFILE_BASELINE)
+			return h264_profile_str[0];
+		else if (profile == H264_PROFILE_MAIN)
+			return h264_profile_str[1];
+		else if (profile == H264_PROFILE_HIGH)
+			return h264_profile_str[2];
+		else if (profile == H264_PROFILE_HIGH10)
+			return h264_profile_str[3];
+		else
+			return unknown_str[0];
+	}
+	break;
+	case MPP_VIDEO_CodingHEVC: {
+		if (profile < 2)
+			return h265_profile_str[0];
+		else
+			return unknown_str[0];
+	}
+	break;
+	case MPP_VIDEO_CodingMJPEG: {
+		return jpeg_profile_str[0];
+	}
+	break;
+	case MPP_VIDEO_CodingVP8: {
+		return vp8_profile_str[0];
+	}
+	break;
+	default: {
+	}
+	break;
 	}
 
 	return NULL;
@@ -210,9 +210,8 @@ const char *strof_bool(RK_U32 enable)
 		"N",
 		"Y",
 	};
-	if (enable) {
+	if (enable)
 		return bool_str[1];
-	}
 	return bool_str[0];
 }
 

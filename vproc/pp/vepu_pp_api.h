@@ -13,23 +13,23 @@ struct dma_buf;
 struct mpp_frame_infos;
 
 enum pp_fmt {
-    RKVENC_F_BGRA_8888 = 0x0,
-    RKVENC_F_RGB_888 = 0x1,
-    RKVENC_F_RGB_565 = 0x2,
+	RKVENC_F_BGRA_8888 = 0x0,
+	RKVENC_F_RGB_888 = 0x1,
+	RKVENC_F_RGB_565 = 0x2,
 
-    RKVENC_F_YCbCr_422_SP = 0x4,
-    RKVENC_F_YCbCr_422_P = 0x5,
-    RKVENC_F_YCbCr_420_SP = 0x6,
-    RKVENC_F_YCbCr_420_P = 0x7,
+	RKVENC_F_YCbCr_422_SP = 0x4,
+	RKVENC_F_YCbCr_422_P = 0x5,
+	RKVENC_F_YCbCr_420_SP = 0x6,
+	RKVENC_F_YCbCr_420_P = 0x7,
 
-    RKVENC_F_YCbYCr = 0x8,
-    RKVENC_F_CbYCrY = 0x9,
+	RKVENC_F_YCbYCr = 0x8,
+	RKVENC_F_CbYCrY = 0x9,
 
-    RKVENC_F_YCbCr_400      = 0xA,
-    RKVENC_F_RESERVED1      = 0xB,
-    RKVENC_F_YCbCr_444_SP   = 0xC,
-    RKVENC_F_YCbCr_444_P    = 0xD,
-    RKVENC_F_BUTT           = 0xE
+	RKVENC_F_YCbCr_400      = 0xA,
+	RKVENC_F_RESERVED1      = 0xB,
+	RKVENC_F_YCbCr_444_SP   = 0xC,
+	RKVENC_F_YCbCr_444_P    = 0xD,
+	RKVENC_F_BUTT           = 0xE
 };
 
 struct pp_chn_attr {
@@ -97,7 +97,8 @@ struct vcodec_mpibuf_fn {
 	int (*buf_queue_destroy)( struct mpi_queue *queue);
 	int (*buf_queue_push)(struct mpi_queue *queue, struct mpi_buf *buf);
 	struct mpi_buf *(*buf_queue_pop)(struct mpi_queue *queue);
-	struct mpi_buf *(*dma_buf_import)(struct dma_buf *dma_buf,struct mpp_frame_infos *info, int chan_id);
+	struct mpi_buf *(*dma_buf_import)(struct dma_buf *dma_buf, struct mpp_frame_infos *info,
+					  int chan_id);
 	void (*get_buf_frm_info)(struct mpi_buf *buf, struct mpp_frame_infos *info);
 	struct mpi_buf_pool *(*buf_pool_create)(size_t buf_size, unsigned int num_bufs);
 	int (*buf_pool_destroy)(struct mpi_buf_pool *pool);

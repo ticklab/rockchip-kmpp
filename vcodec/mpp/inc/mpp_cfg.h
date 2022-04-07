@@ -24,9 +24,9 @@ typedef enum CfgType_e {
 } CfgType;
 
 typedef struct CfgDataInfo_s {
-	CfgType type:4;
-	RK_U32 size:12;
-	RK_U32 offset:16;
+	CfgType type: 4;
+	RK_U32 size: 12;
+	RK_U32 offset: 16;
 } CfgDataInfo;
 
 typedef struct MppCfgApi_t {
@@ -54,8 +54,8 @@ typedef MPP_RET(*CfgGetSt) (void *cfg, MppCfgApi * api, void *val);
 extern "C" {
 #endif
 
-	extern const char *cfg_type_names[];
-	MPP_RET check_cfg_api_info(MppCfgApi * api, CfgType type);
+extern const char *cfg_type_names[];
+MPP_RET check_cfg_api_info(MppCfgApi * api, CfgType type);
 
 #ifdef  __cplusplus
 }

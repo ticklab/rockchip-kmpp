@@ -85,7 +85,8 @@
 
 #ifdef __cplusplus
 
-class Mpp {
+class Mpp
+{
 public:
 	Mpp();
 	~Mpp();
@@ -197,8 +198,8 @@ private:
 	MPP_RET control_enc(MpiCmd cmd, MppParam param);
 	MPP_RET control_isp(MpiCmd cmd, MppParam param);
 
-	 Mpp(const Mpp &);
-	 Mpp & operator=(const Mpp &);
+	Mpp(const Mpp &);
+	Mpp & operator=(const Mpp &);
 };
 
 extern "C" {

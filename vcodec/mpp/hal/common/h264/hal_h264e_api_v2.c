@@ -62,11 +62,11 @@ static MPP_RET hal_h264e_init(void *hal, MppEncHalCfg * cfg)
 
 
 
-/*	} else {
-		mpp_err("vcodec type %08x can not find H.264 encoder device\n",
-			vcodec_type);
-		ret = MPP_NOK;
-	}*/
+	/*	} else {
+			mpp_err("vcodec type %08x can not find H.264 encoder device\n",
+				vcodec_type);
+			ret = MPP_NOK;
+		}*/
 
 	mpp_assert(api);
 
@@ -134,9 +134,8 @@ static MPP_RET hal_h264e_comb_start(void *hal,
 	if (!hw_ctx || !api)
 		return MPP_OK;
 
-	if (!api->comb_start) {
+	if (!api->comb_start)
 		return api->start(hw_ctx, task);
-	}
 
 	return api->comb_start(hw_ctx, task, jpeg_task);
 }
@@ -152,21 +151,20 @@ static MPP_RET hal_h264e_comb_ret_task(void *hal,
 	if (!hw_ctx || !api)
 		return MPP_OK;
 
-	if (!api->comb_ret_task) {
+	if (!api->comb_ret_task)
 		return api->ret_task(hw_ctx, task);
-	}
 
 	return api->comb_ret_task(hw_ctx, task, jpeg_task);
 }
 
 HAL_H264E_FUNC(prepare)
-    HAL_H264E_TASK_FUNC(get_task)
-    HAL_H264E_TASK_FUNC(gen_regs)
-    HAL_H264E_TASK_FUNC(start)
-    HAL_H264E_TASK_FUNC(wait)
-    HAL_H264E_TASK_FUNC(part_start)
-    HAL_H264E_TASK_FUNC(part_wait)
-    HAL_H264E_TASK_FUNC(ret_task)
+HAL_H264E_TASK_FUNC(get_task)
+HAL_H264E_TASK_FUNC(gen_regs)
+HAL_H264E_TASK_FUNC(start)
+HAL_H264E_TASK_FUNC(wait)
+HAL_H264E_TASK_FUNC(part_start)
+HAL_H264E_TASK_FUNC(part_wait)
+HAL_H264E_TASK_FUNC(ret_task)
 
 const MppEncHalApi hal_api_h264e_v2 = {
 	.name = "hal_h264e",

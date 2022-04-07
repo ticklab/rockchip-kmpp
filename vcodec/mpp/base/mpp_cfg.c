@@ -34,47 +34,47 @@ MPP_RET check_cfg_api_info(MppCfgApi * api, CfgType type)
 	MPP_RET ret = MPP_OK;
 
 	switch (type) {
-	case CFG_FUNC_TYPE_St:{
-			if (cfg_type != type) {
-				show_api_type_err(api, type);
-				ret = MPP_NOK;
-			}
-			if (cfg_size <= 0) {
-				mpp_err("cfg %s found invalid size %d\n",
-					api->name, cfg_size);
-				ret = MPP_NOK;
-			}
-		}
-		break;
-	case CFG_FUNC_TYPE_Ptr:{
-			if (cfg_type != type) {
-				show_api_type_err(api, type);
-				ret = MPP_NOK;
-			}
-		}
-		break;
-	case CFG_FUNC_TYPE_S32:
-	case CFG_FUNC_TYPE_U32:{
-			if (cfg_size != sizeof(RK_S32)) {
-				show_api_type_err(api, type);
-				ret = MPP_NOK;
-			}
-		}
-		break;
-	case CFG_FUNC_TYPE_S64:
-	case CFG_FUNC_TYPE_U64:{
-			if (cfg_size != sizeof(RK_S64)) {
-				show_api_type_err(api, type);
-				ret = MPP_NOK;
-			}
-		}
-		break;
-	default:{
-			mpp_err("cfg %s found invalid cfg type %d\n", api->name,
-				type);
+	case CFG_FUNC_TYPE_St: {
+		if (cfg_type != type) {
+			show_api_type_err(api, type);
 			ret = MPP_NOK;
 		}
-		break;
+		if (cfg_size <= 0) {
+			mpp_err("cfg %s found invalid size %d\n",
+				api->name, cfg_size);
+			ret = MPP_NOK;
+		}
+	}
+	break;
+	case CFG_FUNC_TYPE_Ptr: {
+		if (cfg_type != type) {
+			show_api_type_err(api, type);
+			ret = MPP_NOK;
+		}
+	}
+	break;
+	case CFG_FUNC_TYPE_S32:
+	case CFG_FUNC_TYPE_U32: {
+		if (cfg_size != sizeof(RK_S32)) {
+			show_api_type_err(api, type);
+			ret = MPP_NOK;
+		}
+	}
+	break;
+	case CFG_FUNC_TYPE_S64:
+	case CFG_FUNC_TYPE_U64: {
+		if (cfg_size != sizeof(RK_S64)) {
+			show_api_type_err(api, type);
+			ret = MPP_NOK;
+		}
+	}
+	break;
+	default: {
+		mpp_err("cfg %s found invalid cfg type %d\n", api->name,
+			type);
+		ret = MPP_NOK;
+	}
+	break;
 	}
 
 	return ret;

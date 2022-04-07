@@ -117,10 +117,10 @@ void _dump_frm(EncFrmStatus * frm, const char *func, RK_S32 line)
 			frm->temporal_id, frm->ref_mode, frm->ref_arg);
 	} else if (frm->is_lt_ref) {
 		mpp_log
-		    ("%s:%d valid %d frm %d %s tid %d lt-ref  -> [%x:%d] lt_idx %d\n",
-		     func, line, frm->valid, frm->seq_idx,
-		     frm->is_intra ? "intra" : "inter", frm->temporal_id,
-		     frm->ref_mode, frm->ref_arg, frm->lt_idx);
+		("%s:%d valid %d frm %d %s tid %d lt-ref  -> [%x:%d] lt_idx %d\n",
+		 func, line, frm->valid, frm->seq_idx,
+		 frm->is_intra ? "intra" : "inter", frm->temporal_id,
+		 frm->ref_mode, frm->ref_arg, frm->lt_idx);
 	} else {
 		mpp_log("%s:%d valid %d frm %d %s tid %d st-ref  -> [%x:%d]\n",
 			func, line, frm->valid, frm->seq_idx,
@@ -160,9 +160,9 @@ void _dump_cpb(EncVirtualCpb * cpb, const char *func, RK_S32 line)
 		dump_frm(&cpb->lt_idx_refs[i]);
 
 	mpp_log
-	    ("cpb runtime: frm_idx %d seq_idx %d seq_cnt %d st_cfg [%d:%d]\n",
-	     cpb->frm_idx, cpb->seq_idx, cpb->seq_cnt, cpb->st_cfg_pos,
-	     cpb->st_cfg_repeat_pos);
+	("cpb runtime: frm_idx %d seq_idx %d seq_cnt %d st_cfg [%d:%d]\n",
+	 cpb->frm_idx, cpb->seq_idx, cpb->seq_cnt, cpb->st_cfg_pos,
+	 cpb->st_cfg_repeat_pos);
 }
 
 MPP_RET mpp_enc_refs_init(MppEncRefs * refs)
@@ -263,9 +263,9 @@ MPP_RET mpp_enc_refs_set_cfg(MppEncRefs refs, MppEncRefCfg ref_cfg)
 	memcpy(info, &cfg->cpb_info, sizeof(cfg->cpb_info));
 
 	enc_refs_dbg_flow
-	    ("ref_cfg cpb size: lt %d st %d max lt_idx %d tid %d\n",
-	     info->max_lt_cnt, info->max_st_cnt, info->max_lt_idx,
-	     info->max_st_tid);
+	("ref_cfg cpb size: lt %d st %d max lt_idx %d tid %d\n",
+	 info->max_lt_cnt, info->max_st_cnt, info->max_lt_idx,
+	 info->max_st_tid);
 
 	enc_refs_dbg_func("leave %p cfg %p\n", refs, ref_cfg);
 	return MPP_OK;
@@ -346,44 +346,43 @@ static EncFrmStatus *get_ref_from_cpb(EncVirtualCpb * cpb, EncFrmStatus * frm)
 	case REF_TO_PREV_REF_FRM:
 	case REF_TO_PREV_ST_REF:
 	case REF_TO_PREV_LT_REF:
-	case REF_TO_PREV_INTRA:{
-			ref = &cpb->mode_refs[ref_mode];
-		}
-		break;
-	case REF_TO_TEMPORAL_LAYER:{
-			ref = &cpb->st_tid_refs[ref_arg];
-		}
-		break;
-	case REF_TO_LT_REF_IDX:{
-			ref = &cpb->lt_idx_refs[ref_arg];
-		}
-		break;
-	case REF_TO_ST_PREV_N_REF:{
-			ref = &cpb->cpb_refs[ref_arg];
-		}
-		break;
+	case REF_TO_PREV_INTRA: {
+		ref = &cpb->mode_refs[ref_mode];
+	}
+	break;
+	case REF_TO_TEMPORAL_LAYER: {
+		ref = &cpb->st_tid_refs[ref_arg];
+	}
+	break;
+	case REF_TO_LT_REF_IDX: {
+		ref = &cpb->lt_idx_refs[ref_arg];
+	}
+	break;
+	case REF_TO_ST_PREV_N_REF: {
+		ref = &cpb->cpb_refs[ref_arg];
+	}
+	break;
 	case REF_TO_ST_REF_SETUP:
-	default:{
-			mpp_err_f("frm %d not supported ref mode 0x%x\n",
-				  frm->seq_idx, ref_mode);
-		}
-		break;
+	default: {
+		mpp_err_f("frm %d not supported ref mode 0x%x\n",
+			  frm->seq_idx, ref_mode);
+	}
+	break;
 	}
 
 	if (ref) {
 		if (ref->valid)
 			enc_refs_dbg_flow
-			    ("frm %d ref mode %d arg %d -> seq %d %s idx %d\n",
-			     frm->seq_idx, ref_mode, ref_arg, ref->seq_idx,
-			     ref->is_lt_ref ? "lt" : "st",
-			     ref->is_lt_ref ? ref->lt_idx : 0);
+			("frm %d ref mode %d arg %d -> seq %d %s idx %d\n",
+			 frm->seq_idx, ref_mode, ref_arg, ref->seq_idx,
+			 ref->is_lt_ref ? "lt" : "st",
+			 ref->is_lt_ref ? ref->lt_idx : 0);
 		else
 			mpp_err_f
-			    ("frm %d found mode %d arg %d -> ref %d but it is invalid\n",
-			     frm->seq_idx, ref_mode, ref_arg, ref->seq_idx);
-	} else {
+			("frm %d found mode %d arg %d -> ref %d but it is invalid\n",
+			 frm->seq_idx, ref_mode, ref_arg, ref->seq_idx);
+	} else
 		ref = NULL;
-	}
 
 	return ref;
 }
@@ -539,12 +538,12 @@ static void store_ref_to_cpb(EncVirtualCpb * cpb, EncFrmStatus * frm)
 		if (found) {
 			cpb_ref->val = frm->val;
 			enc_refs_dbg_flow
-			    ("frm %d with lt idx %d %s to pos %d\n", seq_idx,
-			     lt_idx, (found == 1) ? "add" : "replace", i);
+			("frm %d with lt idx %d %s to pos %d\n", seq_idx,
+			 lt_idx, (found == 1) ? "add" : "replace", i);
 		} else {
 			mpp_err_f
-			    ("frm %d with lt idx %d found no place to add or relace\n",
-			     seq_idx, lt_idx);
+			("frm %d with lt idx %d found no place to add or relace\n",
+			 seq_idx, lt_idx);
 		}
 	} else {
 		/* do normal st sliding window */
@@ -658,8 +657,8 @@ MPP_RET mpp_enc_refs_dryrun(MppEncRefs refs)
 					if (cpb_st_used_size < cpb_pos + 1) {
 						cpb_st_used_size = cpb_pos + 1;
 						enc_refs_dbg_flow
-						    ("cpb_st_used_size update to %d\n",
-						     cpb_st_used_size);
+						("cpb_st_used_size update to %d\n",
+						 cpb_st_used_size);
 					}
 				}
 			}
@@ -869,7 +868,7 @@ MPP_RET mpp_enc_refs_get_cpb(MppEncRefs refs, EncCpbStatus * status)
 		if (frm->is_idr && frm->lt_idx) {
 			frm->lt_idx = 0;
 			mpp_err_f
-			    ("can not set IDR to ltr with non-zero index\n");
+			("can not set IDR to ltr with non-zero index\n");
 		}
 		/* lt_ref will be forced to tid 0 */
 		frm->temporal_id = 0;
@@ -947,22 +946,22 @@ RK_S32 mpp_enc_refs_next_frm_is_intra(MppEncRefs refs)
 	RK_S32 is_intra = 0;
 
 	if (NULL == refs) {
-	mpp_err_f("invalid NULL input refs\n");
-	return MPP_ERR_VALUE;
+		mpp_err_f("invalid NULL input refs\n");
+		return MPP_ERR_VALUE;
 	}
 
 	enc_refs_dbg_func("enter %p\n", refs);
 	if (p->changed & ENC_REFS_IGOP_CHANGED)
-	is_intra = 1;
+		is_intra = 1;
 
 	if (p->igop && cpb->seq_idx >= p->igop)
-	is_intra = 1;
+		is_intra = 1;
 
 	if (usr_cfg->force_flag & ENC_FORCE_IDR)
-	is_intra = 1;
+		is_intra = 1;
 
 	if (!cpb->frm_idx)
-	is_intra = 0;
+		is_intra = 0;
 
 	enc_refs_dbg_func("leave %p\n", refs);
 

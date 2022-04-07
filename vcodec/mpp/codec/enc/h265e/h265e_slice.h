@@ -147,8 +147,8 @@ typedef struct H265eVps_e {
 	RK_U32 vps_max_nuh_reserved_zero_layer_id;
 	RK_U32 vps_max_op_sets_minus1;
 	RK_U32
-	    layer_id_included_flag[MAX_VPS_OP_SETS_PLUS1]
-	    [MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1];
+	layer_id_included_flag[MAX_VPS_OP_SETS_PLUS1]
+	[MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1];
 	RK_U8 vps_timing_info_present_flag;
 	RK_U32 vps_num_units_in_tick;
 	RK_U32 vps_time_scale;
@@ -376,12 +376,12 @@ typedef struct h265_slice_e {
 extern "C" {
 #endif
 
-	void h265e_slice_set_ref_list(h265_dpb_frm * frame_list,
-				      h265_slice * slice);
-	void h265e_slice_set_ref_poc_list(h265_slice * slice);
-	void h265e_slice_init(void *ctx, EncFrmStatus curr);
-	RK_S32 h265e_code_slice_skip_frame(void *ctx, h265_slice * slice,
-					   RK_U8 * buf, RK_S32 len);
+void h265e_slice_set_ref_list(h265_dpb_frm * frame_list,
+			      h265_slice * slice);
+void h265e_slice_set_ref_poc_list(h265_slice * slice);
+void h265e_slice_init(void *ctx, EncFrmStatus curr);
+RK_S32 h265e_code_slice_skip_frame(void *ctx, h265_slice * slice,
+				   RK_U8 * buf, RK_S32 len);
 
 #ifdef __cplusplus
 }

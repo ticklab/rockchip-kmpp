@@ -34,11 +34,11 @@ MPP_RET hal_info_init(HalInfo * ctx, MppCtxType type, MppCodingType coding)
 
 	MPP_RET ret = MPP_NOK;
 	RK_U32 elem_nb =
-	    (type == MPP_CTX_DEC) ? (ENC_INFO_BUTT) : (DEC_INFO_BUTT);
+		(type == MPP_CTX_DEC) ? (ENC_INFO_BUTT) : (DEC_INFO_BUTT);
 	HalInfoImpl *impl =
-	    mpp_calloc_size(HalInfoImpl,
-			    sizeof(HalInfoImpl) +
-			    sizeof(MppDevInfoCfg) * elem_nb);
+		mpp_calloc_size(HalInfoImpl,
+				sizeof(HalInfoImpl) +
+				sizeof(MppDevInfoCfg) * elem_nb);
 	if (impl) {
 		impl->type = type;
 		impl->coding = coding;
@@ -74,35 +74,35 @@ MPP_RET hal_info_set(HalInfo ctx, RK_U32 type, RK_U32 flag, RK_U64 data)
 	MppDevInfoCfg *elems = NULL;
 
 	switch (info->type) {
-	case MPP_CTX_DEC:{
-			if (type <= DEC_INFO_BASE || type >= DEC_INFO_BUTT) {
-				mpp_err_f
-				    ("found invalid dec info type %d [%d:%d]\n",
-				     type, DEC_INFO_BASE, DEC_INFO_BUTT);
-				return MPP_ERR_VALUE;
-			}
-
-			/* shift enum base */
-			type -= DEC_INFO_BASE;
-		}
-		break;
-	case MPP_CTX_ENC:{
-			if (type <= ENC_INFO_BASE || type >= ENC_INFO_BUTT) {
-				mpp_err_f
-				    ("found invalid enc info type %d [%d:%d]\n",
-				     type, ENC_INFO_BASE, ENC_INFO_BUTT);
-				return MPP_ERR_VALUE;
-			}
-
-			/* shift enum base */
-			type -= ENC_INFO_BASE;
-		}
-		break;
-	default:{
-			mpp_err_f("found invalid ctx type %d\n", info->type);
+	case MPP_CTX_DEC: {
+		if (type <= DEC_INFO_BASE || type >= DEC_INFO_BUTT) {
+			mpp_err_f
+			("found invalid dec info type %d [%d:%d]\n",
+			 type, DEC_INFO_BASE, DEC_INFO_BUTT);
 			return MPP_ERR_VALUE;
 		}
-		break;
+
+		/* shift enum base */
+		type -= DEC_INFO_BASE;
+	}
+	break;
+	case MPP_CTX_ENC: {
+		if (type <= ENC_INFO_BASE || type >= ENC_INFO_BUTT) {
+			mpp_err_f
+			("found invalid enc info type %d [%d:%d]\n",
+			 type, ENC_INFO_BASE, ENC_INFO_BUTT);
+			return MPP_ERR_VALUE;
+		}
+
+		/* shift enum base */
+		type -= ENC_INFO_BASE;
+	}
+	break;
+	default: {
+		mpp_err_f("found invalid ctx type %d\n", info->type);
+		return MPP_ERR_VALUE;
+	}
+	break;
 	}
 
 	elems = &info->elems[type];
@@ -144,19 +144,19 @@ MPP_RET hal_info_get(HalInfo ctx, MppDevInfoCfg * data, RK_S32 * size)
 	RK_S32 i;
 
 	switch (info->type) {
-	case MPP_CTX_DEC:{
-			type_max = DEC_INFO_BUTT - DEC_INFO_BASE;
-		}
-		break;
-	case MPP_CTX_ENC:{
-			type_max = ENC_INFO_BUTT - ENC_INFO_BASE;
-		}
-		break;
-	default:{
-			mpp_err_f("found invalid ctx type %d\n", info->type);
-			return MPP_ERR_VALUE;
-		}
-		break;
+	case MPP_CTX_DEC: {
+		type_max = DEC_INFO_BUTT - DEC_INFO_BASE;
+	}
+	break;
+	case MPP_CTX_ENC: {
+		type_max = ENC_INFO_BUTT - ENC_INFO_BASE;
+	}
+	break;
+	default: {
+		mpp_err_f("found invalid ctx type %d\n", info->type);
+		return MPP_ERR_VALUE;
+	}
+	break;
 	}
 
 	for (i = 0; i < type_max; i++) {
@@ -192,57 +192,57 @@ RK_U64 hal_info_to_string(HalInfo ctx, RK_U32 type, void *val)
 	const char *str = NULL;
 
 	switch (info->type) {
-	case MPP_CTX_DEC:{
-			switch (type) {
-			case DEC_INFO_FORMAT:{
-					MppCodingType coding =
-					    *((MppCodingType *) val);
+	case MPP_CTX_DEC: {
+		switch (type) {
+		case DEC_INFO_FORMAT: {
+			MppCodingType coding =
+				*((MppCodingType *) val);
 
-					mpp_assert(coding == info->coding);
-					str = strof_coding_type(coding);
-				}
-				break;
-			default:{
-				}
-				break;
-			}
+			mpp_assert(coding == info->coding);
+			str = strof_coding_type(coding);
 		}
 		break;
-	case MPP_CTX_ENC:{
-			switch (type) {
-			case ENC_INFO_FORMAT:{
-					MppCodingType coding =
-					    *((MppCodingType *) val);
-
-					mpp_assert(coding == info->coding);
-					str = strof_coding_type(coding);
-				}
-				break;
-			case ENC_INFO_RC_MODE:{
-					MppEncRcMode rc_mode =
-					    *((MppEncRcMode *) val);
-
-					str = strof_rc_mode(rc_mode);
-				}
-				break;
-			case ENC_INFO_PROFILE:{
-					RK_U32 profile = *((RK_U32 *) val);
-
-					str =
-					    strof_profle(info->coding, profile);
-				}
-				break;
-			default:{
-				}
-				break;
-			}
+		default: {
 		}
 		break;
-	default:{
-			mpp_err_f("found invalid ctx type %d\n", info->type);
-			return MPP_ERR_VALUE;
+		}
+	}
+	break;
+	case MPP_CTX_ENC: {
+		switch (type) {
+		case ENC_INFO_FORMAT: {
+			MppCodingType coding =
+				*((MppCodingType *) val);
+
+			mpp_assert(coding == info->coding);
+			str = strof_coding_type(coding);
 		}
 		break;
+		case ENC_INFO_RC_MODE: {
+			MppEncRcMode rc_mode =
+				*((MppEncRcMode *) val);
+
+			str = strof_rc_mode(rc_mode);
+		}
+		break;
+		case ENC_INFO_PROFILE: {
+			RK_U32 profile = *((RK_U32 *) val);
+
+			str =
+				strof_profle(info->coding, profile);
+		}
+		break;
+		default: {
+		}
+		break;
+		}
+	}
+	break;
+	default: {
+		mpp_err_f("found invalid ctx type %d\n", info->type);
+		return MPP_ERR_VALUE;
+	}
+	break;
 	}
 
 	if (str)
@@ -293,19 +293,19 @@ MPP_RET hal_info_from_enc_cfg(HalInfo ctx, MppEncCfgSet * cfg)
 	hal_info_set(ctx, ENC_INFO_GOP_SIZE, CODEC_INFO_FLAG_NUMBER, rc->gop);
 
 	switch (info->coding) {
-	case MPP_VIDEO_CodingAVC:{
-			profile = codec->h264.profile;
-		}
-		break;
-	case MPP_VIDEO_CodingHEVC:{
-			profile = codec->h265.profile;
-		}
-		break;
+	case MPP_VIDEO_CodingAVC: {
+		profile = codec->h264.profile;
+	}
+	break;
+	case MPP_VIDEO_CodingHEVC: {
+		profile = codec->h265.profile;
+	}
+	break;
 	case MPP_VIDEO_CodingMJPEG:
 	case MPP_VIDEO_CodingVP8:
-	default:{
-		}
-		break;
+	default: {
+	}
+	break;
 	}
 	val = hal_info_to_string(ctx, ENC_INFO_PROFILE, &profile);
 	hal_info_set(ctx, ENC_INFO_PROFILE, CODEC_INFO_FLAG_STRING, val);

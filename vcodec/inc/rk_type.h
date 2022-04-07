@@ -109,7 +109,7 @@ typedef void* MppOsd;
 typedef void* MpiBuf;
 
 
-struct vcodec_attr{
+struct vcodec_attr {
 	MppCtxType		type;
 	MppCodingType	coding;
 	RK_S32		chan_id;
@@ -121,24 +121,24 @@ struct vcodec_attr{
 };
 
 struct venc_pack_info {
-    RK_U32      flag;
-    RK_U32      temporal_id;
-    RK_U32      packet_offset;
-    RK_U32      packet_len;
+	RK_U32      flag;
+	RK_U32      temporal_id;
+	RK_U32      packet_offset;
+	RK_U32      packet_len;
 };
 
-struct venc_packet{
-    RK_S64               u64priv_data;  //map mpi_id
-    RK_U64               u64packet_addr; //packet address in kernel space
-    RK_U32               len;
-    RK_U32               buf_size;
+struct venc_packet {
+	RK_S64               u64priv_data;  //map mpi_id
+	RK_U64               u64packet_addr; //packet address in kernel space
+	RK_U32               len;
+	RK_U32               buf_size;
 
-    RK_U64               u64pts;
-    RK_U32               flag;
-    RK_U32               temporal_id;
-    RK_U32               offset;
-    RK_U32               data_num;
-    struct venc_pack_info       packet[8];
+	RK_U64               u64pts;
+	RK_U32               flag;
+	RK_U32               temporal_id;
+	RK_U32               offset;
+	RK_U32               data_num;
+	struct venc_pack_info       packet[8];
 };
 
 #endif /*__RK_TYPE_H__*/

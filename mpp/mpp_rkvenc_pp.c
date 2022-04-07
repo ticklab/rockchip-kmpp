@@ -195,7 +195,7 @@ struct vepu_pp_dev {
 };
 
 static int vepu_pp_extract_task_msg(struct pp_task *task,
-				 struct mpp_task_msgs *msgs)
+				    struct mpp_task_msgs *msgs)
 {
 	u32 i;
 	struct mpp_request *req;
@@ -207,7 +207,7 @@ static int vepu_pp_extract_task_msg(struct pp_task *task,
 
 		switch (req->cmd) {
 		case MPP_CMD_SET_REG_WRITE: {
-			memcpy(&task->params,req->data, req->size);
+			memcpy(&task->params, req->data, req->size);
 		} break;
 		case MPP_CMD_SET_REG_READ: {
 			memcpy(&task->r_reqs[task->r_req_cnt++],
@@ -227,7 +227,7 @@ static int vepu_pp_extract_task_msg(struct pp_task *task,
 }
 
 static void *vepu_pp_alloc_task(struct mpp_session *session,
-			     struct mpp_task_msgs *msgs)
+				struct mpp_task_msgs *msgs)
 {
 	int ret;
 	struct pp_task *task = NULL;
@@ -303,9 +303,8 @@ static void vepu_pp_smear_cfg(struct mpp_dev *mpp, struct pp_task *task)
 
 		mpp_write_relaxed(mpp, VEPU_PP_SMR_BASE_ADR, cfg->adr_smr_base);
 
-		for (k = 0; k < reg_num; ++k) {
+		for (k = 0; k < reg_num; ++k)
 			mpp_write_relaxed(mpp, VEPU_PP_SMR_CON_BASE + 4 * k, pval[k]);
-		}
 	}
 }
 
@@ -318,9 +317,8 @@ static void vepu_pp_wp_cfg(struct mpp_dev *mpp, struct pp_task *task)
 		u32 reg_num = (VEPU_PP_WP_CON_COMB6 - VEPU_PP_WP_CON_COMB0) / 4 + 1;
 		int k;
 
-		for (k = 0; k < reg_num; ++k) {
+		for (k = 0; k < reg_num; ++k)
 			mpp_write_relaxed(mpp, VEPU_PP_WP_CON_COMB0 + 4 * k, pval[k]);
-		}
 	}
 }
 
@@ -352,7 +350,7 @@ static void vepu_pp_osd_cfg(struct mpp_dev *mpp, struct pp_task *task)
 }
 
 static int vepu_pp_run(struct mpp_dev *mpp,
-		    struct mpp_task *mpp_task)
+		       struct mpp_task *mpp_task)
 {
 	struct pp_task *task = NULL;
 
@@ -408,7 +406,7 @@ static int vepu_pp_isr(struct mpp_dev *mpp)
 	mpp->cur_task = NULL;
 	task->irq_status = mpp->irq_status;
 	mpp_debug(DEBUG_IRQ_STATUS, "irq_status: %08x\n",
-			task->irq_status);
+		  task->irq_status);
 
 	if (PP_REG_RO_BUS_ERROR_STS(task->irq_status))
 		atomic_inc(&mpp->reset_request);
@@ -421,7 +419,7 @@ static int vepu_pp_isr(struct mpp_dev *mpp)
 }
 
 static int vepu_pp_finish(struct mpp_dev *mpp,
-		       struct mpp_task *mpp_task)
+			  struct mpp_task *mpp_task)
 {
 	struct pp_task *task = to_pp_task(mpp_task);
 	struct vepu_pp_output *output = &task->output;
@@ -440,8 +438,8 @@ static int vepu_pp_finish(struct mpp_dev *mpp,
 }
 
 static int vepu_pp_result(struct mpp_dev *mpp,
-		       struct mpp_task *mpp_task,
-		       struct mpp_task_msgs *msgs)
+			  struct mpp_task *mpp_task,
+			  struct mpp_task_msgs *msgs)
 {
 	u32 i;
 	struct mpp_request *req;
@@ -456,7 +454,7 @@ static int vepu_pp_result(struct mpp_dev *mpp,
 }
 
 static int vepu_pp_free_task(struct mpp_session *session,
-			  struct mpp_task *mpp_task)
+			     struct mpp_task *mpp_task)
 {
 	struct pp_task *task = to_pp_task(mpp_task);
 
@@ -558,7 +556,7 @@ static int vepu_pp_clk_off(struct mpp_dev *mpp)
 }
 
 static int vepu_pp_set_freq(struct mpp_dev *mpp,
-			 struct mpp_task *mpp_task)
+			    struct mpp_task *mpp_task)
 {
 	struct vepu_pp_dev *pp = to_vepu_pp_dev(mpp);
 	struct pp_task *task = to_pp_task(mpp_task);

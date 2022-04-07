@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-	extern const RcImplApi default_h265e;
+extern const RcImplApi default_h265e;
 
 #ifdef  __cplusplus
 }

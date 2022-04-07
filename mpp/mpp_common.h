@@ -625,8 +625,8 @@ int mpp_translate_reg_address(struct mpp_session *session,
 			      u32 *reg, struct reg_offset_info *off_inf);
 
 int mpp_get_dma_attach_mem_info(struct mpp_session *session,
-			      struct mpp_task *task, int fmt,
-			      u32 *reg);
+				struct mpp_task *task, int fmt,
+				u32 *reg);
 
 
 int mpp_check_req(struct mpp_request *req, int base,

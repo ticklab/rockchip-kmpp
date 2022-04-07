@@ -71,13 +71,11 @@ MPP_RET mpp_frame_deinit(MppFrame * frame)
 		RK_U32 i = 0;
 		osd_data = (MppEncOSDData3 *)p->osd;
 		for (i = 0; i < osd_data->num_region; i++) {
-			if (osd_data->region[i].osd_buf.buf) {
+			if (osd_data->region[i].osd_buf.buf)
 				mpi_buf_unref(osd_data->region[i].osd_buf.buf);
-			}
 
-			if (osd_data->region[i].inv_cfg.inv_buf.buf) {
+			if (osd_data->region[i].inv_cfg.inv_buf.buf)
 				mpi_buf_unref(osd_data->region[i].inv_cfg.inv_buf.buf);
-			}
 		}
 	}
 
@@ -179,16 +177,14 @@ MPP_RET mpp_frame_add_osd(MppFrame frame, MppOsd osd)
 	p->osd = osd;
 	osd_data = (MppEncOSDData3 *)osd;
 
-	for (i = 0; i < osd_data->num_region; i++){
-		if (osd_data->region[i].osd_buf.buf) {
+	for (i = 0; i < osd_data->num_region; i++) {
+		if (osd_data->region[i].osd_buf.buf)
 			mpi_buf_ref(osd_data->region[i].osd_buf.buf);
-		}
-		if (osd_data->region[i].inv_cfg.inv_buf.buf) {
+		if (osd_data->region[i].inv_cfg.inv_buf.buf)
 			mpi_buf_ref(osd_data->region[i].inv_cfg.inv_buf.buf);
-		}
 	}
 	return 0;
-	}
+}
 
 MppOsd mpp_frame_get_osd(MppFrame frame)
 {
@@ -282,9 +278,8 @@ MPP_RET mpp_frame_info_cmp(MppFrame frame0, MppFrame frame1)
 	    (f0->height == f1->height) &&
 	    (f0->hor_stride == f1->hor_stride) &&
 	    (f0->ver_stride == f1->ver_stride) &&
-	    (f0->fmt == f1->fmt) && (f0->buf_size == f1->buf_size)) {
+	    (f0->fmt == f1->fmt) && (f0->buf_size == f1->buf_size))
 		return MPP_OK;
-	}
 	return MPP_NOK;
 }
 
@@ -304,9 +299,8 @@ RK_U32 mpp_frame_get_fbc_offset(MppFrame frame)
 			fbc_offset = MPP_ALIGN(MPP_ALIGN(p->width, 16) *
 					       MPP_ALIGN(p->height, 16) / 16,
 					       SZ_4K);
-		} else if (fbc_version == MPP_FRAME_FBC_AFBC_V2) {
+		} else if (fbc_version == MPP_FRAME_FBC_AFBC_V2)
 			fbc_offset = 0;
-		}
 		p->fbc_offset = fbc_offset;
 	}
 
@@ -340,28 +334,28 @@ RK_U32 mpp_frame_get_fbc_stride(MppFrame frame)
     }
 
 MPP_FRAME_ACCESSORS(RK_U32, width)
-    MPP_FRAME_ACCESSORS(RK_U32, height)
-    MPP_FRAME_ACCESSORS(RK_U32, hor_stride_pixel)
-    MPP_FRAME_ACCESSORS(RK_U32, hor_stride)
-    MPP_FRAME_ACCESSORS(RK_U32, ver_stride)
-    MPP_FRAME_ACCESSORS(RK_U32, offset_x)
-    MPP_FRAME_ACCESSORS(RK_U32, offset_y)
-    MPP_FRAME_ACCESSORS(RK_U32, mode)
-    MPP_FRAME_ACCESSORS(RK_U32, discard)
-    MPP_FRAME_ACCESSORS(RK_U32, viewid)
-    MPP_FRAME_ACCESSORS(RK_U32, poc)
-    MPP_FRAME_ACCESSORS(RK_S64, pts)
-    MPP_FRAME_ACCESSORS(RK_S64, dts)
-    MPP_FRAME_ACCESSORS(RK_U32, eos)
-    MPP_FRAME_ACCESSORS(RK_U32, info_change)
-    MPP_FRAME_ACCESSORS(MppFrameColorRange, color_range)
-    MPP_FRAME_ACCESSORS(MppFrameColorPrimaries, color_primaries)
-    MPP_FRAME_ACCESSORS(MppFrameColorTransferCharacteristic, color_trc)
-    MPP_FRAME_ACCESSORS(MppFrameColorSpace, colorspace)
-    MPP_FRAME_ACCESSORS(MppFrameChromaLocation, chroma_location)
-    MPP_FRAME_ACCESSORS(MppFrameFormat, fmt)
-    MPP_FRAME_ACCESSORS(MppFrameRational, sar)
-    MPP_FRAME_ACCESSORS(MppFrameMasteringDisplayMetadata, mastering_display)
-    MPP_FRAME_ACCESSORS(MppFrameContentLightMetadata, content_light)
-    MPP_FRAME_ACCESSORS(size_t, buf_size)
-    MPP_FRAME_ACCESSORS(RK_U32, errinfo)
+MPP_FRAME_ACCESSORS(RK_U32, height)
+MPP_FRAME_ACCESSORS(RK_U32, hor_stride_pixel)
+MPP_FRAME_ACCESSORS(RK_U32, hor_stride)
+MPP_FRAME_ACCESSORS(RK_U32, ver_stride)
+MPP_FRAME_ACCESSORS(RK_U32, offset_x)
+MPP_FRAME_ACCESSORS(RK_U32, offset_y)
+MPP_FRAME_ACCESSORS(RK_U32, mode)
+MPP_FRAME_ACCESSORS(RK_U32, discard)
+MPP_FRAME_ACCESSORS(RK_U32, viewid)
+MPP_FRAME_ACCESSORS(RK_U32, poc)
+MPP_FRAME_ACCESSORS(RK_S64, pts)
+MPP_FRAME_ACCESSORS(RK_S64, dts)
+MPP_FRAME_ACCESSORS(RK_U32, eos)
+MPP_FRAME_ACCESSORS(RK_U32, info_change)
+MPP_FRAME_ACCESSORS(MppFrameColorRange, color_range)
+MPP_FRAME_ACCESSORS(MppFrameColorPrimaries, color_primaries)
+MPP_FRAME_ACCESSORS(MppFrameColorTransferCharacteristic, color_trc)
+MPP_FRAME_ACCESSORS(MppFrameColorSpace, colorspace)
+MPP_FRAME_ACCESSORS(MppFrameChromaLocation, chroma_location)
+MPP_FRAME_ACCESSORS(MppFrameFormat, fmt)
+MPP_FRAME_ACCESSORS(MppFrameRational, sar)
+MPP_FRAME_ACCESSORS(MppFrameMasteringDisplayMetadata, mastering_display)
+MPP_FRAME_ACCESSORS(MppFrameContentLightMetadata, content_light)
+MPP_FRAME_ACCESSORS(size_t, buf_size)
+MPP_FRAME_ACCESSORS(RK_U32, errinfo)

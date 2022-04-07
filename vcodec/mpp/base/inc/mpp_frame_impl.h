@@ -117,8 +117,8 @@ struct MppFrameImpl_t {
 	 */
 	RK_U32 fbc_offset;
 
-    MppRoi   roi;
-    MppOsd   osd;
+	MppRoi   roi;
+	MppOsd   osd;
 
 	/*
 	 * pointer for multiple frame output at one time
@@ -130,18 +130,18 @@ struct MppFrameImpl_t {
 extern "C" {
 #endif
 
-	MPP_RET mpp_frame_set_next(MppFrame frame, MppFrame next);
-	MPP_RET mpp_frame_info_cmp(MppFrame frame0, MppFrame frame1);
-	RK_U32 mpp_frame_get_fbc_offset(MppFrame frame);
-	RK_U32 mpp_frame_get_fbc_stride(MppFrame frame);
+MPP_RET mpp_frame_set_next(MppFrame frame, MppFrame next);
+MPP_RET mpp_frame_info_cmp(MppFrame frame0, MppFrame frame1);
+RK_U32 mpp_frame_get_fbc_offset(MppFrame frame);
+RK_U32 mpp_frame_get_fbc_stride(MppFrame frame);
 
 /*
  * Debug for frame process timing
  */
-	void mpp_frame_set_stopwatch_enable(MppFrame frame, RK_S32 enable);
-	MppStopwatch mpp_frame_get_stopwatch(const MppFrame frame);
+void mpp_frame_set_stopwatch_enable(MppFrame frame, RK_S32 enable);
+MppStopwatch mpp_frame_get_stopwatch(const MppFrame frame);
 
-	MPP_RET check_is_mpp_frame(void *pointer);
+MPP_RET check_is_mpp_frame(void *pointer);
 
 #ifdef __cplusplus
 }

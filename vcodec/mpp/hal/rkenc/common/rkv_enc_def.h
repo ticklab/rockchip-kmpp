@@ -90,18 +90,18 @@ typedef enum enc_rkv_lnktable_t {
 } enc_rkv_lnk_table;
 
 typedef struct {
-	RK_U8 qp_y:6;
-	RK_U8 set_qp_y_en:1;
-	RK_U8 forbid_inter:1;
+	RK_U8 qp_y: 6;
+	RK_U8 set_qp_y_en: 1;
+	RK_U8 forbid_inter: 1;
 } RkvRoiCfg;
 
 typedef struct {
-	RK_U16 forbid_inter:1;	/* intra flag for cu 16x16 */
-	RK_U16 reserved:3;	/* reserved */
-	RK_U16 qp_area_idx:3;	/* roi range index */
-	RK_U16 area_map:1;	/* roi en */
-	RK_S16 qp_y:7;		/* qp_value,  absolute qp or relative qp */
-	RK_U16 set_qp_y:1;
+	RK_U16 forbid_inter: 1;	/* intra flag for cu 16x16 */
+	RK_U16 reserved: 3;	/* reserved */
+	RK_U16 qp_area_idx: 3;	/* roi range index */
+	RK_U16 area_map: 1;	/* roi en */
+	RK_S16 qp_y: 7;		/* qp_value,  absolute qp or relative qp */
+	RK_U16 set_qp_y: 1;
 } RkvRoiCfg_v2;
 
 typedef enum ReOsdPltType_e {

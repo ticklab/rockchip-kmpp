@@ -92,7 +92,7 @@ struct pp_srv_api_t {
 	enum PP_RET(*deinit) (void *ctx);
 	enum PP_RET(*reg_wr) (void *ctx, struct dev_reg_wr_t *cfg);
 	enum PP_RET(*reg_rd) (void *ctx, struct dev_reg_rd_t *cfg);
- 	enum PP_RET(*cmd_send) (void *ctx);
+	enum PP_RET(*cmd_send) (void *ctx);
 
 	/* poll cmd from hardware */
 	enum PP_RET(*cmd_poll) (void *ctx);

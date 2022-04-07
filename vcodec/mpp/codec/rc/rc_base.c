@@ -91,17 +91,15 @@ void mpp_data_update_v2(MppDataV2 * p, RK_S32 val)
 	p->sum += p->val[p->pos_w];
 	p->pos_w++;
 	p->pos_r++;
-	if (p->pos_w >= p->size) {
+	if (p->pos_w >= p->size)
 		p->pos_w = 0;
-	}
 }
 
 RK_S32 mpp_data_get_pre_val_v2(MppDataV2 * p, RK_S32 idx)
 {
 	RK_S32 pos = 0;
-	if (idx < 0) {
+	if (idx < 0)
 		idx = p->size + idx;
-	}
 	mpp_assert(p->pos_w < p->size);
 	mpp_assert(idx < p->size);
 	pos = p->pos_w - 1;
@@ -110,9 +108,8 @@ RK_S32 mpp_data_get_pre_val_v2(MppDataV2 * p, RK_S32 idx)
 		mpp_assert(p->pos_r == p->size);
 		pos1 = idx - pos;
 		pos = p->size - pos1;
-	} else {
+	} else
 		pos = pos - idx;
-	}
 	mpp_assert(pos < p->size);
 	return p->val[pos];
 }
@@ -149,7 +146,7 @@ RK_S32 mpp_data_sum_with_ratio_v2(MppDataV2 * p, RK_S32 len, RK_S32 num,
 
 		for (i = 0; i < len; i++) {
 			sum +=
-			    (RK_S32) div_s64(p->val[i] * acc_num, acc_denorm);
+				(RK_S32) div_s64(p->val[i] * acc_num, acc_denorm);
 			acc_num *= num;
 			acc_denorm *= denorm;
 		}

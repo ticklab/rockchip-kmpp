@@ -129,7 +129,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	p->online = cfg->online;
 	*enc = p;
 	return ret;
-	ERR_RET:
+ERR_RET:
 	mpp_enc_deinit(p);
 	return ret;
 }
@@ -181,10 +181,9 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 		enc->rc_ctx = NULL;
 	}
 
-	if (enc->ring_pool){
-		if (enc->ring_pool->buf){
+	if (enc->ring_pool) {
+		if (enc->ring_pool->buf)
 			mpp_buffer_put(enc->ring_pool->buf);
-		}
 		MPP_FREE(enc->ring_pool);
 	}
 	mpp_enc_unref_osd_buf(&enc->cur_osd);
@@ -193,7 +192,7 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 	enc->rc_cfg_size = 0;
 	enc->rc_cfg_length = 0;
 	up(&enc->enc_sem);
-	if (enc->strm_pool){
+	if (enc->strm_pool) {
 		mpp_log("buf_pool_destroy in");
 		mpibuf_fn->buf_pool_destroy(enc->strm_pool);
 		mpp_log("buf_pool_destroy out");
@@ -324,7 +323,8 @@ MPP_RET mpp_enc_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 }
 
 
-MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet, MppPacket * jpeg_packet)
+MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
+			    MppPacket * jpeg_packet)
 {
 	MppEncImpl *enc = (MppEncImpl *) ctx;
 	MPP_RET ret = MPP_OK;
@@ -411,38 +411,38 @@ MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param)
 
 	enc_dbg_ctrl("sending cmd %d param %p\n", cmd, param);
 	switch (cmd) {
-	case MPP_ENC_GET_CFG:{
-			MppEncCfgImpl *p = (MppEncCfgImpl *) param;
+	case MPP_ENC_GET_CFG: {
+		MppEncCfgImpl *p = (MppEncCfgImpl *) param;
 
-			enc_dbg_ctrl("get all config\n");
-			if (copy_to_user(&p->cfg, &enc->cfg, sizeof(enc->cfg)))
-				ret = -EFAULT;
-		}
-		break;
-	case MPP_ENC_GET_PREP_CFG:{
-			enc_dbg_ctrl("get prep config\n");
-			if (copy_to_user(param, &enc->cfg.prep, sizeof(enc->cfg.prep)))
-				ret = -EFAULT;
-		}
-		break;
-	case MPP_ENC_GET_RC_CFG:{
-			enc_dbg_ctrl("get rc config\n");
-			if (copy_to_user(param, &enc->cfg.rc, sizeof(enc->cfg.rc)))
-				ret = -EFAULT;
-		}
-		break;
-	case MPP_ENC_GET_CODEC_CFG:{
-			enc_dbg_ctrl("get codec config\n");
-			if (copy_to_user(param, &enc->cfg.codec, sizeof(enc->cfg.codec)))
-				ret = -EFAULT;
-		}
-		break;
-	case MPP_ENC_GET_HEADER_MODE:{
-			enc_dbg_ctrl("get header mode\n");
-			if (copy_to_user(param, &enc->hdr_mode, sizeof(enc->hdr_mode)))
-				ret = -EFAULT;
-		}
-		break;
+		enc_dbg_ctrl("get all config\n");
+		if (copy_to_user(&p->cfg, &enc->cfg, sizeof(enc->cfg)))
+			ret = -EFAULT;
+	}
+	break;
+	case MPP_ENC_GET_PREP_CFG: {
+		enc_dbg_ctrl("get prep config\n");
+		if (copy_to_user(param, &enc->cfg.prep, sizeof(enc->cfg.prep)))
+			ret = -EFAULT;
+	}
+	break;
+	case MPP_ENC_GET_RC_CFG: {
+		enc_dbg_ctrl("get rc config\n");
+		if (copy_to_user(param, &enc->cfg.rc, sizeof(enc->cfg.rc)))
+			ret = -EFAULT;
+	}
+	break;
+	case MPP_ENC_GET_CODEC_CFG: {
+		enc_dbg_ctrl("get codec config\n");
+		if (copy_to_user(param, &enc->cfg.codec, sizeof(enc->cfg.codec)))
+			ret = -EFAULT;
+	}
+	break;
+	case MPP_ENC_GET_HEADER_MODE: {
+		enc_dbg_ctrl("get header mode\n");
+		if (copy_to_user(param, &enc->hdr_mode, sizeof(enc->hdr_mode)))
+			ret = -EFAULT;
+	}
+	break;
 	default:
 		down(&enc->enc_sem);
 		mpp_enc_proc_cfg(enc, cmd, param);

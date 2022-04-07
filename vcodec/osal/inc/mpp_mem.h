@@ -42,10 +42,10 @@
 extern "C" {
 #endif
 
-	void *mpp_osal_malloc(const char *caller, size_t size);
-	void *mpp_osal_calloc(const char *caller, size_t size);
-	void *mpp_osal_realloc(const char *caller, void *ptr, size_t size);
-	void mpp_osal_free(const char *caller, void *ptr);
+void *mpp_osal_malloc(const char *caller, size_t size);
+void *mpp_osal_calloc(const char *caller, size_t size);
+void *mpp_osal_realloc(const char *caller, void *ptr, size_t size);
+void mpp_osal_free(const char *caller, void *ptr);
 
 #ifdef __cplusplus
 }

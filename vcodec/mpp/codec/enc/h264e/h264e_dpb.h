@@ -44,30 +44,30 @@
 #define REF_BY_REFR(idx)            (0x00000001 << idx)
 
 typedef struct  H264eDpbFrm_t {
-    RK_S32              slot_idx;
-    // frame index in frames
-    RK_S32              seq_idx;
-    RK_U32              on_used;
+	RK_S32              slot_idx;
+	// frame index in frames
+	RK_S32              seq_idx;
+	RK_U32              on_used;
 
-    /* frame status */
-    EncFrmStatus        status;
+	/* frame status */
+	EncFrmStatus        status;
 
-    /* frame number from H264eSlice */
-    RK_S32              frame_num;
-    RK_S32              lt_idx;
-    /* poc from H264eSlice */
-    RK_S32              poc;
-    /* pts from input MppFrame */
-    RK_S64              pts;
+	/* frame number from H264eSlice */
+	RK_S32              frame_num;
+	RK_S32              lt_idx;
+	/* poc from H264eSlice */
+	RK_S32              poc;
+	/* pts from input MppFrame */
+	RK_S64              pts;
 } H264eDpbFrm;
 
 /* runtime status record */
 typedef struct H264eDpbRt_t {
-    RK_S32              last_seq_idx;
-    RK_S32              last_is_ref;
-    RK_S32              last_frm_num;
-    RK_S32              last_poc_lsb;
-    RK_S32              last_poc_msb;
+	RK_S32              last_seq_idx;
+	RK_S32              last_is_ref;
+	RK_S32              last_frm_num;
+	RK_S32              last_poc_lsb;
+	RK_S32              last_poc_msb;
 } H264eDpbRt;
 
 /*
@@ -81,40 +81,40 @@ typedef struct H264eDpbRt_t {
  * next frame encoding.
  */
 typedef struct H264eDpb_t {
-    H264eReorderInfo    *reorder;
-    H264eMarkingInfo    *marking;
+	H264eReorderInfo    *reorder;
+	H264eMarkingInfo    *marking;
 
-    MppEncCpbInfo       info;
-    RK_S32              next_max_lt_idx;
-    RK_S32              curr_max_lt_idx;
-    RK_S32              st_size;
-    RK_S32              lt_size;
-    RK_S32              used_size;
+	MppEncCpbInfo       info;
+	RK_S32              next_max_lt_idx;
+	RK_S32              curr_max_lt_idx;
+	RK_S32              st_size;
+	RK_S32              lt_size;
+	RK_S32              used_size;
 
-    RK_S32              dpb_size;
-    RK_S32              total_cnt;
+	RK_S32              dpb_size;
+	RK_S32              total_cnt;
 
-    /* status on dpb rebuild is needed */
-    RK_S32              max_frm_num;
-    RK_S32              max_poc_lsb;
-    RK_S32              poc_type;
+	/* status on dpb rebuild is needed */
+	RK_S32              max_frm_num;
+	RK_S32              max_poc_lsb;
+	RK_S32              poc_type;
 
-    RK_S32              last_frm_num;
-    RK_S32              last_poc_lsb;
-    RK_S32              last_poc_msb;
+	RK_S32              last_frm_num;
+	RK_S32              last_poc_lsb;
+	RK_S32              last_poc_msb;
 
-    H264eDpbFrm         *curr;
-    H264eDpbFrm         *refr;
-    H264eDpbFrm         *list[H264E_MAX_REFS_CNT];
-    H264eDpbFrm         *stref[H264E_MAX_REFS_CNT];
-    H264eDpbFrm         *ltref[H264E_MAX_REFS_CNT];
-    H264eDpbFrm         *map[H264E_MAX_REFS_CNT + 1];
+	H264eDpbFrm         *curr;
+	H264eDpbFrm         *refr;
+	H264eDpbFrm         *list[H264E_MAX_REFS_CNT];
+	H264eDpbFrm         *stref[H264E_MAX_REFS_CNT];
+	H264eDpbFrm         *ltref[H264E_MAX_REFS_CNT];
+	H264eDpbFrm         *map[H264E_MAX_REFS_CNT + 1];
 
-    // frame storage
-    H264eDpbRt          rt;
-    H264eDpbRt          rt_bak;
-    H264eDpbFrm         frames[H264E_MAX_REFS_CNT + 1];
-    H264eDpbFrm         frm_bak[H264E_MAX_REFS_CNT + 1];
+	// frame storage
+	H264eDpbRt          rt;
+	H264eDpbRt          rt_bak;
+	H264eDpbFrm         frames[H264E_MAX_REFS_CNT + 1];
+	H264eDpbFrm         frm_bak[H264E_MAX_REFS_CNT + 1];
 } H264eDpb;
 
 #ifdef __cplusplus

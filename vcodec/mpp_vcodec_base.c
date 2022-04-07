@@ -39,7 +39,7 @@ static void *mpp_vcodec_bind(void *in_param, void *out_param)
 	int id = -1;
 	MppCtxType type = MPP_CTX_ENC;
 	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
-	if( !mpidev_fn){
+	if ( !mpidev_fn) {
 		mpp_err("get_mpidev_ops fail");
 		return NULL;
 	}
@@ -68,7 +68,7 @@ static struct vcodec_threads *mpp_vcodec_get_thd_handle(struct mpi_obj *obj)
 	void *ctx = NULL;
 	struct mpp_chan *entry = NULL;
 	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
-	if (!mpidev_fn){
+	if (!mpidev_fn) {
 		mpp_err("get_mpidev_ops fail");
 		return NULL;
 	}
@@ -81,14 +81,14 @@ static struct vcodec_threads *mpp_vcodec_get_thd_handle(struct mpi_obj *obj)
 
 	if (entry) {
 		switch (entry->type) {
-		case MPP_CTX_ENC:{
-				thd = g_vcodec_entry.venc.thd;
-			}
-			break;
-		default:{
-				mpp_err("MppCtxType error %d", entry->type);
-			}
-			break;
+		case MPP_CTX_ENC: {
+			thd = g_vcodec_entry.venc.thd;
+		}
+		break;
+		default: {
+			mpp_err("MppCtxType error %d", entry->type);
+		}
+		break;
 		}
 	}
 	return thd;
@@ -101,7 +101,7 @@ static int mpp_vcodec_msg_handle(struct mpi_obj *obj, int event, void *args)
 
 	struct vcodec_threads *thd;
 	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
-	if (!mpidev_fn){
+	if (!mpidev_fn) {
 		mpp_err("get_mpidev_ops fail");
 		return -1;
 	}
@@ -109,9 +109,8 @@ static int mpp_vcodec_msg_handle(struct mpi_obj *obj, int event, void *args)
 	if (mpidev_fn->handle_message)
 		ret = mpidev_fn->handle_message(obj, event, args);
 
-	if (ret && thd) {
+	if (ret && thd)
 		vcodec_thread_trigger(thd);
-	}
 	return 0;
 }
 
@@ -126,11 +125,10 @@ int vcodec_create_mpi_dev(void)
 	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
 	struct venc_module *venc = &g_vcodec_entry.venc;
 	if (mpidev_fn->create_dev && !venc->dev)
-		venc->dev = mpidev_fn->create_dev(venc->name , &gdev_fn);
+		venc->dev = mpidev_fn->create_dev(venc->name, &gdev_fn);
 
-	if (!venc->dev) {
+	if (!venc->dev)
 		mpp_err("creat mpi dev & register fail \n");
-	}
 	return 0;
 }
 
@@ -154,11 +152,11 @@ static int mpp_enc_module_init(void)
 	venc->num_enc = 0;
 	thds = vcodec_thread_create((struct vcodec_module *)venc);
 
- 	vcodec_thread_set_count(thds, 1);
+	vcodec_thread_set_count(thds, 1);
 	vcodec_thread_set_callback(thds,
-		(void *)mpp_vcodec_enc_routine,
-		(void *)venc);
-
+				   (void *)
+				   mpp_vcodec_enc_routine,
+				   (void *)venc);
 	mpp_packet_pool_init(MAX_STREAM_CNT);
 
 	venc->check = &venc;
@@ -172,25 +170,23 @@ int mpp_vcodec_get_free_chan(MppCtxType type)
 	RK_S32 i = 0;
 	switch (type) {
 
-	case MPP_CTX_ENC:{
-			unsigned long lock_flag;
-			struct venc_module *venc = &g_vcodec_entry.venc;
-			spin_lock_irqsave(&venc->enc_lock, lock_flag);
-			for (i = 0; i < MAX_ENC_NUM; i++) {
-				if (!venc->mpp_enc_chan_entry[i].handle) {
-					break;
-				}
-			}
-			if (i >= MAX_ENC_NUM) {
-				i = -1;
-			}
-			spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
+	case MPP_CTX_ENC: {
+		unsigned long lock_flag;
+		struct venc_module *venc = &g_vcodec_entry.venc;
+		spin_lock_irqsave(&venc->enc_lock, lock_flag);
+		for (i = 0; i < MAX_ENC_NUM; i++) {
+			if (!venc->mpp_enc_chan_entry[i].handle)
+				break;
 		}
-		break;
-	default:{
-			mpp_err("MppCtxType error %d", type);
-		}
-		break;
+		if (i >= MAX_ENC_NUM)
+			i = -1;
+		spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
+	}
+	break;
+	default: {
+		mpp_err("MppCtxType error %d", type);
+	}
+	break;
 	}
 	return i;
 }
@@ -199,20 +195,20 @@ struct mpp_chan *mpp_vcodec_get_chan_entry(RK_S32 chan_id, MppCtxType type)
 {
 	struct mpp_chan *chan = NULL;
 	switch (type) {
-	case MPP_CTX_ENC:{
-			struct venc_module *venc = &g_vcodec_entry.venc;
-			if (chan_id < 0 || chan_id > MAX_ENC_NUM) {
-				mpp_err("chan id %d is over, full max is %d \n",
-					chan_id, MAX_ENC_NUM);
-				return NULL;
-			}
-			chan = &venc->mpp_enc_chan_entry[chan_id];
+	case MPP_CTX_ENC: {
+		struct venc_module *venc = &g_vcodec_entry.venc;
+		if (chan_id < 0 || chan_id > MAX_ENC_NUM) {
+			mpp_err("chan id %d is over, full max is %d \n",
+				chan_id, MAX_ENC_NUM);
+			return NULL;
 		}
-		break;
-	default:{
-			mpp_err("MppCtxType error %d", type);
-		}
-		break;
+		chan = &venc->mpp_enc_chan_entry[chan_id];
+	}
+	break;
+	default: {
+		mpp_err("MppCtxType error %d", type);
+	}
+	break;
 	}
 	return chan;
 }
@@ -222,17 +218,17 @@ RK_U32 mpp_vcodec_get_chan_num(MppCtxType type)
 	RK_U32 num_chan = 0;
 
 	switch (type) {
-	case MPP_CTX_ENC:{
-			unsigned long lock_flag;
-			struct venc_module *venc = &g_vcodec_entry.venc;
-			spin_lock_irqsave(&venc->enc_lock, lock_flag);
-			num_chan = venc->num_enc;
-			spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
-		} break;
-	default:{
-			mpp_err("MppCtxType error %d", type);
-		}
-		break;
+	case MPP_CTX_ENC: {
+		unsigned long lock_flag;
+		struct venc_module *venc = &g_vcodec_entry.venc;
+		spin_lock_irqsave(&venc->enc_lock, lock_flag);
+		num_chan = venc->num_enc;
+		spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
+	} break;
+	default: {
+		mpp_err("MppCtxType error %d", type);
+	}
+	break;
 	}
 	return num_chan;
 }
@@ -240,17 +236,17 @@ RK_U32 mpp_vcodec_get_chan_num(MppCtxType type)
 void mpp_vcodec_inc_chan_num(MppCtxType type)
 {
 	switch (type) {
-	case MPP_CTX_ENC:{
-			unsigned long lock_flag;
-			struct venc_module *venc = &g_vcodec_entry.venc;
-			spin_lock_irqsave(&venc->enc_lock, lock_flag);
-			venc->num_enc++;
-			spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
-		} break;
-	default:{
-			mpp_err("MppCtxType error %d", type);
-		}
-		break;
+	case MPP_CTX_ENC: {
+		unsigned long lock_flag;
+		struct venc_module *venc = &g_vcodec_entry.venc;
+		spin_lock_irqsave(&venc->enc_lock, lock_flag);
+		venc->num_enc++;
+		spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
+	} break;
+	default: {
+		mpp_err("MppCtxType error %d", type);
+	}
+	break;
 	}
 	return;
 }
@@ -258,22 +254,21 @@ void mpp_vcodec_inc_chan_num(MppCtxType type)
 void mpp_vcodec_dec_chan_num(MppCtxType type)
 {
 	switch (type) {
-	case MPP_CTX_ENC:{
-			unsigned long lock_flag;
-			struct venc_module *venc = &g_vcodec_entry.venc;
-			spin_lock_irqsave(&venc->enc_lock, lock_flag);
-			venc->num_enc--;
-			spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
+	case MPP_CTX_ENC: {
+		unsigned long lock_flag;
+		struct venc_module *venc = &g_vcodec_entry.venc;
+		spin_lock_irqsave(&venc->enc_lock, lock_flag);
+		venc->num_enc--;
+		spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
 
-			if(!venc->num_enc){
-				vcodec_thread_stop(venc->thd);
-			}
+		if (!venc->num_enc)
+			vcodec_thread_stop(venc->thd);
 
-		} break;
-	default:{
-			mpp_err("MppCtxType error %d", type);
-		}
-		break;
+	} break;
+	default: {
+		mpp_err("MppCtxType error %d", type);
+	}
+	break;
 	}
 
 	return;
@@ -284,7 +279,7 @@ int mpp_vcodec_chan_entry_init(struct mpp_chan *entry, MppCtxType type,
 {
 	unsigned long lock_flag;
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
-	if (!mpibuf_fn){
+	if (!mpibuf_fn) {
 		mpp_err_f("mpibuf_ops get fail");
 		return -1;
 	}
@@ -318,7 +313,7 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 {
 	unsigned long lock_flag;
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
-	if (!mpibuf_fn){
+	if (!mpibuf_fn) {
 		mpp_err_f("mpibuf_ops get fail");
 		return -1;
 	}
@@ -330,20 +325,18 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 	entry->binder_chan_id = -1;
 	spin_unlock_irqrestore(&entry->chan_lock, lock_flag);
 	atomic_set(&entry->runing, 0);
-    if (mpibuf_fn->buf_queue_destroy) {
+	if (mpibuf_fn->buf_queue_destroy)
 		mpibuf_fn->buf_queue_destroy(entry->yuv_queue);
-	}
 	return 0;
 }
 
 void stream_packet_free(struct kref *ref)
 {
 	MppPacketImpl *packet =
-	container_of(ref, MppPacketImpl, ref);
+		container_of(ref, MppPacketImpl, ref);
 
-	if (packet) {
+	if (packet)
 		mpp_packet_deinit((MppPacket)&packet);
-	}
 	return;
 }
 
@@ -409,18 +402,17 @@ void enc_chan_update_chan_prior_tab(void)
 				tmp_pri_chan[1] = venc->chan_pri_tab[i][1];
 
 				venc->chan_pri_tab[i][0] =
-				    venc->chan_pri_tab[j][0];
+					venc->chan_pri_tab[j][0];
 				venc->chan_pri_tab[i][1] =
-				    venc->chan_pri_tab[j][1];
+					venc->chan_pri_tab[j][1];
 
 				venc->chan_pri_tab[j][0] = tmp_pri_chan[0];
 				venc->chan_pri_tab[j][1] = tmp_pri_chan[1];
 				soft_flag = MPP_NOK;
 			}
 		}
-		if (soft_flag == MPP_OK) {
+		if (soft_flag == MPP_OK)
 			break;
-		}
 	}
 	spin_unlock_irqrestore(&venc->enc_lock, lock_flags);
 	return;
@@ -445,9 +437,8 @@ MPP_RET enc_chan_update_tab_after_enc(RK_U32 curr_chan)
 	}
 
 	if (venc->started_chan_num) {
-		for (i = tmp_index; i < venc->started_chan_num - 1; i++) {
+		for (i = tmp_index; i < venc->started_chan_num - 1; i++)
 			venc->chan_pri_tab[i][0] = venc->chan_pri_tab[i + 1][0];
-		}
 		venc->chan_pri_tab[venc->started_chan_num - 1][0] = curr_chan;
 	}
 
@@ -462,7 +453,7 @@ void enc_chan_get_high_prior_chan(void)
 
 	spin_lock_irqsave(&venc->enc_lock, lock_flags);
 	venc->curr_high_prior_chan =
-	venc->chan_pri_tab[venc->chan_pri_tab_index][0];
+		venc->chan_pri_tab[venc->chan_pri_tab_index][0];
 	venc->chan_pri_tab_index++;
 	spin_unlock_irqrestore(&venc->enc_lock, lock_flags);
 	return;
@@ -482,21 +473,21 @@ int mpp_vcodec_unregister_mipdev(void)
 {
 	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
 
-	if (!mpidev_fn){
+	if (!mpidev_fn)
 		return -1;
-	}
 
 	if (mpidev_fn->destory_dev && g_vcodec_entry.venc.dev) {
 		mpidev_fn->destory_dev(g_vcodec_entry.venc.dev);
 		g_vcodec_entry.venc.dev = NULL;
-    }
-    return 0;
+	}
+	return 0;
 }
 
 int mpp_vcodec_deinit(void)
 {
 	struct venc_module *venc = &g_vcodec_entry.venc;
-	if (venc->thd){
+
+	if (venc->thd) {
 		vcodec_thread_stop(venc->thd);
 		vcodec_thread_destroy(venc->thd);
 		venc->thd = NULL;

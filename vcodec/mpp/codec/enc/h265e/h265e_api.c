@@ -76,8 +76,8 @@ static MPP_RET h265e_init(void *ctx, EncImplCfg * ctrlCfg)
 	h265->ctu_size = 32;
 	h265->max_cu_size = 32;
 #else
-    h265->ctu_size = 64;
-    h265->max_cu_size = 64;
+	h265->ctu_size = 64;
+	h265->max_cu_size = 64;
 #endif
 	h265->tmvp_enable = 0;
 	h265->amp_enable = 0;
@@ -364,8 +364,8 @@ static MPP_RET h265e_proc_prep_cfg(MppEncPrepCfg * dst, MppEncPrepCfg * src)
 	if (MPP_FRAME_FMT_IS_FBC(dst->format)
 	    && (dst->mirroring || dst->rotation)) {
 		mpp_err
-		    ("invalid cfg fbc data no support mirror %d or rotaion %d",
-		     dst->mirroring, dst->rotation);
+		("invalid cfg fbc data no support mirror %d or rotaion %d",
+		 dst->mirroring, dst->rotation);
 		ret = MPP_ERR_VALUE;
 	}
 
@@ -374,8 +374,8 @@ static MPP_RET h265e_proc_prep_cfg(MppEncPrepCfg * dst, MppEncPrepCfg * src)
 	    dst->colorprim >= MPP_FRAME_PRI_NB ||
 	    dst->colortrc >= MPP_FRAME_TRC_NB) {
 		mpp_err
-		    ("invalid color range %d colorspace %d primaries %d transfer characteristic %d\n",
-		     dst->range, dst->color, dst->colorprim, dst->colortrc);
+		("invalid color range %d colorspace %d primaries %d transfer characteristic %d\n",
+		 dst->range, dst->color, dst->colorprim, dst->colortrc);
 		ret = MPP_ERR_VALUE;
 	}
 
@@ -400,20 +400,16 @@ static MPP_RET h265e_proc_h265_cfg(MppEncH265Cfg * dst, MppEncH265Cfg * src)
 		dst->level = src->level;
 	}
 
-	if (change & MPP_ENC_H265_CFG_CU_CHANGE) {
+	if (change & MPP_ENC_H265_CFG_CU_CHANGE)
 		memcpy(&dst->cu_cfg, &src->cu_cfg, sizeof(src->cu_cfg));
-	}
 
-	if (change & MPP_ENC_H265_CFG_PU_CHANGE) {
+	if (change & MPP_ENC_H265_CFG_PU_CHANGE)
 		memcpy(&dst->pu_cfg, &src->pu_cfg, sizeof(src->pu_cfg));
-	}
 
-	if (change & MPP_ENC_H265_CFG_DBLK_CHANGE) {
+	if (change & MPP_ENC_H265_CFG_DBLK_CHANGE)
 		memcpy(&dst->dblk_cfg, &src->dblk_cfg, sizeof(src->dblk_cfg));
-	}
-	if (change & MPP_ENC_H265_CFG_SAO_CHANGE) {
+	if (change & MPP_ENC_H265_CFG_SAO_CHANGE)
 		memcpy(&dst->sao_cfg, &src->sao_cfg, sizeof(src->sao_cfg));
-	}
 	if (change & MPP_ENC_H265_CFG_TRANS_CHANGE) {
 		memcpy(&dst->trans_cfg, &src->trans_cfg,
 		       sizeof(src->trans_cfg));
@@ -434,13 +430,11 @@ static MPP_RET h265e_proc_h265_cfg(MppEncH265Cfg * dst, MppEncH265Cfg * src)
 		       sizeof(src->merge_cfg));
 	}
 
-	if (change & MPP_ENC_H265_CFG_CHANGE_VUI) {
+	if (change & MPP_ENC_H265_CFG_CHANGE_VUI)
 		memcpy(&dst->vui, &src->vui, sizeof(src->vui));
-	}
 
-	if (change & MPP_ENC_H265_CFG_SAO_CHANGE) {
+	if (change & MPP_ENC_H265_CFG_SAO_CHANGE)
 		memcpy(&dst->sao_cfg, &src->sao_cfg, sizeof(src->sao_cfg));
-	}
 
 	/*
 	 * NOTE: use OR here for avoiding overwrite on multiple config
@@ -460,9 +454,8 @@ static MPP_RET h265e_proc_split_cfg(MppEncH265SliceCfg * dst,
 		if (src->split_mode == MPP_ENC_SPLIT_BY_CTU)
 			dst->split_mode = 1;
 		dst->slice_size = src->split_arg;
-	} else {
+	} else
 		dst->split_enable = 0;
-	}
 
 	return MPP_OK;
 }
@@ -476,67 +469,66 @@ static MPP_RET h265e_proc_cfg(void *ctx, MpiCmd cmd, void *param)
 	h265e_dbg_func("enter ctx %p cmd %08x\n", ctx, cmd);
 
 	switch (cmd) {
-	case MPP_ENC_SET_CFG:{
-			MppEncCfgImpl *impl = (MppEncCfgImpl *) param;
-			MppEncCfgSet *src = &impl->cfg;
+	case MPP_ENC_SET_CFG: {
+		MppEncCfgImpl *impl = (MppEncCfgImpl *) param;
+		MppEncCfgSet *src = &impl->cfg;
 
-			if (src->prep.change) {
-				ret |=
-				    h265e_proc_prep_cfg(&cfg->prep, &src->prep);
-				src->prep.change = 0;
-			}
+		if (src->prep.change) {
+			ret |=
+				h265e_proc_prep_cfg(&cfg->prep, &src->prep);
+			src->prep.change = 0;
+		}
 
-			if (src->codec.h265.change) {
-				ret |=
-				    h265e_proc_h265_cfg(&cfg->codec.h265,
-							&src->codec.h265);
-				src->codec.h265.change = 0;
-			}
-			if (src->split.change) {
-				ret |=
-				    h265e_proc_split_cfg(&cfg->codec.h265.
-							 slice_cfg,
-							 &src->split);
-				src->split.change = 0;
-			}
+		if (src->codec.h265.change) {
+			ret |=
+				h265e_proc_h265_cfg(&cfg->codec.h265,
+						    &src->codec.h265);
+			src->codec.h265.change = 0;
 		}
-		break;
-	case MPP_ENC_GET_EXTRA_INFO:{
-			MppPacket pkt_out = (MppPacket) param;
-			h265e_set_extra_info(p);
-			h265e_get_extra_info(p, pkt_out);
+		if (src->split.change) {
+			ret |=
+				h265e_proc_split_cfg(&cfg->codec.h265.
+						     slice_cfg,
+						     &src->split);
+			src->split.change = 0;
 		}
-		break;
-	case MPP_ENC_SET_PREP_CFG:{
-			ret = h265e_proc_prep_cfg(&cfg->prep, param);
-		}
-		break;
-	case MPP_ENC_SET_CODEC_CFG:{
-			MppEncCodecCfg *codec = (MppEncCodecCfg *) param;
-			ret =
-			    h265e_proc_h265_cfg(&cfg->codec.h265, &codec->h265);
-		}
-		break;
+	}
+	break;
+	case MPP_ENC_GET_EXTRA_INFO: {
+		MppPacket pkt_out = (MppPacket) param;
+		h265e_set_extra_info(p);
+		h265e_get_extra_info(p, pkt_out);
+	}
+	break;
+	case MPP_ENC_SET_PREP_CFG: {
+		ret = h265e_proc_prep_cfg(&cfg->prep, param);
+	}
+	break;
+	case MPP_ENC_SET_CODEC_CFG: {
+		MppEncCodecCfg *codec = (MppEncCodecCfg *) param;
+		ret =
+			h265e_proc_h265_cfg(&cfg->codec.h265, &codec->h265);
+	}
+	break;
 
-	case MPP_ENC_SET_SEI_CFG:{
-		}
-		break;
-	case MPP_ENC_SET_SPLIT:{
-			MppEncSliceSplit *src = (MppEncSliceSplit *) param;
-			MppEncH265SliceCfg *slice_cfg =
-			    &cfg->codec.h265.slice_cfg;
+	case MPP_ENC_SET_SEI_CFG: {
+	}
+	break;
+	case MPP_ENC_SET_SPLIT: {
+		MppEncSliceSplit *src = (MppEncSliceSplit *) param;
+		MppEncH265SliceCfg *slice_cfg =
+			&cfg->codec.h265.slice_cfg;
 
-			if (src->split_mode > MPP_ENC_SPLIT_NONE) {
-				slice_cfg->split_enable = 1;
-				slice_cfg->split_mode = 0;
-				if (src->split_mode == MPP_ENC_SPLIT_BY_CTU)
-					slice_cfg->split_mode = 1;
-				slice_cfg->slice_size = src->split_arg;
-			} else {
-				slice_cfg->split_enable = 0;
-			}
-		}
-		break;
+		if (src->split_mode > MPP_ENC_SPLIT_NONE) {
+			slice_cfg->split_enable = 1;
+			slice_cfg->split_mode = 0;
+			if (src->split_mode == MPP_ENC_SPLIT_BY_CTU)
+				slice_cfg->split_mode = 1;
+			slice_cfg->slice_size = src->split_arg;
+		} else
+			slice_cfg->split_enable = 0;
+	}
+	break;
 	default:
 		mpp_err("No correspond %08x found, and can not config!\n", cmd);
 		ret = MPP_NOK;
@@ -549,32 +541,41 @@ static MPP_RET h265e_proc_cfg(void *ctx, MpiCmd cmd, void *param)
 
 static void h265e_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 {
-    struct seq_file *seq  = (struct seq_file *)seq_file;
+	struct seq_file *seq  = (struct seq_file *)seq_file;
 	H265eCtx *p = (H265eCtx *) ctx;
 	MppEncCfgSet *cfg = p->cfg;
-    MppEncPrepCfg *prep = &cfg->prep;
-    MppEncH265Cfg *h265 = &cfg->codec.h265;
-    seq_puts(seq, "\n--------h265e chn attr----------------------------------------------------------------------------\n");
-    seq_printf(seq, "%7s%10s%10s%10s\n", "ID","Width", "Height", "profile");
-    seq_printf(seq, "%7d%10u%10u%10s\n", chl_id, prep->width, prep->height, strof_profle(MPP_VIDEO_CodingHEVC, h265->profile));
+	MppEncPrepCfg *prep = &cfg->prep;
+	MppEncH265Cfg *h265 = &cfg->codec.h265;
+	seq_puts(seq,
+		 "\n--------h265e chn attr----------------------------------------------------------------------------\n");
+	seq_printf(seq, "%7s%10s%10s%10s\n", "ID", "Width", "Height", "profile");
+	seq_printf(seq, "%7d%10u%10u%10s\n", chl_id, prep->width, prep->height,
+		   strof_profle(MPP_VIDEO_CodingHEVC, h265->profile));
 
-    seq_puts(seq, "\n--------Syntax INFO1-----------------------------------------------------------------------------\n");
-    seq_printf(seq, "%7s%10s%10s%10s%15s%15s%15s\n", "ID", "SlcspltEn", "SplitMode", "Slcsize",
-        "IntraRefresh", "RefreshMode", "RefreshNum");
-    seq_printf(seq, "%7d%10s%10u%15u%15s%15u%15u\n", chl_id, strof_bool(cfg->split.split_mode), cfg->split.split_mode, cfg->split.split_arg,
-        strof_bool(0), 0, 0);
+	seq_puts(seq,
+		 "\n--------Syntax INFO1-----------------------------------------------------------------------------\n");
+	seq_printf(seq, "%7s%10s%10s%10s%15s%15s%15s\n", "ID", "SlcspltEn", "SplitMode", "Slcsize",
+		   "IntraRefresh", "RefreshMode", "RefreshNum");
+	seq_printf(seq, "%7d%10s%10u%15u%15s%15u%15u\n", chl_id, strof_bool(cfg->split.split_mode),
+		   cfg->split.split_mode, cfg->split.split_arg,
+		   strof_bool(0), 0, 0);
 
-    seq_puts(seq, "--------Syntax INFO2------------------------------------------------------------------------------\n");
-    seq_printf(seq, "%7s%10s%8s%8s%10s%10s%15s\n", "ID", "DblkEn", "Tc", "Beta", "Saoluma", "Saochroma", "IntraSmoothing");
-    seq_printf(seq, "%7d%10s%7d%8d%10d%10d%12d\n", chl_id, strof_bool(1 - h265->dblk_cfg.slice_deblocking_filter_disabled_flag),
-                     h265->dblk_cfg.slice_tc_offset_div2, h265->dblk_cfg.slice_beta_offset_div2,
-                     h265->sao_cfg.slice_sao_luma_disable, h265->sao_cfg.slice_sao_chroma_disable,
-                     h265->pu_cfg.strg_intra_smth_disable);
+	seq_puts(seq,
+		 "--------Syntax INFO2------------------------------------------------------------------------------\n");
+	seq_printf(seq, "%7s%10s%8s%8s%10s%10s%15s\n", "ID", "DblkEn", "Tc", "Beta", "Saoluma", "Saochroma",
+		   "IntraSmoothing");
+	seq_printf(seq, "%7d%10s%7d%8d%10d%10d%12d\n", chl_id,
+		   strof_bool(1 - h265->dblk_cfg.slice_deblocking_filter_disabled_flag),
+		   h265->dblk_cfg.slice_tc_offset_div2, h265->dblk_cfg.slice_beta_offset_div2,
+		   h265->sao_cfg.slice_sao_luma_disable, h265->sao_cfg.slice_sao_chroma_disable,
+		   h265->pu_cfg.strg_intra_smth_disable);
 
 
-    seq_puts(seq, "------Trans INFO-----------------------------------------------------------------------------------\n");
-    seq_printf(seq, "%7s%12s%12s\n", "ID", "CbQpOffset", "CrQpOffset");
-    seq_printf(seq, "%7d%12d%12d\n", chl_id, h265->trans_cfg.cb_qp_offset, h265->trans_cfg.cr_qp_offset);
+	seq_puts(seq,
+		 "------Trans INFO-----------------------------------------------------------------------------------\n");
+	seq_printf(seq, "%7s%12s%12s\n", "ID", "CbQpOffset", "CrQpOffset");
+	seq_printf(seq, "%7d%12d%12d\n", chl_id, h265->trans_cfg.cb_qp_offset,
+		   h265->trans_cfg.cr_qp_offset);
 }
 
 const EncImplApi api_h265e = {

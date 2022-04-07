@@ -156,24 +156,25 @@ typedef struct MppEncInitCfg_t {
 extern "C" {
 #endif
 
-	MPP_RET mpp_enc_init(MppEnc * ctx, MppEncInitCfg * cfg);
-	MPP_RET mpp_enc_deinit(MppEnc ctx);
+MPP_RET mpp_enc_init(MppEnc * ctx, MppEncInitCfg * cfg);
+MPP_RET mpp_enc_deinit(MppEnc ctx);
 
-	MPP_RET mpp_enc_start(MppEnc ctx);
-	MPP_RET mpp_enc_stop(MppEnc ctx);
+MPP_RET mpp_enc_start(MppEnc ctx);
+MPP_RET mpp_enc_stop(MppEnc ctx);
 
-	MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param);
-	MPP_RET mpp_enc_notify(MppEnc ctx, RK_U32 flag);
-	MPP_RET mpp_enc_reset(MppEnc ctx);
-	MPP_RET mpp_enc_oneframe(MppEnc ctx, MppFrame frame,
-				 MppPacket * packet);
-	MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame);	//no block
-	MPP_RET mpp_enc_hw_start(MppEnc ctx, MppEnc jpeg_ctx);	//no block
+MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param);
+MPP_RET mpp_enc_notify(MppEnc ctx, RK_U32 flag);
+MPP_RET mpp_enc_reset(MppEnc ctx);
+MPP_RET mpp_enc_oneframe(MppEnc ctx, MppFrame frame,
+			 MppPacket * packet);
+MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame);	//no block
+MPP_RET mpp_enc_hw_start(MppEnc ctx, MppEnc jpeg_ctx);	//no block
 
-	MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet, MppPacket * jpeg_packet);
-	MPP_RET mpp_enc_register_chl(MppEnc ctx, void *func, RK_S32 chan_id);
-	void    mpp_enc_proc_debug(void *seq_file, MppEnc ctx, RK_U32 chl_id);
-	RK_S32  mpp_enc_check_pkt_pool(MppEnc ctx);
+MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
+			    MppPacket * jpeg_packet);
+MPP_RET mpp_enc_register_chl(MppEnc ctx, void *func, RK_S32 chan_id);
+void    mpp_enc_proc_debug(void *seq_file, MppEnc ctx, RK_U32 chl_id);
+RK_S32  mpp_enc_check_pkt_pool(MppEnc ctx);
 
 #ifdef __cplusplus
 }

@@ -43,15 +43,15 @@ typedef struct MppDataV2_t {
 extern "C" {
 #endif
 
-	MPP_RET mpp_data_init_v2(MppDataV2 ** p, RK_S32 len, RK_S32 value);
-	void mpp_data_deinit_v2(MppDataV2 * p);
-	void mpp_data_reset_v2(MppDataV2 * p, RK_S32 val);
-	void mpp_data_update_v2(MppDataV2 * p, RK_S32 val);
-	RK_S32 mpp_data_sum_v2(MppDataV2 * p);
-	RK_S32 mpp_data_mean_v2(MppDataV2 * p);
-	RK_S32 mpp_data_get_pre_val_v2(MppDataV2 * p, RK_S32 idx);
-	RK_S32 mpp_data_sum_with_ratio_v2(MppDataV2 * p, RK_S32 len, RK_S32 num,
-					  RK_S32 denorm);
+MPP_RET mpp_data_init_v2(MppDataV2 ** p, RK_S32 len, RK_S32 value);
+void mpp_data_deinit_v2(MppDataV2 * p);
+void mpp_data_reset_v2(MppDataV2 * p, RK_S32 val);
+void mpp_data_update_v2(MppDataV2 * p, RK_S32 val);
+RK_S32 mpp_data_sum_v2(MppDataV2 * p);
+RK_S32 mpp_data_mean_v2(MppDataV2 * p);
+RK_S32 mpp_data_get_pre_val_v2(MppDataV2 * p, RK_S32 idx);
+RK_S32 mpp_data_sum_with_ratio_v2(MppDataV2 * p, RK_S32 len, RK_S32 num,
+				  RK_S32 denorm);
 
 #ifdef __cplusplus
 }

@@ -78,8 +78,8 @@ MPP_RET rc_model_v2_vp8_hal_start(void *ctx, EncRcTask * task)
 		if (info->quality_target < 0) {
 			if (info->bit_target) {
 				p->start_qp =
-				    vp8_initial_qp(info->bit_target,
-						   mb_w * mb_h * 16 * 16);
+					vp8_initial_qp(info->bit_target,
+						       mb_w * mb_h * 16 * 16);
 				p->cur_scale_qp = (p->start_qp) << 6;
 			} else {
 				mpp_log("fix qp case but init qp no set");
@@ -96,14 +96,13 @@ MPP_RET rc_model_v2_vp8_hal_start(void *ctx, EncRcTask * task)
 			p->cur_scale_qp += p->next_ratio;
 			p->start_qp = p->cur_scale_qp >> 6;
 			rc_dbg_rc
-			    ("p->start_qp = %d, p->cur_scale_qp %d,p->next_ratio %d ",
-			     p->start_qp, p->cur_scale_qp, p->next_ratio);
-		} else {
+			("p->start_qp = %d, p->cur_scale_qp %d,p->next_ratio %d ",
+			 p->start_qp, p->cur_scale_qp, p->next_ratio);
+		} else
 			p->start_qp -= usr_cfg->i_quality_delta;
-		}
 		p->cur_scale_qp =
-		    mpp_clip(p->cur_scale_qp, (info->quality_min << 6),
-			     (info->quality_max << 6));
+			mpp_clip(p->cur_scale_qp, (info->quality_min << 6),
+				 (info->quality_max << 6));
 		p->pre_i_qp = p->cur_scale_qp >> 6;
 		p->pre_p_qp = p->cur_scale_qp >> 6;
 	} else {
@@ -113,16 +112,16 @@ MPP_RET rc_model_v2_vp8_hal_start(void *ctx, EncRcTask * task)
 
 		if (frm->is_intra) {
 			qp_scale =
-			    mpp_clip(qp_scale, (info->quality_min << 6),
-				     (info->quality_max << 6));
+				mpp_clip(qp_scale, (info->quality_min << 6),
+					 (info->quality_max << 6));
 
 			start_qp =
-			    ((p->pre_i_qp +
-			      ((qp_scale + p->next_i_ratio) >> 6)) >> 1);
+				((p->pre_i_qp +
+				  ((qp_scale + p->next_i_ratio) >> 6)) >> 1);
 
 			start_qp =
-			    mpp_clip(start_qp, info->quality_min,
-				     info->quality_max);
+				mpp_clip(start_qp, info->quality_min,
+					 info->quality_max);
 			p->pre_i_qp = start_qp;
 			p->start_qp = start_qp;
 			p->cur_scale_qp = qp_scale;
@@ -131,21 +130,20 @@ MPP_RET rc_model_v2_vp8_hal_start(void *ctx, EncRcTask * task)
 				p->start_qp -= dealt_qp;
 		} else {
 			qp_scale =
-			    mpp_clip(qp_scale, (info->quality_min << 6),
-				     (info->quality_max << 6));
+				mpp_clip(qp_scale, (info->quality_min << 6),
+					 (info->quality_max << 6));
 			p->cur_scale_qp = qp_scale;
 			p->start_qp = qp_scale >> 6;
 			if (frm->ref_mode == REF_TO_PREV_INTRA
-			    && usr_cfg->vi_quality_delta) {
+			    && usr_cfg->vi_quality_delta)
 				p->start_qp -= usr_cfg->vi_quality_delta;
-			}
 		}
 		rc_dbg_rc("i_quality_delta %d, vi_quality_delta %d", dealt_qp,
 			  usr_cfg->vi_quality_delta);
 	}
 
 	p->start_qp =
-	    mpp_clip(p->start_qp, info->quality_min, info->quality_max);
+		mpp_clip(p->start_qp, info->quality_min, info->quality_max);
 	info->quality_target = p->start_qp;
 
 	rc_dbg_rc("bitrate [%d : %d : %d] -> [%d : %d : %d]\n",

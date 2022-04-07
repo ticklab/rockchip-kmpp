@@ -72,13 +72,13 @@ MPP_RET vepu540c_set_roi(void *roi_reg_base, MppEncROICfg * roi,
 			goto DONE;
 		}
 		reg_regions->roi_pos_lt.roi_lt_x =
-		    MPP_ALIGN(region->x, 16) >> 4;
+			MPP_ALIGN(region->x, 16) >> 4;
 		reg_regions->roi_pos_lt.roi_lt_y =
-		    MPP_ALIGN(region->y, 16) >> 4;
+			MPP_ALIGN(region->y, 16) >> 4;
 		reg_regions->roi_pos_rb.roi_rb_x =
-		    MPP_ALIGN(region->x + region->w, 16) >> 4;
+			MPP_ALIGN(region->x + region->w, 16) >> 4;
 		reg_regions->roi_pos_rb.roi_rb_y =
-		    MPP_ALIGN(region->y + region->h, 16) >> 4;
+			MPP_ALIGN(region->y + region->h, 16) >> 4;
 		reg_regions->roi_base.roi_qp_value = region->quality;
 		reg_regions->roi_base.roi_qp_adj_mode = region->abs_qp_en;
 		reg_regions->roi_base.roi_en = 1;
@@ -116,7 +116,7 @@ MPP_RET vepu540c_set_osd(Vepu540cOsdCfg * cfg)
 	num = osd->num_region;
 	for (i = 0; i < num; i++, tmp++) {
 		vepu540c_osd_com *reg = (vepu540c_osd_com *) & regs->osd_cfg[i];
-        	VepuFmtCfg fmt_cfg;
+		VepuFmtCfg fmt_cfg;
 		MppFrameFormat fmt = tmp->fmt;
 		vepu541_set_fmt(&fmt_cfg, fmt);
 		reg->cfg0.osd_en = tmp->enable;
@@ -263,7 +263,8 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 		vepu540c_jpeg_set_uv_offset(regs, syn, (Vepu541Fmt) fmt->format, task);
 	}
 
-	regs->reg0257_adr_bsbb = mpp_dev_get_iova_address(cfg->dev, task->output->buf, 257) + task->output->start_offset;
+	regs->reg0257_adr_bsbb = mpp_dev_get_iova_address(cfg->dev, task->output->buf,
+							  257) + task->output->start_offset;
 	regs->reg0256_adr_bsbt = regs->reg0257_adr_bsbb + task->output->size - 1;
 	regs->reg0258_adr_bsbr = regs->reg0257_adr_bsbb;
 	regs->reg0259_adr_bsbs = regs->reg0257_adr_bsbb + mpp_packet_get_length(task->packet);
@@ -284,9 +285,10 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	regs->reg0279_src_proc.src_mirr = syn->mirroring > 0;
 	regs->reg0279_src_proc.src_rot = syn->rotation;
 
-	if (syn->hor_stride) {
+	if (syn->hor_stride)
 		stridey = syn->hor_stride;
-	} else {
+
+	else {
 		if (regs->reg0274_src_fmt.src_cfmt == VEPU541_FMT_BGRA8888)
 			stridey = syn->width * 4;
 		else if (regs->reg0274_src_fmt.src_cfmt == VEPU541_FMT_BGR888)
@@ -300,7 +302,7 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 
 	stridec = (regs->reg0274_src_fmt.src_cfmt == VEPU541_FMT_YUV422SP ||
 		   regs->reg0274_src_fmt.src_cfmt == VEPU541_FMT_YUV420SP) ?
-	    stridey : stridey / 2;
+		  stridey : stridey / 2;
 
 	if (regs->reg0274_src_fmt.src_cfmt < VEPU541_FMT_ARGB1555) {
 		regs->reg0275_src_udfy.csc_wgt_r2y = 77;
@@ -345,23 +347,23 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	regs->reg0288_uvc_cfg.uvc_skip_len = 0;
 
 	if (cfg->online) {
-	#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
-				struct dvbm_addr_cfg dvbm_adr;
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+		struct dvbm_addr_cfg dvbm_adr;
 
-				rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
-				regs->reg0260_adr_vsy_b = dvbm_adr.ybuf_bot;
-				regs->reg0261_adr_vsc_b = dvbm_adr.cbuf_bot;
-				regs->reg0262_adr_vsy_t = dvbm_adr.ybuf_top;
-				regs->reg0263_adr_vsc_t = dvbm_adr.cbuf_top;
-				regs->reg0264_adr_src0 = dvbm_adr.ybuf_sadr;
-				regs->reg0265_adr_src1 = dvbm_adr.cbuf_sadr;
-				regs->reg0266_adr_src2 = dvbm_adr.cbuf_sadr;
-	#else
-				regs->reg0260_adr_vsy_b = 0;
-				regs->reg0261_adr_vsc_b = 0;
-				regs->reg0262_adr_vsy_t = 0;
-				regs->reg0263_adr_vsc_t = 0;
-	#endif
+		rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+		regs->reg0260_adr_vsy_b = dvbm_adr.ybuf_bot;
+		regs->reg0261_adr_vsc_b = dvbm_adr.cbuf_bot;
+		regs->reg0262_adr_vsy_t = dvbm_adr.ybuf_top;
+		regs->reg0263_adr_vsc_t = dvbm_adr.cbuf_top;
+		regs->reg0264_adr_src0 = dvbm_adr.ybuf_sadr;
+		regs->reg0265_adr_src1 = dvbm_adr.cbuf_sadr;
+		regs->reg0266_adr_src2 = dvbm_adr.cbuf_sadr;
+#else
+		regs->reg0260_adr_vsy_b = 0;
+		regs->reg0261_adr_vsc_b = 0;
+		regs->reg0262_adr_vsy_t = 0;
+		regs->reg0263_adr_vsc_t = 0;
+#endif
 	}
 	return MPP_OK;
 }

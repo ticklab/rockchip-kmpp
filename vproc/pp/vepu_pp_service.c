@@ -15,12 +15,13 @@
 struct dma_buf;
 
 struct vcodec_mppdev_svr_fn {
-     struct mpp_session *(*chnl_open)(int client_type);
-     int (*chnl_register)(struct mpp_session *session, void *fun, unsigned int chn_id);
-     int (*chnl_release)(struct mpp_session *session);
-     int (*chnl_add_req)(struct mpp_session *session,  void *reqs);
-     unsigned int (*chnl_get_iova_addr)(struct mpp_session *session,  struct dma_buf *buf, unsigned int offset);
-     void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
+	struct mpp_session *(*chnl_open)(int client_type);
+	int (*chnl_register)(struct mpp_session *session, void *fun, unsigned int chn_id);
+	int (*chnl_release)(struct mpp_session *session);
+	int (*chnl_add_req)(struct mpp_session *session,  void *reqs);
+	unsigned int (*chnl_get_iova_addr)(struct mpp_session *session,  struct dma_buf *buf,
+					   unsigned int offset);
+	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
 };
 
 struct mpp_req_t {
@@ -40,7 +41,7 @@ struct vepu_pp_dev_srv {
 	int reg_offset_count;
 	struct mpp_req_t reqs[PP_MAX_REQ_NUM];
 
-    struct vcodec_mppdev_svr_fn *mppdev_ops;
+	struct vcodec_mppdev_svr_fn *mppdev_ops;
 };
 
 extern struct vcodec_mppdev_svr_fn *get_mppdev_svr_ops(void);
@@ -51,7 +52,7 @@ enum PP_RET pp_service_init(void *ctx, int type)
 	enum PP_RET ret = VEPU_PP_OK;
 
 	p->mppdev_ops = get_mppdev_svr_ops();
-	if(!p->mppdev_ops){
+	if (!p->mppdev_ops) {
 		pr_err("get_mppdev_svr_ops fail");
 		return VEPU_PP_NOK;
 	}
@@ -156,7 +157,7 @@ u32 pp_service_iova_address(void *ctx, struct dma_buf * buf, u32 offset)
 
 	if (p->mppdev_ops->chnl_get_iova_addr)
 		iova_address =
-		    p->mppdev_ops->chnl_get_iova_addr(p->chnl, buf, offset);
+			p->mppdev_ops->chnl_get_iova_addr(p->chnl, buf, offset);
 	return iova_address;
 }
 

@@ -61,7 +61,7 @@ static int check_vcodec_threads(struct vcodec_threads *thds, const char *fmt)
 static void vcodec_thread_worker(struct kthread_work *work_s)
 {
 	struct vcodec_thread *thd =
-	    container_of(work_s, struct vcodec_thread, work);
+		container_of(work_s, struct vcodec_thread, work);
 	struct vcodec_threads *thds = thd->thds;
 	u64 curr_us = ktime_get_raw_ns();
 
@@ -158,8 +158,8 @@ struct vcodec_threads *vcodec_thread_create(struct vcodec_module *module)
 		/* setup init single thread pool without callback */
 		thds->set.count = 1;
 		thds->change =
-		    VCODEC_THREADS_CHANGE_COUNT |
-		    VCODEC_THREADS_CHANGE_CALLBACK;
+			VCODEC_THREADS_CHANGE_COUNT |
+			VCODEC_THREADS_CHANGE_CALLBACK;
 
 		thds->check = thds;
 		thds->module = module;
@@ -383,13 +383,13 @@ int vcodec_thread_trigger(struct vcodec_threads *thds)
 			for (i = 0; i < thds->cfg.count; i++) {
 				if (!test_bit(i, &thds->run_state)) {
 					struct vcodec_thread *thd =
-					    &thds->worker[i];
+								&thds->worker[i];
 
 					cnt =
-					    kthread_queue_work(&thd->worker,
-							       &thd->work);
+						kthread_queue_work(&thd->worker,
+								   &thd->work);
 					thread_dbg_flow
-					    ("queue work %d ret %d\n", i, cnt);
+					("queue work %d ret %d\n", i, cnt);
 					thd->queue_cnt += cnt;
 					break;
 				}
@@ -405,9 +405,8 @@ int vcodec_thread_trigger(struct vcodec_threads *thds)
 		if (cnt) {
 			thds->queue_cnt++;
 			thds->miss_cnt = 0;
-		} else {
+		} else
 			thds->miss_cnt++;
-		}
 	}
 
 	thread_dbg_flow("leave trigger %llu:%llu\n", thds->queue_cnt,

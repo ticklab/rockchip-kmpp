@@ -246,6 +246,6 @@ MPP_RET rc_proc_show(void *seq_file, RcCtx ctx, RK_S32 chl_id)
 		return MPP_OK;
 
 	api->proc_show(seq_file, p->ctx, chl_id);
-    return 0;
+	return 0;
 }
 

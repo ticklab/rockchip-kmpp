@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-	extern const RcImplApi default_jpege;
+extern const RcImplApi default_jpege;
 
 #ifdef  __cplusplus
 }

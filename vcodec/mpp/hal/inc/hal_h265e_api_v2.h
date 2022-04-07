@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-	extern const MppEncHalApi hal_api_h265e_v2;
+extern const MppEncHalApi hal_api_h265e_v2;
 
 #ifdef __cplusplus
 }

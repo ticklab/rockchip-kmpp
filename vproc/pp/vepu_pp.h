@@ -22,107 +22,107 @@ struct pp_buffer_t {
 };
 
 struct pp_param_t {
-    /* 0x0034 - ENC_PIC_FMT */
-    struct {
-        u32 src_from_isp : 1;
-        u32 ref_pic0_updt_en : 1;
-        u32 ref_pic1_updt_en : 1;
-        u32 reserved : 29;
-    } enc_pic_fmt;
+	/* 0x0034 - ENC_PIC_FMT */
+	struct {
+		u32 src_from_isp : 1;
+		u32 ref_pic0_updt_en : 1;
+		u32 ref_pic1_updt_en : 1;
+		u32 reserved : 29;
+	} enc_pic_fmt;
 
-    /* 0x0038 - ENC_PIC_RSL */
-    struct {
-        u32 pic_wd8_m1 : 11;
-        u32 reserved1 : 5;
-        u32 pic_hd8_m1 : 11;
-        u32 reserved2 : 5;
-    } enc_pic_rsl;
+	/* 0x0038 - ENC_PIC_RSL */
+	struct {
+		u32 pic_wd8_m1 : 11;
+		u32 reserved1 : 5;
+		u32 pic_hd8_m1 : 11;
+		u32 reserved2 : 5;
+	} enc_pic_rsl;
 
-    /* 0x0100 - VSP_PIC_CON */
-    struct {
-        u32 src_cfmt : 4;
-        u32 out_fmt_cfg : 1;
-        u32 alpha_swap : 1;
-        u32 rbuv_swap : 1;
-        u32 src_rot : 2;
-        u32 src_mirr : 1;
-        u32 src_range_trns_en : 1;
-        u32 src_range_trns_sel : 1;
-        u32 src_chroma_ds_mode : 1;
-        u32 reserved1 : 3;
-        u32 vepu_pp_internal_filter_strength : 2;
-        u32 reserved2 : 2;
-        u32 vepu_pp_edge_filter_strength : 2;
-        u32 reserved3 : 2;
-        u32 vepu_pp_corner_filter_strength : 2;
-        u32 reserved4 : 6;
-    } vsp_pic_con;
+	/* 0x0100 - VSP_PIC_CON */
+	struct {
+		u32 src_cfmt : 4;
+		u32 out_fmt_cfg : 1;
+		u32 alpha_swap : 1;
+		u32 rbuv_swap : 1;
+		u32 src_rot : 2;
+		u32 src_mirr : 1;
+		u32 src_range_trns_en : 1;
+		u32 src_range_trns_sel : 1;
+		u32 src_chroma_ds_mode : 1;
+		u32 reserved1 : 3;
+		u32 vepu_pp_internal_filter_strength : 2;
+		u32 reserved2 : 2;
+		u32 vepu_pp_edge_filter_strength : 2;
+		u32 reserved3 : 2;
+		u32 vepu_pp_corner_filter_strength : 2;
+		u32 reserved4 : 6;
+	} vsp_pic_con;
 
-    /* 0x0104 - VSP_PIC_FILL */
-    struct {
-        u32 pic_wfill : 6;
-        u32 reserved1 : 10;
-        u32 pic_hfill : 6;
-        u32 reserved2 : 10;
-    } vsp_pic_fill;
+	/* 0x0104 - VSP_PIC_FILL */
+	struct {
+		u32 pic_wfill : 6;
+		u32 reserved1 : 10;
+		u32 pic_hfill : 6;
+		u32 reserved2 : 10;
+	} vsp_pic_fill;
 
-    /* 0x0108 - VSP_PIC_OFST */
-    struct {
-        u32 pic_ofst_x : 14;
-        u32 reserved1 : 2;
-        u32 pic_ofst_y : 14;
-        u32 reserved2 : 2;
-    } vsp_pic_ofst;
+	/* 0x0108 - VSP_PIC_OFST */
+	struct {
+		u32 pic_ofst_x : 14;
+		u32 reserved1 : 2;
+		u32 pic_ofst_y : 14;
+		u32 reserved2 : 2;
+	} vsp_pic_ofst;
 
-    /* 0x0118 - VSP_PIC_STRD0 */
-    struct {
-        u32 src_strd0 : 17;
-        u32 reserved : 15;
-    } vsp_pic_strd0;
+	/* 0x0118 - VSP_PIC_STRD0 */
+	struct {
+		u32 src_strd0 : 17;
+		u32 reserved : 15;
+	} vsp_pic_strd0;
 
-    /* 0x011c - VSP_PIC_STRD1 */
-    struct {
-        u32 src_strd1 : 16;
-        u32 reserved : 16;
-    } vsp_pic_strd1;
+	/* 0x011c - VSP_PIC_STRD1 */
+	struct {
+		u32 src_strd1 : 16;
+		u32 reserved : 16;
+	} vsp_pic_strd1;
 
-    /* 0x0120 - VSP_PIC_UDFY */
-    struct {
-        u32 csc_wgt_b2y : 9;
-        u32 csc_wgt_g2y : 9;
-        u32 csc_wgt_r2y : 9;
-        u32 reserved : 5;
-    } vsp_pic_udfy;
+	/* 0x0120 - VSP_PIC_UDFY */
+	struct {
+		u32 csc_wgt_b2y : 9;
+		u32 csc_wgt_g2y : 9;
+		u32 csc_wgt_r2y : 9;
+		u32 reserved : 5;
+	} vsp_pic_udfy;
 
-    /* 0x0124 - VSP_PIC_UDFU */
-    struct {
-        u32 csc_wgt_b2u : 9;
-        u32 csc_wgt_g2u : 9;
-        u32 csc_wgt_r2u : 9;
-        u32 reserved : 5;
-    } vsp_pic_udfu;
+	/* 0x0124 - VSP_PIC_UDFU */
+	struct {
+		u32 csc_wgt_b2u : 9;
+		u32 csc_wgt_g2u : 9;
+		u32 csc_wgt_r2u : 9;
+		u32 reserved : 5;
+	} vsp_pic_udfu;
 
-    /* 0x0128 - VSP_PIC_UDFV */
-    struct {
-        u32 csc_wgt_b2v : 9;
-        u32 csc_wgt_g2v : 9;
-        u32 csc_wgt_r2v : 9;
-        u32 reserved : 5;
-    } vsp_pic_udfv;
+	/* 0x0128 - VSP_PIC_UDFV */
+	struct {
+		u32 csc_wgt_b2v : 9;
+		u32 csc_wgt_g2v : 9;
+		u32 csc_wgt_r2v : 9;
+		u32 reserved : 5;
+	} vsp_pic_udfv;
 
-    /* 0x012c - VSP_PIC_UDFO */
-    struct {
-        u32 csc_ofst_v : 8;
-        u32 csc_ofst_u : 8;
-        u32 csc_ofst_y : 5;
-    } vsp_pic_udfo;
+	/* 0x012c - VSP_PIC_UDFO */
+	struct {
+		u32 csc_ofst_v : 8;
+		u32 csc_ofst_u : 8;
+		u32 csc_ofst_y : 5;
+	} vsp_pic_udfo;
 
-    /* 0x0204 - SMR_CON_BASE */
-    struct {
-        u32 smear_cur_frm_en : 1;
-        u32 smear_ref_frm_en : 1;
-        u32 reserved : 30;
-    } smr_con_base;
+	/* 0x0204 - SMR_CON_BASE */
+	struct {
+		u32 smear_cur_frm_en : 1;
+		u32 smear_ref_frm_en : 1;
+		u32 reserved : 30;
+	} smr_con_base;
 
 	u32 smr_resi_thd0; /* 0x208 */
 	u32 smr_resi_thd1;

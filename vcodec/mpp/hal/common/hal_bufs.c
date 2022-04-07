@@ -69,7 +69,7 @@ static MPP_RET hal_bufs_clear(HalBufsImpl * impl)
 				for (j = 0; j < impl->size_cnt; j++) {
 					if (buf->buf[j]) {
 						ret |=
-						    mpp_buffer_put(buf->buf[j]);
+							mpp_buffer_put(buf->buf[j]);
 						buf->buf[j] = NULL;
 					}
 				}

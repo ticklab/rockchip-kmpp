@@ -54,22 +54,22 @@ typedef struct EncImplApi_t {
 	RK_U32 ctx_size;
 	RK_U32 flag;
 
-	 MPP_RET(*init) (void *ctx, EncImplCfg * ctrlCfg);
-	 MPP_RET(*deinit) (void *ctx);
+	MPP_RET(*init) (void *ctx, EncImplCfg * ctrlCfg);
+	MPP_RET(*deinit) (void *ctx);
 
-	 MPP_RET(*proc_cfg) (void *ctx, MpiCmd cmd, void *param);
-	 MPP_RET(*gen_hdr) (void *ctx, MppPacket pkt);
+	MPP_RET(*proc_cfg) (void *ctx, MpiCmd cmd, void *param);
+	MPP_RET(*gen_hdr) (void *ctx, MppPacket pkt);
 
-	 MPP_RET(*start) (void *ctx, HalEncTask * task);
-	 MPP_RET(*proc_dpb) (void *ctx, HalEncTask * task);
-	 MPP_RET(*proc_hal) (void *ctx, HalEncTask * task);
+	MPP_RET(*start) (void *ctx, HalEncTask * task);
+	MPP_RET(*proc_dpb) (void *ctx, HalEncTask * task);
+	MPP_RET(*proc_hal) (void *ctx, HalEncTask * task);
 
-	 MPP_RET(*add_prefix) (MppPacket pkt, RK_S32 * length, RK_U8 uuid[16],
-			       const void *data, RK_S32 size);
+	MPP_RET(*add_prefix) (MppPacket pkt, RK_S32 * length, RK_U8 uuid[16],
+			      const void *data, RK_S32 size);
 
-	 MPP_RET(*sw_enc) (void *ctx, HalEncTask * task);
+	MPP_RET(*sw_enc) (void *ctx, HalEncTask * task);
 
-	 void(*proc_debug)(void *seq_file, void *ctx, RK_S32 chl_id);
+	void(*proc_debug)(void *seq_file, void *ctx, RK_S32 chl_id);
 } EncImplApi;
 
 #endif /*__ENC_IMPL_API_H__*/

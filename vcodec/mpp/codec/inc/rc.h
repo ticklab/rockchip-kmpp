@@ -56,26 +56,26 @@ typedef void *RcCtx;
 extern "C" {
 #endif
 
-	MPP_RET rc_init(RcCtx * ctx, MppCodingType type,
-			const char **request_name);
-	MPP_RET rc_deinit(RcCtx ctx);
+MPP_RET rc_init(RcCtx * ctx, MppCodingType type,
+		const char **request_name);
+MPP_RET rc_deinit(RcCtx ctx);
 
 /* update rc control  */
-	MPP_RET rc_update_usr_cfg(RcCtx ctx, RcCfg * cfg);
+MPP_RET rc_update_usr_cfg(RcCtx ctx, RcCfg * cfg);
 
 /* Frame rate convertion */
-	MPP_RET rc_frm_check_drop(RcCtx ctx, EncRcTask * task);
+MPP_RET rc_frm_check_drop(RcCtx ctx, EncRcTask * task);
 /* Frame reenc check */
-	MPP_RET rc_frm_check_reenc(RcCtx ctx, EncRcTask * task);
+MPP_RET rc_frm_check_reenc(RcCtx ctx, EncRcTask * task);
 
 /* Frame level rate and quality control */
-	MPP_RET rc_frm_start(RcCtx ctx, EncRcTask * task);
-	MPP_RET rc_frm_end(RcCtx ctx, EncRcTask * task);
+MPP_RET rc_frm_start(RcCtx ctx, EncRcTask * task);
+MPP_RET rc_frm_end(RcCtx ctx, EncRcTask * task);
 
-	MPP_RET rc_hal_start(RcCtx ctx, EncRcTask * task);
-	MPP_RET rc_hal_end(RcCtx ctx, EncRcTask * task);
+MPP_RET rc_hal_start(RcCtx ctx, EncRcTask * task);
+MPP_RET rc_hal_end(RcCtx ctx, EncRcTask * task);
 
-    MPP_RET rc_proc_show(void *seq_file, RcCtx ctx, RK_S32 chl_id);
+MPP_RET rc_proc_show(void *seq_file, RcCtx ctx, RK_S32 chl_id);
 #ifdef __cplusplus
 }
 #endif

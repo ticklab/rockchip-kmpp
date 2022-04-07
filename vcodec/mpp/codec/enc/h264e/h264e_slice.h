@@ -27,17 +27,17 @@
 
 /* reference picture list modification operation */
 typedef struct H264eRplmo_t {
-    RK_S32      modification_of_pic_nums_idc;
-    RK_S32      abs_diff_pic_num_minus1;
-    RK_S32      long_term_pic_idx;
-    RK_S32      abs_diff_view_idx_minus1;
+	RK_S32      modification_of_pic_nums_idc;
+	RK_S32      abs_diff_pic_num_minus1;
+	RK_S32      long_term_pic_idx;
+	RK_S32      abs_diff_view_idx_minus1;
 } H264eRplmo;
 
 typedef struct H264eReorderInfo_t {
-    RK_S32      rd_cnt;
-    RK_S32      wr_cnt;
-    RK_S32      size;
-    H264eRplmo  ops[H264E_MAX_REFS_CNT];
+	RK_S32      rd_cnt;
+	RK_S32      wr_cnt;
+	RK_S32      size;
+	H264eRplmo  ops[H264E_MAX_REFS_CNT];
 } H264eReorderInfo;
 
 /*
@@ -56,76 +56,76 @@ typedef struct H264eReorderInfo_t {
  *     assign a long-term frame index to it
  */
 typedef struct H264eMmco_t {
-    RK_S32      mmco;
-    RK_S32      difference_of_pic_nums_minus1;   // for MMCO 1 & 3
-    RK_S32      long_term_pic_num;               // for MMCO 2
-    RK_S32      long_term_frame_idx;             // for MMCO 3 & 6
-    RK_S32      max_long_term_frame_idx_plus1;   // for MMCO 4
+	RK_S32      mmco;
+	RK_S32      difference_of_pic_nums_minus1;   // for MMCO 1 & 3
+	RK_S32      long_term_pic_num;               // for MMCO 2
+	RK_S32      long_term_frame_idx;             // for MMCO 3 & 6
+	RK_S32      max_long_term_frame_idx_plus1;   // for MMCO 4
 } H264eMmco;
 
 #define MAX_H264E_MMCO_CNT      8
 
 typedef struct H264eMarkingInfo_t {
-    RK_S32      idr_flag;
-    /* idr marking flag */
-    RK_S32      no_output_of_prior_pics;
-    RK_S32      long_term_reference_flag;
-    /* non-idr marking flag */
-    RK_S32      adaptive_ref_pic_buffering;
-    RK_S32      rd_cnt;
-    RK_S32      wr_cnt;
-    RK_S32      size;
-    H264eMmco   ops[MAX_H264E_MMCO_CNT];
+	RK_S32      idr_flag;
+	/* idr marking flag */
+	RK_S32      no_output_of_prior_pics;
+	RK_S32      long_term_reference_flag;
+	/* non-idr marking flag */
+	RK_S32      adaptive_ref_pic_buffering;
+	RK_S32      rd_cnt;
+	RK_S32      wr_cnt;
+	RK_S32      size;
+	H264eMmco   ops[MAX_H264E_MMCO_CNT];
 } H264eMarkingInfo;
 
 typedef struct H264eSlice_t {
-    /* Copy of sps/pps parameter */
-    RK_S32      mb_w;
-    RK_S32      mb_h;
-    RK_U32      max_num_ref_frames;
-    RK_U32      entropy_coding_mode;
-    RK_S32      log2_max_frame_num;
-    RK_S32      log2_max_poc_lsb;
-    RK_S32      pic_order_cnt_type;
-    RK_S32      qp_init;
+	/* Copy of sps/pps parameter */
+	RK_S32      mb_w;
+	RK_S32      mb_h;
+	RK_U32      max_num_ref_frames;
+	RK_U32      entropy_coding_mode;
+	RK_S32      log2_max_frame_num;
+	RK_S32      log2_max_poc_lsb;
+	RK_S32      pic_order_cnt_type;
+	RK_S32      qp_init;
 
-    /* Nal parameters */
-    RK_S32      nal_reference_idc;
-    RK_S32      nalu_type;
+	/* Nal parameters */
+	RK_S32      nal_reference_idc;
+	RK_S32      nalu_type;
 
-    /* Unchanged parameters  */
-    RK_U32      first_mb_in_slice;
-    RK_U32      slice_type;
-    RK_U32      last_slice_type;
-    RK_U32      pic_parameter_set_id;
-    RK_S32      frame_num;
-    RK_S32      num_ref_idx_override;
-    RK_S32      qp_delta;
-    RK_U32      cabac_init_idc;
-    RK_U32      disable_deblocking_filter_idc;
-    RK_S32      slice_alpha_c0_offset_div2;
-    RK_S32      slice_beta_offset_div2;
+	/* Unchanged parameters  */
+	RK_U32      first_mb_in_slice;
+	RK_U32      slice_type;
+	RK_U32      last_slice_type;
+	RK_U32      pic_parameter_set_id;
+	RK_S32      frame_num;
+	RK_S32      num_ref_idx_override;
+	RK_S32      qp_delta;
+	RK_U32      cabac_init_idc;
+	RK_U32      disable_deblocking_filter_idc;
+	RK_S32      slice_alpha_c0_offset_div2;
+	RK_S32      slice_beta_offset_div2;
 
-    /* reorder parameter */
-    RK_S32      ref_pic_list_modification_flag;
-    H264eReorderInfo    *reorder;
-    H264eMarkingInfo    *marking;
+	/* reorder parameter */
+	RK_S32      ref_pic_list_modification_flag;
+	H264eReorderInfo    *reorder;
+	H264eMarkingInfo    *marking;
 
-    RK_S32      idr_flag;
-    RK_U32      idr_pic_id;
-    RK_U32      next_idr_pic_id;
-    /* for poc mode 0 */
-    RK_U32      pic_order_cnt_lsb;
-    RK_S32      num_ref_idx_active;
-    /* idr mmco flag */
-    RK_S32      no_output_of_prior_pics;
-    RK_S32      long_term_reference_flag;
+	RK_S32      idr_flag;
+	RK_U32      idr_pic_id;
+	RK_U32      next_idr_pic_id;
+	/* for poc mode 0 */
+	RK_U32      pic_order_cnt_lsb;
+	RK_S32      num_ref_idx_active;
+	/* idr mmco flag */
+	RK_S32      no_output_of_prior_pics;
+	RK_S32      long_term_reference_flag;
 
-    /* Changable parameters  */
-    RK_S32      adaptive_ref_pic_buffering;
+	/* Changable parameters  */
+	RK_S32      adaptive_ref_pic_buffering;
 
-    /* for multi-slice writing */
-    RK_S32      is_multi_slice;
+	/* for multi-slice writing */
+	RK_S32      is_multi_slice;
 } H264eSlice;
 
 #ifdef  __cplusplus
@@ -154,16 +154,16 @@ MPP_RET h264e_marking_rd_op(H264eMarkingInfo *info, H264eMmco *op);
  * When cfg has no changes just use slice next to setup
  */
 void h264e_slice_init(H264eSlice *slice, H264eReorderInfo *reorder,
-                      H264eMarkingInfo *marking);
+		      H264eMarkingInfo *marking);
 RK_S32 h264e_slice_update(H264eSlice *slice, MppEncCfgSet *cfg,
-                          H264eSps *sps, H264ePps *pps,
-                          H264eDpbFrm *frm);
+			  H264eSps *sps, H264ePps *pps,
+			  H264eDpbFrm *frm);
 
 RK_S32 h264e_slice_read(H264eSlice *slice, void *p, RK_S32 size);
 RK_S32 h264e_slice_write(H264eSlice *slice, void *p, RK_U32 size);
 RK_S32 h264e_slice_write_pskip(H264eSlice *slice, void *p, RK_U32 size);
 RK_S32 h264e_slice_move(RK_U8 *dst, RK_U8 *src, RK_S32 dst_bit, RK_S32 src_bit,
-                        RK_S32 src_size);
+			RK_S32 src_size);
 
 RK_S32 h264e_slice_write_prefix_nal_unit_svc(H264ePrefixNal *nal, void *p, RK_S32 size);
 
