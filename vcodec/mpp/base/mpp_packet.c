@@ -83,7 +83,7 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 		min_size = (min_size + SZ_1K) & (SZ_1K - 1);
 
 	if (ring_buf_get_free(pool, &p->buf, 128, min_size, 1)) {
-		MPP_FREE(p);
+		mpp_packet_mem_free(p);
 		return MPP_ERR_MALLOC;
 	}
 
