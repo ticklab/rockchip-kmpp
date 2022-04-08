@@ -58,7 +58,7 @@ MppPacketImpl *mpp_packet_mem_alloc(void)
 {
 	struct MppPacketPool *ctx = &mpp_packet_pool;
 	struct MppPacketPoolImpl *p = NULL;
-    mutex_lock(&ctx->mem_lock);
+	mutex_lock(&ctx->mem_lock);
 	if (atomic_read(&ctx->unused_cnt) > 0) {
 		p = list_first_entry_or_null(&ctx->unused_list,
 					     struct MppPacketPoolImpl,
@@ -72,7 +72,7 @@ MppPacketImpl *mpp_packet_mem_alloc(void)
 		memset(&p->impl, 0, sizeof(MppPacketImpl));
 	} else {
 
-        if (atomic_read(&ctx->cur_pool_size) > ctx->max_pool_size) {
+		if (atomic_read(&ctx->cur_pool_size) > ctx->max_pool_size) {
 			mutex_unlock(&ctx->mem_lock);
 			return NULL;
 		}
@@ -89,7 +89,7 @@ MppPacketImpl *mpp_packet_mem_alloc(void)
 		atomic_inc(&ctx->used_cnt);
 		atomic_inc(&ctx->cur_pool_size);
 	}
-    mutex_unlock(&ctx->mem_lock);
+	mutex_unlock(&ctx->mem_lock);
 	return &p->impl;
 }
 
@@ -97,7 +97,7 @@ MPP_RET mpp_packet_mem_free(MppPacketImpl * p)
 {
 	struct MppPacketPool *ctx = &mpp_packet_pool;
 	struct MppPacketPoolImpl *packet = NULL, *n;
-    mutex_lock(&ctx->mem_lock);
+	mutex_lock(&ctx->mem_lock);
 	list_for_each_entry_safe(packet, n, &ctx->used_list, pool_list) {
 		if (&packet->impl == p) {
 			list_del_init(&packet->pool_list);
@@ -136,16 +136,17 @@ MPP_RET mpp_packet_pool_deinit(void)
 	return MPP_OK;
 }
 
-MPP_RET mpp_packet_pool_proc(void *seq_file){
-	    struct MppPacketPool *ctx = &mpp_packet_pool;
-        struct seq_file *seq = (struct seq_file *)seq_file;
-        seq_puts(
-            seq,
-            "\n--------packet_pool---------------------------------------------------------------------------\n");
-        seq_printf(seq, "%12s%12s%12s\n", "unused_cnt", "used_cnt", "total_cnt");
-        seq_printf(seq, "%12u%12u%12u\n", atomic_read(&ctx->unused_cnt), atomic_read(&ctx->used_cnt),
-            atomic_read(&ctx->cur_pool_size));
-        return 0;
+MPP_RET mpp_packet_pool_proc(void *seq_file)
+{
+	struct MppPacketPool *ctx = &mpp_packet_pool;
+	struct seq_file *seq = (struct seq_file *)seq_file;
+	seq_puts(
+		seq,
+		"\n--------packet_pool---------------------------------------------------------------------------\n");
+	seq_printf(seq, "%12s%12s%12s\n", "unused_cnt", "used_cnt", "total_cnt");
+	seq_printf(seq, "%12u%12u%12u\n", atomic_read(&ctx->unused_cnt), atomic_read(&ctx->used_cnt),
+		   atomic_read(&ctx->cur_pool_size));
+	return 0;
 }
 
 

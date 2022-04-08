@@ -497,19 +497,19 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	reg->rdo_smear_cfg_comb.rdo_smear_en = 1;
 	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 9;
 	reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 8;
-	reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 8;    
+	reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 8;
 
-	if(smear_cnt[2] + smear_cnt[3] > smear_cnt[4] / 2)
-	    delta_qp = 1;
-	if(smear_cnt[4] < (mb_cnt >> 8))
-	    delta_qp -= 8;
-	else if(smear_cnt[4] < (mb_cnt >> 7))
-	    delta_qp -= 6;
-	else if(smear_cnt[4] < (mb_cnt >> 6))
-	    delta_qp -= 4;
+	if (smear_cnt[2] + smear_cnt[3] > smear_cnt[4] / 2)
+		delta_qp = 1;
+	if (smear_cnt[4] < (mb_cnt >> 8))
+		delta_qp -= 8;
+	else if (smear_cnt[4] < (mb_cnt >> 7))
+		delta_qp -= 6;
+	else if (smear_cnt[4] < (mb_cnt >> 6))
+		delta_qp -= 4;
 	else
-	    delta_qp -= 1;
-	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = delta_qp; 
+		delta_qp -= 1;
+	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = delta_qp;
 
 	reg->rdo_smear_cfg_comb.rdo_smear_order_state = 0;
 	if (INTRA_FRAME == ctx->frame_type)
@@ -2017,7 +2017,7 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	fb->st_smear_cnt[2] = elem->st.st_smear_cnt.rdo_smear_cnt2 * 4;
 	fb->st_smear_cnt[3] = elem->st.st_smear_cnt.rdo_smear_cnt3 * 4;
 	fb->st_smear_cnt[4] = fb->st_smear_cnt[0] + fb->st_smear_cnt[1]
-	 	+ fb->st_smear_cnt[2] + fb->st_smear_cnt[3];
+			      + fb->st_smear_cnt[2] + fb->st_smear_cnt[3];
 
 	hal_rc_ret->bit_real += fb->out_strm_size * 8;
 

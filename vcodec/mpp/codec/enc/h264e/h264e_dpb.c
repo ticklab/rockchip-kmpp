@@ -36,12 +36,12 @@ void h264e_dpb_dump_frm(H264eDpb *dpb, const char *caller, RK_S32 line)
 		mpp_log_f("frm  %2d   %d  %-3d %s    %-3d %-3s %-3d %-4x %-3d\n",
 			  i, frm->on_used, status->seq_idx,
 			  (status->is_intra) ? (status->is_idr ? "I" : "i" ) :
-				  status->is_non_ref ? "p" : "P",
-				  status->temporal_id,
-				  status->is_non_ref ? "non" : status->is_lt_ref ? "lt" : "st",
-				  status->lt_idx,
-				  status->ref_mode,
-				  status->ref_arg);
+			  status->is_non_ref ? "p" : "P",
+			  status->temporal_id,
+			  status->is_non_ref ? "non" : status->is_lt_ref ? "lt" : "st",
+			  status->lt_idx,
+			  status->ref_mode,
+			  status->ref_arg);
 	}
 }
 
@@ -56,12 +56,12 @@ void h264e_dpb_dump_listX(H264eDpbFrm **list, RK_S32 count)
 		mpp_log_f("frm  %2d   %d  %-3d %s    %-3d %-3s %-3d %-4x %-3d\n",
 			  i, frm->on_used, status->seq_idx,
 			  (status->is_intra) ? (status->is_idr ? "I" : "i" ) :
-				  status->is_non_ref ? "p" : "P",
-				  status->temporal_id,
-				  status->is_non_ref ? "non" : status->is_lt_ref ? "lt" : "st",
-				  status->lt_idx,
-				  status->ref_mode,
-				  status->ref_arg);
+			  status->is_non_ref ? "p" : "P",
+			  status->temporal_id,
+			  status->is_non_ref ? "non" : status->is_lt_ref ? "lt" : "st",
+			  status->lt_idx,
+			  status->ref_mode,
+			  status->ref_arg);
 	}
 }
 

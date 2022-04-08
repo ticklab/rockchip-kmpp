@@ -383,7 +383,7 @@ int vcodec_thread_trigger(struct vcodec_threads *thds)
 			for (i = 0; i < thds->cfg.count; i++) {
 				if (!test_bit(i, &thds->run_state)) {
 					struct vcodec_thread *thd =
-								&thds->worker[i];
+							&thds->worker[i];
 
 					cnt =
 						kthread_queue_work(&thd->worker,

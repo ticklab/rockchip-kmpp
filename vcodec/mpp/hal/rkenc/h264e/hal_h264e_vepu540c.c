@@ -1126,17 +1126,17 @@ static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 	reg->rdo_smear_cfg_comb.rdo_smear_en = 1;
 	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 9;
 
-	if(smear_cnt[2] + smear_cnt[3] > smear_cnt[4] / 2)
-	    delta_qp = 1;
-	if(smear_cnt[4] < (mb_cnt >> 8))
-	    delta_qp -= 8;
-	else if(smear_cnt[4] < (mb_cnt >> 7))
-	    delta_qp -= 6;
-	else if(smear_cnt[4] < (mb_cnt >> 6))
-	    delta_qp -= 4;
+	if (smear_cnt[2] + smear_cnt[3] > smear_cnt[4] / 2)
+		delta_qp = 1;
+	if (smear_cnt[4] < (mb_cnt >> 8))
+		delta_qp -= 8;
+	else if (smear_cnt[4] < (mb_cnt >> 7))
+		delta_qp -= 6;
+	else if (smear_cnt[4] < (mb_cnt >> 6))
+		delta_qp -= 4;
 	else
-	    delta_qp -= 1;
-	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = delta_qp; 
+		delta_qp -= 1;
+	reg->rdo_smear_cfg_comb.rdo_smear_dlt_qp = delta_qp;
 
 	reg->rdo_smear_cfg_comb.rdo_smear_order_state = 0;
 	if (H264_I_SLICE == slice->slice_type)
@@ -2436,7 +2436,7 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 	ctx->smear_cnt[2] = regs_set->reg_st.st_smear_cnt.rdo_smear_cnt2 * 4;
 	ctx->smear_cnt[3] = regs_set->reg_st.st_smear_cnt.rdo_smear_cnt3 * 4;
 	ctx->smear_cnt[4] = ctx->smear_cnt[0] + ctx->smear_cnt[1]
-		+ ctx->smear_cnt[2] + ctx->smear_cnt[3];
+			    + ctx->smear_cnt[2] + ctx->smear_cnt[3];
 
 	task->hal_ret.data = &ctx->hal_rc_cfg;
 	task->hal_ret.number = 1;

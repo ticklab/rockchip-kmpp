@@ -587,8 +587,7 @@ void code_skip_flag(h265_slice * slice, RK_U32 abs_part_idx, DataCu * cu)
 		ctxSkip = 2;
 	h265e_dbg_skip("ctxSkip = %d", ctxSkip);
 	h265e_cabac_encodeBin(cabac_ctx,
-			      &slice->contex_models[OFF_SKIP_FLAG_CTX +
-						    ctxSkip], 1);
+			      &slice->contex_models[OFF_SKIP_FLAG_CTX + ctxSkip], 1);
 }
 
 static void code_merge_index(h265_slice * slice)

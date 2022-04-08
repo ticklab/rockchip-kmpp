@@ -14,11 +14,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	MPP_RET mpp_packet_pool_init(RK_U32 max_cnt);
-	MppPacketImpl *mpp_packet_mem_alloc(void);
-	MPP_RET mpp_packet_mem_free(MppPacketImpl * p);
-	MPP_RET mpp_packet_pool_deinit(void);
-	MPP_RET mpp_packet_pool_proc(void *seq_file);
+MPP_RET mpp_packet_pool_init(RK_U32 max_cnt);
+MppPacketImpl *mpp_packet_mem_alloc(void);
+MPP_RET mpp_packet_mem_free(MppPacketImpl * p);
+MPP_RET mpp_packet_pool_deinit(void);
+MPP_RET mpp_packet_pool_proc(void *seq_file);
 #ifdef __cplusplus
 }
 #endif

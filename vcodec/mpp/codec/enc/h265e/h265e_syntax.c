@@ -336,17 +336,15 @@ RK_S32 fill_ref_parameters(const H265eCtx * h, H265eSlicParams * sp)
 
 			if (rps->delta_poc_msb_present_flag[i]) {
 				if (deltaFlag) {
-					dlt_poc_msb_cycl[numLongTerm - 1 -
-							 (i - offset)] =
-								 rps->delta_poc_msb_cycle_lt[i];
+					dlt_poc_msb_cycl[numLongTerm - 1 - (i - offset)] =
+						rps->delta_poc_msb_cycle_lt[i];
 				} else {
 					RK_S32 differenceInDeltaMSB =
 						rps->delta_poc_msb_cycle_lt[i] -
 						prevDeltaMSB;
 					mpp_assert(differenceInDeltaMSB >= 0);
-					dlt_poc_msb_cycl[numLongTerm - 1 -
-							 (i - offset)] =
-								 differenceInDeltaMSB;
+					dlt_poc_msb_cycl[numLongTerm - 1 - (i - offset)] =
+						differenceInDeltaMSB;
 				}
 			}
 			prevDeltaMSB = rps->delta_poc_msb_cycle_lt[i];

@@ -1541,7 +1541,7 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 		if (p->qp_layer_id) {
 			RK_S32 hier_qp_delta =
 				usr_cfg->hier_qp_cfg.hier_qp_delta[p->qp_layer_id -
-								   1];
+										  1];
 
 			p->start_qp -= hier_qp_delta;
 			rc_dbg_qp("hier_qp: layer %d delta %d", p->qp_layer_id,
