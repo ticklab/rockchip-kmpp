@@ -185,9 +185,9 @@ int vepu_pp_destroy_chn(int chn)
 
 	info = &g_pp_ctx.chn_info[chn];
 
-	info->api->deinit(info->dev_srv);
-
 	pp_release_buffer(info);
+
+	info->api->deinit(info->dev_srv);
 
 	if (info->dev_srv) {
 		vfree(info->dev_srv);
