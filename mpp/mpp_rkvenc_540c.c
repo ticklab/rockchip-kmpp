@@ -41,7 +41,6 @@
 #define RKVENC_DRIVER_NAME			"mpp_rkvenc_540c"
 
 #define	RKVENC_SESSION_MAX_BUFFERS		40
-#define RV1106_FPGA_TEST 0
 
 #define RKVENC_DVBM_DISCONNECT	(BIT(15))
 #define REC_FBC_DIS_CLASS_OFFSET	(36)
@@ -261,24 +260,8 @@ struct rkvenc_dev {
 	struct dvbm_port *port;
 	u32 line_cnt;
 #endif
-	/* dvbm y/c top/bot addr */
-	u32 ybuf_top;
-	u32 ybuf_bot;
-	u32 cbuf_top;
-	u32 cbuf_bot;
 	u32 frm_id_start;
 	u32 frm_id_end;
-	u32 frm_id_tmp;
-	u32 multi_out;
-
-	u32 out_addr;
-	u32 out_offset;
-#if RV1106_FPGA_TEST
-	struct mpp_dma_buffer *out_buf;
-#endif
-	u32 out_buf_top_off;
-	u32 out_buf_cur_off;
-	u32 out_buf_pre_off;
 
 	/* for link mode */
 	u32 task_capacity;
@@ -712,17 +695,6 @@ static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 		return 0;
 
 	switch (event) {
-	case DVBM_VEPU_NOTIFY_ADDR: {
-		struct dvbm_addr_cfg *cfg = (struct dvbm_addr_cfg*)arg;
-
-		enc->ybuf_top = cfg->ybuf_top;
-		enc->ybuf_bot = cfg->ybuf_bot;
-		enc->cbuf_top = cfg->cbuf_top;
-		enc->cbuf_bot = cfg->cbuf_bot;
-
-		//pr_info("%s y/c t: 0x%08x 0x%08x y/c b: 0x%08x 0x%08x\n",
-		//	__func__, enc->ybuf_top, enc->cbuf_top, enc->ybuf_bot, enc->cbuf_bot);
-	} break;
 	case DVBM_VEPU_REQ_CONNECT : {
 		u32 connect = *(u32*)arg;
 		unsigned long val = mpp_read(&enc->mpp, 0x18);
@@ -999,7 +971,6 @@ static void *rkvenc_prepare(struct mpp_dev *mpp,
 		mutex_lock(&link->list_mutex);
 		table = list_first_entry_or_null(&link->unused_list,
 						 struct mpp_dma_buffer, link);
-		//mpp_err("table=%px\n", table);
 		if (table) {
 			rkvenc_link_fill_table(link, task, table);
 			// mutex_lock(&link->list_mutex);
@@ -1086,7 +1057,6 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 
 	enc->line_cnt = 0;
 	atomic_set(&enc->on_work, 1);
-	//dev_info(mpp->dev, "link_run=%d mode %d\n", enc->link_run, enc->link_mode);
 	switch (enc->link_mode) {
 	case RKVENC_MODE_ONEFRAME: {
 		u32 i, j;
@@ -1102,15 +1072,12 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 
 			req = &task->w_reqs[i];
 			ret = rkvenc_get_class_msg(task, req->offset, &msg);
-			//mpp_err("req->offset=%d, msg.offset=%d, req->size=%d, ret=%d\n",
-			//		req->offset, msg.offset, req->size, ret);
 			if (ret)
 				return -EINVAL;
 
 			s = (req->offset - msg.offset) / sizeof(u32);
 			e = s + req->size / sizeof(u32);
 			regs = (u32 *)msg.data;
-			//mpp_err("s=%d, e=%d\n", s, e);
 			for (j = s; j < e; j++) {
 				off = msg.offset + j * sizeof(u32);
 				if (off == hw->enc_start_base) {
@@ -1203,74 +1170,6 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 	if (mpp->irq_status == RKVENC_DVBM_DISCONNECT)
 		return IRQ_HANDLED;
 
-#if RV1106_FPGA_TEST
-	if (enc->multi_out) {
-		u32 st_snum = mpp_read(mpp, 0x4034);
-		u32 pkt_num = (st_snum >> 16) & 0x7f;
-		u32 size = 0;
-		void *src = enc->out_buf->vaddr;
-		void* dst;
-
-		dma_sync_single_for_device(mpp->dev, enc->out_addr,
-					   10 * 1024, DMA_FROM_DEVICE);
-		dma_sync_single_for_cpu(mpp->dev, enc->out_addr,
-					10 * 1024, DMA_FROM_DEVICE);
-		dma_sync_single_for_device(mpp->dev, enc->out_buf->iova,
-					   enc->out_buf_top_off, DMA_FROM_DEVICE);
-		dma_sync_single_for_cpu(mpp->dev, enc->out_buf->iova,
-					enc->out_buf_top_off, DMA_FROM_DEVICE);
-		dst = phys_to_virt(enc->out_addr);
-		if (test_bit(0, &mpp->irq_status))
-			size = mpp_read(mpp, 0x4000) - enc->out_offset;
-		else
-			size = pkt_num * 1024 - enc->out_offset;
-
-		if ((test_bit(4, &mpp->irq_status) && size > 0) || (size == enc->out_buf_top_off)) {
-			//pr_info("buf overflow pkt_num %d\n", pkt_num);
-			size -= 1024;
-		}
-		//pr_info("pkt_num %d size %d pre %d offset %d max %d\n",
-		//	pkt_num, size, enc->out_buf_pre_off, enc->out_offset,
-		//	enc->out_buf_top_off);
-		//pr_info("w : r = 0x%08x : 0x%08x\n", mpp_read(mpp, 0x402c), mpp_read(mpp, 0x2bc));
-		if (size > 0) {
-			if ((enc->out_buf_pre_off + size) >= enc->out_buf_top_off) {
-				u32 size1 = enc->out_buf_top_off - enc->out_buf_pre_off;
-
-				memcpy(dst + enc->out_offset, src + enc->out_buf_pre_off, size1);
-				enc->out_buf_pre_off = 0;
-				enc->out_offset += size1;
-				memcpy(dst + enc->out_offset, src + enc->out_buf_pre_off, size - size1);
-				enc->out_offset += (size - size1);
-				enc->out_buf_pre_off += (size - size1);
-			} else {
-				memcpy(phys_to_virt(enc->out_addr) + enc->out_offset, src + enc->out_buf_pre_off, size);
-				enc->out_buf_pre_off += size;
-				enc->out_offset += size;
-			}
-			dma_sync_single_for_device(mpp->dev, enc->out_addr,
-						   10 * 1024, DMA_FROM_DEVICE);
-			dma_sync_single_for_cpu(mpp->dev, enc->out_addr,
-						10 * 1024, DMA_FROM_DEVICE);
-			dma_sync_single_for_device(mpp->dev, enc->out_buf->iova,
-						   enc->out_buf_top_off, DMA_FROM_DEVICE);
-			dma_sync_single_for_cpu(mpp->dev, enc->out_buf->iova,
-						enc->out_buf_top_off, DMA_FROM_DEVICE);
-			// if (test_bit(4, &mpp->irq_status)) {
-			// 	// u32 old_adr = mpp_read(mpp, 0x2b0);
-			// 	// enc->out_buf_top_off += 1*1024;
-			// 	// mpp_write(mpp, 0x2b0, enc->out_buf->iova + enc->out_buf_top_off);
-			// 	// pr_info("update top addr 0x%08x -> 0x%08x", old_adr, mpp_read(mpp, 0x2b0));
-			// 	mpp_write(mpp, 0x2bc, enc->out_buf->iova + enc->out_buf_pre_off + 0xd);
-			// } else
-			mpp_write(mpp, 0x2bc, enc->out_buf->iova + enc->out_buf_pre_off + 0xd);
-		}
-		//pr_info("st_snum 0x%08x si_len 0x%08x size 0x%08x\n", st_snum,
-		//	mpp_read(mpp, 0x4038), mpp_read(mpp, 0x4000));
-		if (!test_bit(0, &mpp->irq_status))
-			return IRQ_NONE;
-	}
-#endif
 	mpp_debug_leave();
 
 	return IRQ_WAKE_THREAD;
@@ -1504,7 +1403,6 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 			s = (req->offset - msg.offset) / sizeof(u32);
 			e = s + req->size / sizeof(u32);
 			reg = (u32 *)req->data;
-			//mpp_err("msg.offset=%08x, s=%d, e=%d\n", msg.offset, s ,e);
 			for (j = s; j < e; j++)
 				reg[j] = mpp_read_relaxed(mpp, msg.offset + j * sizeof(u32));
 
@@ -1842,8 +1740,6 @@ static int rkvenc_procfs_init(struct mpp_dev *mpp)
 				enc->procfs, rkvenc_show_session_info, mpp);
 	mpp_procfs_create_u32("link_mode", 0644,
 			      enc->procfs, &enc->link_mode);
-	mpp_procfs_create_u32("stream_top", 0644,
-			      enc->procfs, &enc->out_buf_top_off);
 
 	return 0;
 }
@@ -2147,7 +2043,6 @@ static int rkvenc_link_init(struct platform_device *pdev,
 
 	enc->link = link;
 	link->enc = enc;
-	//mpp_err("xxxx link_mode=%d\n", enc->link_mode);
 
 	mpp_debug_leave();
 
@@ -2220,10 +2115,6 @@ static int rkvenc_probe_default(struct platform_device *pdev)
 		}
 	}
 #endif
-#if RV1106_FPGA_TEST
-	enc->out_buf = mpp_dma_alloc(dev, 50 * 1024);
-	enc->out_buf_top_off = 3 * 1024;
-#endif
 	enc->link_mode = RKVENC_MODE_ONEFRAME;
 	/* init for link device */
 	rkvenc_link_init(pdev, enc);
@@ -2265,10 +2156,6 @@ static int rkvenc_remove(struct platform_device *pdev)
 #endif
 	mpp_dev_remove(&enc->mpp);
 	rkvenc_procfs_remove(&enc->mpp);
-#if RV1106_FPGA_TEST
-	if (enc->out_buf)
-		mpp_dma_free(enc->out_buf);
-#endif
 	rkvenc_link_remove(enc, enc->link);
 
 	return 0;

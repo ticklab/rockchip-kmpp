@@ -838,25 +838,9 @@ extern const char *enc_info_item_name[ENC_INFO_BUTT];
 
 extern const struct file_operations rockchip_mpp_fops;
 
-extern struct platform_driver rockchip_rkvdec_driver;
-extern struct platform_driver rockchip_rkvenc_driver;
-extern struct platform_driver rockchip_vdpu1_driver;
-extern struct platform_driver rockchip_vepu1_driver;
-extern struct platform_driver rockchip_vdpu2_driver;
-extern struct platform_driver rockchip_vepu2_driver;
-extern struct platform_driver rockchip_vepu22_driver;
-extern struct platform_driver rockchip_iep2_driver;
-extern struct platform_driver rockchip_jpgdec_driver;
-extern struct platform_driver rockchip_rkvdec2_driver;
 extern struct platform_driver rockchip_rkvenc2_driver;
 extern struct platform_driver rockchip_rkvenc540c_driver;
-extern struct platform_driver rockchip_av1dec_driver;
-extern struct platform_driver rockchip_av1_iommu_driver;
 extern struct platform_driver rockchip_vepu_pp_driver;
-
-extern struct platform_device *av1dec_device_create(void);
-extern int av1dec_driver_register(struct platform_driver *drv);
-extern struct bus_type av1dec_bus;
 
 extern struct mpp_service *g_srv;
 #endif
