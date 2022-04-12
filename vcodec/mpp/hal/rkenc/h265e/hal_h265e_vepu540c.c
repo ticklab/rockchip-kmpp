@@ -890,12 +890,12 @@ static MPP_RET hal_h265e_vepu540c_prepare(void *hal)
 
 	if (prep->change & (MPP_ENC_PREP_CFG_CHANGE_INPUT |
 			    MPP_ENC_PREP_CFG_CHANGE_FORMAT)) {
-		RK_S32 i;
+		/*RK_S32 i;
 
 		// pre-alloc required buffers to reduce first frame delay
 		vepu540c_h265_setup_hal_bufs(ctx);
 		for (i = 0; i < ctx->max_buf_cnt; i++)
-			hal_bufs_get_buf(ctx->dpb_bufs, i);
+			hal_bufs_get_buf(ctx->dpb_bufs, i);*/
 
 		prep->change = 0;
 	}
