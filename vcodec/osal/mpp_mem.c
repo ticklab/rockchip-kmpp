@@ -12,6 +12,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/vmalloc.h>
+#include <linux/mm.h>
 #include <linux/slab.h>
 #include "rk_type.h"
 #include "mpp_err.h"
@@ -48,7 +49,8 @@ void *mpp_osal_malloc(const char *caller, size_t size)
 		(debug & MEM_EXT_ROOM) ? (size_align +
 					  2 * MEM_ALIGN) : (size_align);
 
-	return vmalloc(size_real);
+	//mpp_log("call %s size_real = %d", caller, size_real);
+	return kvmalloc(size_real, GFP_KERNEL);
 
 }
 
@@ -87,7 +89,7 @@ void mpp_osal_free(const char *caller, void *ptr)
 		return;
 
 	if (!debug) {
-		vfree(ptr);
+		kvfree(ptr);
 		return;
 	}
 }
