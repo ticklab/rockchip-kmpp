@@ -456,6 +456,8 @@ typedef struct MppEncPrepCfg_t {
 	RK_S32              height;
 	RK_S32              hor_stride;
 	RK_S32              ver_stride;
+	RK_S32              max_width;
+	RK_S32              max_height;
 
 	/*
 	 * Mpp encoder input data format config

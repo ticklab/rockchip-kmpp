@@ -222,8 +222,8 @@ static void get_wrap_buf(HalH264eVepu540cCtx *ctx, RK_S32 max_lt_cnt)
 	MppEncCfgSet *cfg = ctx->cfg;
 	MppEncPrepCfg *prep = &cfg->prep;
 	RK_S32 alignment = 64;
-	RK_S32 aligned_w = MPP_ALIGN(prep->width, alignment);
-	RK_S32 aligned_h = MPP_ALIGN(prep->height, alignment);
+	RK_S32 aligned_w = MPP_ALIGN(prep->max_width, alignment);
+	RK_S32 aligned_h = MPP_ALIGN(prep->max_height, alignment);
 	RK_U32 total_wrap_size;
 	WrapInfo *body = &ctx->wrap_infos.body;
 	WrapInfo *hdr = &ctx->wrap_infos.hdr;
@@ -448,8 +448,8 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 	MppEncCfgSet *cfg = ctx->cfg;
 	MppEncPrepCfg *prep = &cfg->prep;
 	RK_S32 alignment = 64;
-	RK_S32 aligned_w = MPP_ALIGN(prep->width, alignment);
-	RK_S32 aligned_h = MPP_ALIGN(prep->height, alignment);
+	RK_S32 aligned_w = MPP_ALIGN(prep->max_width, alignment);
+	RK_S32 aligned_h = MPP_ALIGN(prep->max_height, alignment);
 	RK_S32 pixel_buf_fbc_hdr_size = MPP_ALIGN(aligned_w * aligned_h / 64, SZ_8K);
 	RK_S32 pixel_buf_fbc_bdy_size = aligned_w * aligned_h * 3 / 2;
 	RK_S32 pixel_buf_size = pixel_buf_fbc_hdr_size + pixel_buf_fbc_bdy_size;
@@ -457,6 +457,7 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 	RK_S32 old_max_cnt = ctx->max_buf_cnt;
 	RK_S32 new_max_cnt = 2;
 	RK_U32 smera_size = 0;
+	RK_U32 smera_r_size = 0;
 	MppEncRefCfg ref_cfg = cfg->ref_cfg;
 	RK_S32 max_lt_cnt;
 
@@ -489,12 +490,14 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 		ctx->ext_line_buf_size = 0;
 	}
 
-	if (1)
+	if (1) {
 		smera_size = MPP_ALIGN(aligned_w, 1024) / 1024 * MPP_ALIGN(aligned_h, 16) / 16 * 16;
-
-	else
+		smera_r_size = MPP_ALIGN(aligned_h, 1024) / 1024 * MPP_ALIGN(aligned_w, 16) / 16 * 16;
+	} else {
 		smera_size = MPP_ALIGN(aligned_w, 256) / 256 * MPP_ALIGN(aligned_h, 32) / 32;
-
+		smera_r_size = MPP_ALIGN(aligned_h, 256) / 256 * MPP_ALIGN(aligned_w, 32) / 32;;
+	}
+	smera_size = MPP_MAX(smera_size, smera_r_size);
 	if ((ctx->pixel_buf_fbc_hdr_size != pixel_buf_fbc_hdr_size) ||
 	    (ctx->pixel_buf_fbc_bdy_size != pixel_buf_fbc_bdy_size) ||
 	    (ctx->pixel_buf_size != pixel_buf_size) ||

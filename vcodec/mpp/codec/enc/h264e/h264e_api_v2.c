@@ -264,6 +264,20 @@ static MPP_RET h264e_proc_prep_cfg(MppEncPrepCfg *dst, MppEncPrepCfg *src)
 			}
 			dst->hor_stride = src->hor_stride;
 			dst->ver_stride = src->ver_stride;
+			if (src->max_width && src->max_height) {
+				if (src->max_width * src->max_height < dst->width * dst->height) {
+					mpp_err("config maybe err should realloc buff max w:h [%d:%d] enc w:h[%d:%d]",
+						src->max_width, src->max_height, dst->width, dst->height);
+					dst->max_width  = dst->width;
+					dst->max_height = dst->height;
+				} else {
+					dst->max_width  = src->max_width;
+					dst->max_height = src->max_height;
+				}
+			} else {
+				dst->max_width  = dst->width;
+				dst->max_height = dst->height;
+			}
 		}
 
 		dst->change |= change;
@@ -693,7 +707,7 @@ static MPP_RET h264e_proc_hal(void *ctx, HalEncTask *task)
 static MPP_RET h264e_sw_enc(void *ctx, HalEncTask *task)
 {
 #ifdef SW_ENC_PSKIP
-    H264eCtx *p = (H264eCtx *)ctx;
+	H264eCtx *p = (H264eCtx *)ctx;
 	MppEncH264Cfg *h264 = &p->cfg->codec.h264;
 	EncRcTaskInfo *rc_info = &task->rc_task->info;
 	MppPacket packet = task->packet;

@@ -257,7 +257,7 @@ static MPP_RET h265e_proc_hal(void *ctx, HalEncTask * task)
 static MPP_RET h265e_proc_enc_skip(void *ctx, HalEncTask * task)
 {
 #ifdef SW_ENC_PSKIP
-    H265eCtx *p = (H265eCtx *) ctx;
+	H265eCtx *p = (H265eCtx *) ctx;
 	MppPacket pkt = task->packet;
 	RK_U8 *ptr = mpp_packet_get_pos(pkt);
 	RK_U32 offset = mpp_packet_get_length(pkt);
@@ -339,6 +339,20 @@ static MPP_RET h265e_proc_prep_cfg(MppEncPrepCfg * dst, MppEncPrepCfg * src)
 		}
 		dst->hor_stride = src->hor_stride;
 		dst->ver_stride = src->ver_stride;
+		if (src->max_width && src->max_height) {
+			if (src->max_width * src->max_height < dst->width * dst->height) {
+				mpp_err("config maybe err should realloc buff max w:h [%d:%d] enc w:h[%d:%d]",
+					src->max_width, src->max_height, dst->width, dst->height);
+				dst->max_width  = dst->width;
+				dst->max_height = dst->height;
+			} else {
+				dst->max_width  = src->max_width;
+				dst->max_height = src->max_height;
+			}
+		} else {
+			dst->max_width  = dst->width;
+			dst->max_height = dst->height;
+		}
 	}
 
 	dst->change |= change;
