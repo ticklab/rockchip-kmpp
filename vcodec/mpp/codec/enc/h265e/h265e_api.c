@@ -256,7 +256,8 @@ static MPP_RET h265e_proc_hal(void *ctx, HalEncTask * task)
 
 static MPP_RET h265e_proc_enc_skip(void *ctx, HalEncTask * task)
 {
-	H265eCtx *p = (H265eCtx *) ctx;
+#ifdef SW_ENC_PSKIP
+    H265eCtx *p = (H265eCtx *) ctx;
 	MppPacket pkt = task->packet;
 	RK_U8 *ptr = mpp_packet_get_pos(pkt);
 	RK_U32 offset = mpp_packet_get_length(pkt);
@@ -270,8 +271,8 @@ static MPP_RET h265e_proc_enc_skip(void *ctx, HalEncTask * task)
 	task->length = new_length;
 	task->rc_task->info.bit_real = 8 * new_length;
 	///mpp_packet_set_length(pkt, offset + new_length);
-
 	h265e_dbg_func("leave\n");
+#endif
 	return MPP_OK;
 }
 

@@ -692,7 +692,8 @@ static MPP_RET h264e_proc_hal(void *ctx, HalEncTask *task)
 
 static MPP_RET h264e_sw_enc(void *ctx, HalEncTask *task)
 {
-	H264eCtx *p = (H264eCtx *)ctx;
+#ifdef SW_ENC_PSKIP
+    H264eCtx *p = (H264eCtx *)ctx;
 	MppEncH264Cfg *h264 = &p->cfg->codec.h264;
 	EncRcTaskInfo *rc_info = &task->rc_task->info;
 	MppPacket packet = task->packet;
@@ -725,7 +726,7 @@ static MPP_RET h264e_sw_enc(void *ctx, HalEncTask *task)
 
 	rc_info->bit_real = task->length;
 	rc_info->quality_real = rc_info->quality_target;
-
+#endif
 	return MPP_OK;
 }
 

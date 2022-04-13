@@ -1617,10 +1617,12 @@ MPP_RET rc_model_v2_check_reenc(void *ctx, EncRcTask * task)
 		}
 		break;
 		case MPP_ENC_RC_DROP_FRM_PSKIP: {
+#ifdef SW_ENC_PSKIP
 			frm->force_pskip = 1;
 			frm->reencode = 1;
 			p->on_pskip = 1;
 			p->drop_cnt++;
+#endif
 			rc_dbg_drop("force_pskip\n");
 		}
 		break;

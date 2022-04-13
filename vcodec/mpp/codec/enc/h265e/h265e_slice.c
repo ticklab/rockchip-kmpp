@@ -324,6 +324,7 @@ RK_S32 get_num_rps_cur_templist(h265_reference_picture_set * rps)
 	return numRpsCurrTempList;
 }
 
+#ifdef SW_ENC_PSKIP
 void h265e_code_slice_header(h265_slice * slice, MppWriteCtx * bitIf)
 {
 	RK_U32 i = 0;
@@ -780,13 +781,16 @@ static void h265e_write_nal(MppWriteCtx * bitIf)
 	mpp_writer_put_bits(bitIf, 0, 6);	// nuh_reserved_zero_6bits
 	mpp_writer_put_bits(bitIf, 1, 3);	// nuh_temporal_id_plus1
 	h265e_dbg_func("leave\n");
-}  static void h265e_write_algin(MppWriteCtx * bitIf)
+}
+static void h265e_write_algin(MppWriteCtx * bitIf)
 {
 	h265e_dbg_func("enter\n");
 	mpp_writer_put_bits(bitIf, 1, 1);
 	mpp_writer_align_zero(bitIf);
 	h265e_dbg_func("leave\n");
-}  RK_S32 h265e_code_slice_skip_frame(void *ctx, h265_slice * slice,
+}
+
+RK_S32 h265e_code_slice_skip_frame(void *ctx, h265_slice * slice,
 				      RK_U8 * buf, RK_S32 len)
 {
 	MppWriteCtx bitIf;
@@ -827,5 +831,5 @@ static void h265e_write_nal(MppWriteCtx * bitIf)
 	h265e_dbg_func("leave\n");
 	return mpp_writer_bytes(&bitIf);
 }
-
+#endif
 
