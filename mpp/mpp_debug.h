@@ -39,9 +39,9 @@
 #define DEBUG_GET_REG				0x00002000
 #define DEBUG_PPS_FILL				0x00004000
 #define DEBUG_IRQ_CHECK				0x00008000
-#define DEBUG_CACHE_32B				0x00010000
+#define DEBUG_DVBM_INFO				0x00010000
 
-#define DEBUG_RESET				0x00020000
+#define DEBUG_RESET					0x00020000
 #define DEBUG_SET_REG_L2			0x00040000
 #define DEBUG_GET_REG_L2			0x00080000
 #define DEBUG_GET_PERF_VAL			0x00100000
@@ -120,6 +120,13 @@ extern unsigned int mpp_dev_debug;
 #define mpp_dbg_core(fmt, args...)				\
 	do {							\
 		if (unlikely(mpp_dev_debug & DEBUG_CORE)) {	\
+			pr_info(fmt, ##args);			\
+		}						\
+	} while (0)
+
+#define mpp_dbg_dvbm(fmt, args...)				\
+	do {							\
+		if (unlikely(mpp_dev_debug & DEBUG_DVBM_INFO)) {	\
 			pr_info(fmt, ##args);			\
 		}						\
 	} while (0)

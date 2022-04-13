@@ -687,6 +687,7 @@ static void rkvenc_dump_dbg(struct mpp_dev *mpp)
 #define VEPU_FRAME_CNT		GENMASK(21, 14)
 #define VEPU_FRAME_CNT_OFF	(14)
 #define VEPU_LDLY_REG		(0x18)
+#define VEPU_DVBM_ID_REG	(0x308)
 
 static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 {
@@ -728,9 +729,10 @@ static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 		val &= VEPU_LINE_CNT_UNMARK;
 		val |= info->line_cnt;
 		if (atomic_read(&enc->on_work)) {
-			//pr_err("frame cnt %d line cnt %d\n", enc->frm_id_start, info->line_cnt);
 			enc->line_cnt = info->line_cnt;
 			mpp_write(&enc->mpp, VEPU_LDLY_REG, val);
+			mpp_dbg_dvbm("frame cnt %d line cnt %d\n",
+				     info->frame_cnt, info->line_cnt);
 		}
 	} break;
 	case DVBM_VEPU_NOTIFY_DUMP: {
@@ -748,13 +750,19 @@ static void update_online_info(struct mpp_dev *mpp)
 	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
 	u32 val;
 
-	val = mpp_read(mpp, VEPU_LDLY_REG);
 	rk_dvbm_ctrl(enc->port, DVBM_VEPU_GET_FRAME_INFO, &info);
 
+	val = mpp_read(mpp, VEPU_LDLY_REG);
 	val &= (~GENMASK(21, 0));
 	val |= ((info.frame_cnt << 14) | info.line_cnt);
-
 	mpp_write(mpp, VEPU_LDLY_REG, val);
+
+	val = mpp_read(mpp, VEPU_DVBM_ID_REG);
+	val = (val >> 8) << 8;
+	val |= info.frame_cnt;
+	mpp_write(mpp, VEPU_DVBM_ID_REG, val);
+	mpp_dbg_dvbm("frame cnt %d line cnt %d\n",
+		     info.frame_cnt, info.line_cnt);
 }
 #endif
 

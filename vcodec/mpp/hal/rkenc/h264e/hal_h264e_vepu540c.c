@@ -2114,7 +2114,7 @@ static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ct
 
 	regs->reg_base.dvbm_id.ch_id = 1;
 	regs->reg_base.dvbm_id.frame_id = dvbm_adr.frame_id;
-	regs->reg_base.dvbm_id.vrsp_rtn_en = 0;
+	regs->reg_base.dvbm_id.vrsp_rtn_en = 1;
 
 
 	regs->reg_base.online_addr.reg0156_adr_vsy_t = dvbm_adr.ybuf_top;

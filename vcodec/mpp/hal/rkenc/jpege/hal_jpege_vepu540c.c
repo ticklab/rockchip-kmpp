@@ -174,7 +174,7 @@ static void vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
 
 	regs->reg_base.reg0194_dvbm_id.ch_id = 1;
 	regs->reg_base.reg0194_dvbm_id.frame_id = dvbm_adr.frame_id;
-	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 0;
+	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 1;
 #else
 #endif
 }
