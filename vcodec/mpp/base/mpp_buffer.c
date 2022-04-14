@@ -153,6 +153,7 @@ MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer *buffer,
 	if (NULL == mpi_buf || 0 == size) {
 		mpp_err("mpp_buffer_get invalid input: group %p buffer %p size %u from %s\n",
 			group, buffer, (RK_U32)size, caller);
+		mpp_free(buf_impl);
 		return MPP_ERR_UNKNOW;
 	}
 	if (mpibuf_fn->buf_get_dmabuf)
