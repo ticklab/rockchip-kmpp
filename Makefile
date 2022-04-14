@@ -29,7 +29,7 @@ VCODEC_REVISION_0 := $(subst \,\\\,$(VCODEC_GIT_REVISION))
 VCODEC_REVISION   := $(subst ",\\\",$(VCODEC_REVISION_0))
 
 # add git hooks
-$(shell if [[ -d "$(TOP)/.git/" && -d "$(TOP)/tools/hooks" ]]; then cp -rf $(TOP)/tools/hooks $(TOP)/.git/; fi)
+$(shell [ -d "$(TOP)/.git/" ] && [ -d "$(TOP)/tools/hooks" ] && cp -rf $(TOP)/tools/hooks $(TOP)/.git/)
 
 include $(TOP)/mpp/Makefile
 include $(TOP)/vcodec/Makefile
