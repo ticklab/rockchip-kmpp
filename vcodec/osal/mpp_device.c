@@ -10,6 +10,7 @@
 #define MODULE_TAG "mpp_device"
 
 #include <linux/string.h>
+#include <linux/errno.h>
 
 #include "mpp_log.h"
 #include "mpp_mem.h"
@@ -148,11 +149,15 @@ RK_U32 mpp_dev_get_iova_address(MppDev ctx, MppBuffer mpp_buf, RK_U32 reg_idx)
 	const MppDevApi *api = p->api;
 	void *impl_ctx = p->ctx;
 	struct dma_buf *dma_buf = NULL;
+	if (!mpp_buf) {
+		mpp_err_f("input NULL");
+		return -EINVAL;
+	}
 	dma_buf = mpp_buffer_get_dma(mpp_buf);
 	mpp_assert(dma_buf);
 	if (api->get_address)
 		return api->get_address(impl_ctx, dma_buf, reg_idx);
-	return 0;
+	return -EINVAL;
 }
 
 RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf, RK_U32 offset)
@@ -161,11 +166,15 @@ RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf, RK_U32 offset)
 	const MppDevApi *api = p->api;
 	void *impl_ctx = p->ctx;
 	struct dma_buf *dma_buf = NULL;
+	if (!mpi_buf) {
+		mpp_err_f("input NULL");
+		return -EINVAL;
+	}
 	dma_buf = mpi_buf_get_dma(mpi_buf);
 	mpp_assert(dma_buf);
 	if (api->get_address)
 		return api->get_address(impl_ctx, dma_buf, offset);
-	return 0;
+	return -EINVAL;
 }
 
 
