@@ -158,6 +158,7 @@ static int mpp_enc_module_init(void)
 				   mpp_vcodec_enc_routine,
 				   (void *)venc);
 	mpp_packet_pool_init(MAX_STREAM_CNT);
+	vcodec_thread_start(thds);
 
 	venc->check = &venc;
 	venc->thd = thds;
@@ -260,9 +261,6 @@ void mpp_vcodec_dec_chan_num(MppCtxType type)
 		spin_lock_irqsave(&venc->enc_lock, lock_flag);
 		venc->num_enc--;
 		spin_unlock_irqrestore(&venc->enc_lock, lock_flag);
-
-		if (!venc->num_enc)
-			vcodec_thread_stop(venc->thd);
 
 	} break;
 	default: {

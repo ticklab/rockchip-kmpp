@@ -64,14 +64,7 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			attr->max_strm_cnt,
 			attr->shared_buf_en
 		};
-		if (!num_chan) {
-			struct venc_module *venc =
-				mpp_vcodec_get_enc_module_entry();
-			struct vcodec_threads *thd = venc->thd;
 
-			mpp_log("start thread \n");
-			vcodec_thread_start(thd);
-		}
 		ret = mpp_enc_init(&enc, &cfg);
 		if (ret)
 			break;
