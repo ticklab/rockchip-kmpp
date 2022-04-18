@@ -1557,15 +1557,11 @@ MPP_RET mpp_enc_impl_get_roi_osd(MppEncImpl *enc, MppFrame frame)
 
 	if (!frame)
 		return MPP_OK;
-	if (enc->cur_roi.change) {
-		mpp_log("attch roi to frame");
+	if (enc->cur_roi.change)
 		mpp_frame_add_roi(frame, &enc->cur_roi);
-	}
 
-	if (enc->cur_osd.change) {
-		mpp_log("attch osd to frame");
+	if (enc->cur_osd.change)
 		mpp_frame_add_osd(frame, &enc->cur_osd);
-	}
 	return MPP_OK;
 }
 
