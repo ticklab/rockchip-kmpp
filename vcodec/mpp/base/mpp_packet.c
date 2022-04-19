@@ -71,10 +71,8 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 
 	p = mpp_packet_mem_alloc();
 
-	if (NULL == p) {
-		mpp_err_f("malloc failed\n");
+	if (NULL == p)
 		return MPP_ERR_NULL_PTR;
-	}
 
 	INIT_LIST_HEAD(&p->list);
 	kref_init(&p->ref);

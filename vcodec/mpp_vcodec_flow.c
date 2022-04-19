@@ -194,8 +194,7 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		}
 
 		if (MPP_OK != ret) {
-			if (MPP_ERR_MALLOC == ret)
-				mpp_err("strm buf full drop frame\n");
+
 			atomic_dec(&chan_entry->runing);
 			wake_up(&chan_entry->stop_wait);
 			if (comb_frame)

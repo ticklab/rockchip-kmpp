@@ -64,15 +64,13 @@ MppPacketImpl *mpp_packet_mem_alloc(void)
 					     struct MppPacketPoolImpl,
 					     pool_list);
 
-		list_del_init(&p->pool_list);
 		atomic_dec(&ctx->unused_cnt);
 		list_move_tail(&p->pool_list, &ctx->used_list);
 		atomic_inc(&ctx->used_cnt);
-
 		memset(&p->impl, 0, sizeof(MppPacketImpl));
 	} else {
 
-		if (atomic_read(&ctx->cur_pool_size) > ctx->max_pool_size) {
+		if (atomic_read(&ctx->cur_pool_size) >= ctx->max_pool_size) {
 			mutex_unlock(&ctx->mem_lock);
 			return NULL;
 		}
@@ -100,7 +98,6 @@ MPP_RET mpp_packet_mem_free(MppPacketImpl * p)
 	mutex_lock(&ctx->mem_lock);
 	list_for_each_entry_safe(packet, n, &ctx->used_list, pool_list) {
 		if (&packet->impl == p) {
-			list_del_init(&packet->pool_list);
 			atomic_dec(&ctx->used_cnt);
 			list_move_tail(&packet->pool_list, &ctx->unused_list);
 			atomic_inc(&ctx->unused_cnt);

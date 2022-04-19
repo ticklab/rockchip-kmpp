@@ -1183,7 +1183,10 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 	}
 	ret = mpp_packet_new_ring_buf(&enc->packet, enc->ring_pool, 0);
 	if (ret) {
-		enc->pkt_fail_cnt++ ;
+		if (ret == MPP_ERR_NULL_PTR)
+			enc->pkt_fail_cnt++ ;
+		else
+			enc->ringbuf_fail_cnt++;
 		return ret;
 	}
 	{
@@ -1380,6 +1383,8 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 //	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, NULL, enc, ret);
 //   mpp_stopwatch_record(hal_task->stopwatch, " hal wait");
 TASK_DONE:
+	if (ret)
+		enc->cfg_fail_cnt++;
 	return ret;
 }
 
@@ -1503,7 +1508,7 @@ TASK_DONE:
 
 static void mpp_enc_terminate_task(MppEncImpl *enc, EncTask *task)
 {
-	HalEncTask *hal_task = &task->info.enc;
+	//HalEncTask *hal_task = &task->info.enc;
 	//   EncFrmStatus *frm = &enc->rc_task.frm;
 
 	//    mpp_stopwatch_record(hal_task->stopwatch, "encode task done");
@@ -1515,7 +1520,9 @@ static void mpp_enc_terminate_task(MppEncImpl *enc, EncTask *task)
 
 	if (enc->packet) {
 		/* setup output packet and meta data */
-		mpp_packet_set_length(enc->packet, hal_task->length);
+		mpp_packet_set_length(enc->packet, 0);
+		mpp_packet_ring_buf_put_used(enc->packet);
+		mpp_packet_deinit(&enc->packet);
 	}
 
 	reset_enc_task(enc);
@@ -1687,8 +1694,15 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 		      ret);
 
 TASK_DONE:
-	if (ret)
+	if (ret) {
 		mpp_enc_terminate_task(enc, task);
+		if (jpeg_ctx) {
+			MppEncImpl *jpeg_enc = (MppEncImpl *)jpeg_ctx;
+			EncTask *jpeg_task = (EncTask *)jpeg_enc->enc_task;
+			mpp_enc_terminate_task(jpeg_enc, jpeg_task);
+		}
+		enc->cfg_fail_cnt++;
+	}
 	return ret;
 }
 static MPP_RET mpp_enc_comb_end_jpeg(MppEnc ctx, MppPacket *packet)
@@ -1869,8 +1883,13 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 	seq_puts(
 		seq,
 		"\n--------hw status---------------------------------------------------------------------------------\n");
-	seq_printf(seq, "%8s%8s%12s%14s\n", "ID", "hw_run", "enc_status", "pkt_fail_cnt");
-	seq_printf(seq, "%8d%8d%12d%14u\n", chl_id, enc->hw_run, enc->enc_status, enc->pkt_fail_cnt);
+	seq_printf(seq, "%8s%8s%12s%14s%14s%14s%16s\n", "ID", "hw_run", "enc_status", "pkt_fail_cnt",
+		   "ring_fail_cnt",
+		   "cfg_fail_cnt", "start_fail_cnt");
+	seq_printf(seq, "%8d%8d%12d%14u%14u%14u%16u\n", chl_id, enc->hw_run, enc->enc_status,
+		   enc->pkt_fail_cnt,
+		   enc->ringbuf_fail_cnt,
+		   enc->cfg_fail_cnt, enc->start_fail_cnt);
 
 	enc_impl_proc_debug(seq_file, enc->impl, chl_id);
 	rc_proc_show(seq_file, enc->rc_ctx, chl_id);
