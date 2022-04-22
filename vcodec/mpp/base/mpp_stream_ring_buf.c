@@ -60,7 +60,7 @@ MPP_RET ring_buf_put_use(ring_buf_pool *ctx, ring_buf *buf)
 	RK_U32 w_pos = 0, r_pos = 0;
 	RK_U32 start_pos = 0, end_pos = 0;
 	RK_U32 use_len = 0;
-	if (!ctx || !buf || (ctx->buf != buf->buf))
+	if (!ctx || !buf || (ctx->buf != buf->buf) || !buf->use_len)
 		return MPP_NOK;
 	w_pos = ctx->w_pos;
 	r_pos = ctx->r_pos;
@@ -102,7 +102,7 @@ MPP_RET ring_buf_put_free(ring_buf_pool *ctx, ring_buf *buf)
 {
 	RK_U32 w_pos = 0, r_pos = 0;
 	RK_U32 start_pos = 0, end_pos = 0;
-	if (!ctx || !buf || (ctx->buf != buf->buf))
+	if (!ctx || !buf || (ctx->buf != buf->buf) || !buf->use_len)
 		return MPP_NOK;
 	w_pos = ctx->w_pos;
 	r_pos = ctx->r_pos;

@@ -101,8 +101,10 @@ MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet)
 	p->buf.use_len = p->length;
 
 	if (p->ring_pool) {
-		if (p->length > p->buf.size)
+		if (p->length > p->buf.size) {
 			mpp_err("ring_buf used may be error");
+			return MPP_NOK;
+		}
 		ring_buf_put_use(p->ring_pool, &p->buf);
 	}
 	if (p->buf.buf)

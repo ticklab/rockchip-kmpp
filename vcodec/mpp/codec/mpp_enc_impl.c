@@ -1732,7 +1732,9 @@ TASK_DONE:
 	*packet = enc->packet;
 	/* setup output packet and meta data */
 	mpp_packet_set_length(enc->packet, hal_task->length);
-	mpp_packet_ring_buf_put_used(enc->packet);
+	if (mpp_packet_ring_buf_put_used(enc->packet))
+		mpp_err_f("ring_buf_put_used fail \n");
+
 	mpp_packet_set_flag(enc->packet, frm->is_intra); //set as key frame
 	mpp_packet_set_temporal_id(enc->packet, frm->temporal_id);
 	/*
@@ -1814,12 +1816,14 @@ TASK_DONE:
 		enc->frame_force_drop++;
 		enc->frm_cfg.force_flag |= ENC_FORCE_IDR;
 		enc->hdr_status.val = 0;
+		mpp_packet_set_length(enc->packet, 0);
 		mpp_packet_ring_buf_put_used(enc->packet);
 		mpp_packet_deinit(&enc->packet);
 	} else {
 		/* setup output packet and meta data */
 		mpp_packet_set_length(enc->packet, hal_task->length);
-		mpp_packet_ring_buf_put_used(enc->packet);
+		if (mpp_packet_ring_buf_put_used(enc->packet))
+			mpp_err_f("ring_buf_put_used fail \n");
 		mpp_packet_set_flag(enc->packet, frm->is_intra); //set as key frame
 		mpp_packet_set_temporal_id(enc->packet, frm->temporal_id);
 	}
