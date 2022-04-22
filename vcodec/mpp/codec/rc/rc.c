@@ -242,7 +242,7 @@ MPP_RET rc_proc_show(void *seq_file, RcCtx ctx, RK_S32 chl_id)
 	MppRcImpl *p = (MppRcImpl *) ctx;
 	const RcImplApi *api = p->api;
 
-	if (!api || !api->hal_end || !p->ctx )
+	if (!api || !api->proc_show || !p->ctx )
 		return MPP_OK;
 
 	api->proc_show(seq_file, p->ctx, chl_id);
