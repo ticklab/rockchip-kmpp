@@ -1395,26 +1395,21 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 		u32 i, j;
 		u32 *reg;
 		struct mpp_request *req;
-		struct mpp_request msg;
 
 		if (mpp->irq_status & 0x100 || mpp->dump_regs)
 			rkvenc_dump_dbg(mpp);
 
 		for (i = 0; i < task->r_req_cnt; i++) {
-			int ret;
-			int s, e;
+			u32 off;
 
 			req = &task->r_reqs[i];
-			ret = rkvenc_get_class_msg(task, req->offset, &msg);
-
-			if (ret)
-				return -EINVAL;
-			s = (req->offset - msg.offset) / sizeof(u32);
-			e = s + req->size / sizeof(u32);
 			reg = (u32 *)req->data;
-			for (j = s; j < e; j++)
-				reg[j] = mpp_read_relaxed(mpp, msg.offset + j * sizeof(u32));
-
+			for (j = 0; j < req->size / sizeof(u32); j++) {
+				off =  req->offset + j * sizeof(u32);
+				reg[j] = mpp_read_relaxed(mpp, off);
+				if (off == task->hw_info->int_sta_base)
+					reg[j] = task->irq_status;
+			}
 		}
 		/* revert hack for irq status */
 		reg = rkvenc_get_class_reg(task, task->hw_info->int_sta_base);
@@ -1434,7 +1429,6 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 
 	return 0;
 }
-
 
 static u32 *rkvenc_link_get_class_reg(struct rkvenc_link_dev *link,
 				      struct rkvenc_task *task, u32 addr)
