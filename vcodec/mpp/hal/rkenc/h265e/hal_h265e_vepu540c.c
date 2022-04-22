@@ -1428,11 +1428,7 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 
 	hal_h265e_enter();
 
-	if (ctx->online) {
-		regs->reg0160_adr_src0 = 0;
-		regs->reg0161_adr_src1 = 0;
-		regs->reg0162_adr_src2 = 0;
-	} else {
+	if (!ctx->online) {
 		regs->reg0160_adr_src0 =
 			mpp_dev_get_iova_address(ctx->dev, enc_task->input, 160);
 		regs->reg0161_adr_src1 = regs->reg0160_adr_src0;
@@ -1617,7 +1613,8 @@ static MPP_RET vepu540c_h265_set_dvbm(H265eV540cRegSet *regs)
 	regs->reg_base.reg0161_adr_src1 = dvbm_adr.cbuf_sadr;
 	regs->reg_base.reg0162_adr_src2 = dvbm_adr.cbuf_sadr;
 	if (dvbm_adr.overflow) {
-		mpp_err("cur frame already overflow!\n");
+		mpp_err("cur frame already overflow [%d %d]!\n",
+			dvbm_adr.frame_id, dvbm_adr.line_cnt);
 		return MPP_NOK;
 	}
 #else
@@ -1766,15 +1763,15 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 		reg_base->reg0236_synt_nal.nal_unit_type = i_nal_type;
 	}
 
+	if (ctx->online) {
+		if (vepu540c_h265_set_dvbm(regs))
+			return MPP_NOK;
+	}
 	vepu540c_h265_set_hw_address(ctx, reg_base, task);
 	vepu540c_h265_set_pp_regs(regs, fmt, prep);
 	vepu540c_h265_set_rc_regs(ctx, regs, task);
 	vepu540c_h265_set_slice_regs(syn, reg_base);
 	vepu540c_h265_set_ref_regs(syn, reg_base);
-	if (ctx->online) {
-		if (vepu540c_h265_set_dvbm(regs))
-			return MPP_NOK;
-	}
 	if (ctx->osd_cfg.osd_data3)
 		vepu540c_set_osd(&ctx->osd_cfg);
 
@@ -2042,7 +2039,6 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 		       ((elem->st.st_sse_bsl.sse_l16 >> 16) & 0xffff);
 
 	fb->hw_status = hw_status;
-	hal_h265e_dbg_detail("hw_status: 0x%08x", hw_status);
 	if (hw_status & RKV_ENC_INT_LINKTABLE_FINISH)
 		hal_h265e_err("RKV_ENC_INT_LINKTABLE_FINISH");
 
@@ -2337,6 +2333,8 @@ static MPP_RET hal_h265e_v540c_ret_comb_task(void *hal, HalEncTask *task, HalEnc
 	hal_h265e_enter();
 
 	ret = vepu540c_h265_set_feedback(ctx, enc_task);
+	if (ret)
+		return ret;
 	enc_task->hw_length = fb->out_strm_size;
 	enc_task->length += fb->out_strm_size;
 

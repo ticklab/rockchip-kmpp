@@ -220,12 +220,17 @@ static void vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
 	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 1;
 }
 #else
-static void vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
+static MPP_RET vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
 {
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct dvbm_addr_cfg dvbm_adr;
 
 	rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+	if (dvbm_adr.overflow) {
+		mpp_err("cur frame already overflow [%d %d]!\n",
+			dvbm_adr.frame_id, dvbm_adr.line_cnt);
+		return MPP_NOK;
+	}
 	regs->reg_ctl.reg0024_dvbm_cfg.dvbm_en = 1;
 	regs->reg_ctl.reg0024_dvbm_cfg.src_badr_sel = 1;
 	regs->reg_ctl.reg0024_dvbm_cfg.vinf_frm_match = 1;
@@ -242,6 +247,7 @@ static void vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
 	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 1;
 #else
 #endif
+	return MPP_OK;
 }
 #endif
 
@@ -319,8 +325,10 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 	reg_ctl->reg0014_enc_wdg.vs_load_thd = 0x1fffff;
 	reg_ctl->reg0014_enc_wdg.rfp_load_thd = 0xff;
 
-	if (ctx->online)
-		vepu540c_jpeg_set_dvbm(regs);
+	if (ctx->online) {
+		if (vepu540c_jpeg_set_dvbm(regs))
+			return MPP_NOK;
+	}
 	vepu540c_set_jpeg_reg(&cfg);
 	vepu540c_set_osd(&ctx->osd_cfg);
 	{

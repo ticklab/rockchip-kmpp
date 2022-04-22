@@ -7,6 +7,8 @@
  *
  */
 
+#define pr_fmt(fmt) "rkvenc_540c: " fmt
+
 #include <asm/cacheflush.h>
 #include <linux/delay.h>
 #include <linux/devfreq.h>
@@ -259,6 +261,7 @@ struct rkvenc_dev {
 
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct dvbm_port *port;
+	u32 dvbm_overflow;
 #endif
 	u32 line_cnt;
 	u32 frm_id_start;
@@ -663,19 +666,16 @@ static void rkvenc_dump_dbg(struct mpp_dev *mpp)
 		u32 end;// = 0x5170;//0x5350;
 		// struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
 
+		off = 0x18;
+		pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
+		off = 0x308;
+		pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
 		start = 0x5004;
 		end = 0x5028;
 		for (i = start; i <= end; i += 4) {
 			off = i;
 			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
 		}
-		start = 0x5168;
-		end = 0x5170;
-		for (i = start; i <= end; i += 4) {
-			off = i;
-			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
-		}
-		// rk_dvbm_ctrl(enc->port, DVBM_VEPU_DUMP_REGS, NULL);
 	}
 	pr_info("=== %s ===\n", __func__);
 
@@ -688,6 +688,52 @@ static void rkvenc_dump_dbg(struct mpp_dev *mpp)
 #define VEPU_FRAME_CNT_OFF	(14)
 #define VEPU_LDLY_REG		(0x18)
 #define VEPU_DVBM_ID_REG	(0x308)
+#define VEPU_DBG_POS0		(0x5008)
+#define VEPU_DBG_POS1		(0x500c)
+
+static int rkvenc_check_overflow(struct rkvenc_dev *enc, struct dvbm_isp_frm_info *info,
+				 u32 cur_fcnt, u32 cur_lcnt)
+{
+	u32 pos0_y = mpp_read(&enc->mpp, VEPU_DBG_POS0) >> 16;
+	u32 pos1_y = mpp_read(&enc->mpp, VEPU_DBG_POS1) >> 16;
+	u32 vepu_lcnt = 16 * max(pos0_y, pos1_y);
+
+	/* 1. check whether isp frame is cur enc frame or not */
+	if (cur_fcnt != info->frame_cnt || cur_lcnt >= info->line_cnt) {
+		/* 1.1 check overflow */
+		if (info->line_cnt > 0 && cur_fcnt != info->frame_cnt) {
+			if (info->line_cnt >= info->wrap_line) {
+				pr_err("overflow vepu[frm: %d line: %d %d] isp[frm: %d line: %d]\n",
+				       cur_fcnt, vepu_lcnt, cur_lcnt,
+				       info->frame_cnt, info->line_cnt);
+				enc->dvbm_overflow = 1;
+			}
+			rkvenc_dump_dbg(&enc->mpp);
+		}
+		/* 1.2 hack for isp interruption disorder */
+		if (cur_lcnt < info->max_line_cnt) {
+			u32 val = mpp_read(&enc->mpp, VEPU_LDLY_REG);
+
+			val &= VEPU_LINE_CNT_UNMARK;
+			val |= info->max_line_cnt;
+			mpp_write(&enc->mpp, VEPU_LDLY_REG, val);
+			wmb();
+			pr_err("line cnt disorder set max %d [%d %d]->[%d %d]\n",
+			       info->max_line_cnt, cur_fcnt, cur_lcnt, info->frame_cnt, info->line_cnt);
+		}
+		return 1;
+	}
+
+	/* check overflow */
+	if ((info->line_cnt - vepu_lcnt) > info->wrap_line) {
+		pr_err("overflow vepu[frm: %d line: %d %d] isp[frm: %d line: %d]\n",
+		       cur_fcnt, vepu_lcnt, cur_lcnt,
+		       info->frame_cnt, info->line_cnt);
+		enc->dvbm_overflow = 1;
+	}
+
+	return 0;
+}
 
 static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 {
@@ -717,22 +763,25 @@ static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 		u32 cur_fcnt;
 		u32 cur_lcnt;
 
+		/* 1. get cur vepu frame info */
 		val = mpp_read(&enc->mpp, VEPU_LDLY_REG);
 		cur_fcnt = (val & VEPU_FRAME_CNT) >> VEPU_FRAME_CNT_OFF;
 		cur_lcnt = val & VEPU_LINE_CNT;
-		if (cur_fcnt != info->frame_cnt) {
-			if (info->line_cnt > 0)
-				pr_err("frame cnt not match, maybe overflow [%d %d]->[%d %d]\n",
-				       cur_fcnt, cur_lcnt, info->frame_cnt, info->line_cnt);
+
+		/* 2. check overflow */
+		if (rkvenc_check_overflow(enc, info, cur_fcnt, cur_lcnt))
 			return 0;
-		}
+		/* 3. config frame info to vepu */
 		val &= VEPU_LINE_CNT_UNMARK;
 		val |= info->line_cnt;
-		if (atomic_read(&enc->on_work)) {
-			enc->line_cnt = info->line_cnt;
-			mpp_write(&enc->mpp, VEPU_LDLY_REG, val);
-			mpp_dbg_dvbm("frame cnt %d line cnt %d\n",
-				     info->frame_cnt, info->line_cnt);
+		enc->line_cnt = info->line_cnt;
+		mpp_write(&enc->mpp, VEPU_LDLY_REG, val);
+		wmb();
+		mpp_dbg_dvbm("frame cnt %d line cnt %d\n",
+			     info->frame_cnt, info->line_cnt);
+		if (val != mpp_read(&enc->mpp, VEPU_LDLY_REG)) {
+			pr_err("set frame info failed! [%d %d] -> [%d %d]\n",
+			       cur_fcnt, cur_lcnt, info->frame_cnt, info->line_cnt);
 		}
 	} break;
 	case DVBM_VEPU_NOTIFY_DUMP: {
@@ -761,8 +810,8 @@ static void update_online_info(struct mpp_dev *mpp)
 	val = (val >> 8) << 8;
 	val |= info.frame_cnt;
 	mpp_write(mpp, VEPU_DVBM_ID_REG, val);
-	mpp_dbg_dvbm("frame cnt %d line cnt %d\n",
-		     info.frame_cnt, info.line_cnt);
+	mpp_dbg_dvbm("%s frame cnt %d line cnt %d\n",
+		     __func__, info.frame_cnt, info.line_cnt);
 }
 #endif
 
@@ -1065,7 +1114,6 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 	mpp_debug_enter();
 
 	enc->line_cnt = 0;
-	atomic_set(&enc->on_work, 1);
 	switch (enc->link_mode) {
 	case RKVENC_MODE_ONEFRAME: {
 		u32 i, j;
@@ -1109,16 +1157,17 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 			rk_dvbm_link(enc->port);
 #endif
 		wmb();
+		atomic_set(&enc->on_work, 1);
 		if (enc->link_run)
 			mpp_write(mpp, hw->enc_start_base, enc_start_val);
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
-		if (dvbm_en)
-			update_online_info(mpp);
-#endif
 		if (dvbm_en) {
+			update_online_info(mpp);
+			enc->dvbm_overflow = 0;
 			priv->dvbm_link = 1;
 			priv->dvbm_en = dvbm_en;
 		}
+#endif
 	} break;
 	case RKVENC_MODE_LINK_ONEFRAME: {
 		atomic_set(&enc->link_task_cnt, 0);
@@ -1314,6 +1363,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 	switch (enc->link_mode) {
 	case RKVENC_MODE_ONEFRAME: {
 		struct mpp_task *mpp_task = mpp->cur_task;
+		struct rkvenc2_session_priv *priv = mpp_task->session->priv;
 
 		if (!mpp_task)
 			return IRQ_HANDLED;
@@ -1321,6 +1371,10 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 		mpp_time_diff(mpp_task);
 		mpp->cur_task = NULL;
 		task = to_rkvenc_task(mpp_task);
+		if (priv->dvbm_en && enc->dvbm_overflow) {
+			mpp->irq_status |= BIT(6);
+			enc->dvbm_overflow = 0;
+		}
 		task->irq_status = mpp->irq_status;
 		mpp_debug(DEBUG_IRQ_STATUS, "irq_status: %08x\n", task->irq_status);
 

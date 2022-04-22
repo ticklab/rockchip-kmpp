@@ -2106,13 +2106,18 @@ static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ct
 	vepu540c_set_dvbm(&regs->reg_base.online_addr);
 }
 #else
-static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx)
+static MPP_RET setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx)
 {
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct dvbm_addr_cfg dvbm_adr;
 
 	(void)ctx;
 	rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+	if (dvbm_adr.overflow) {
+		mpp_err("cur frame already overflow [%d %d]!\n",
+			dvbm_adr.frame_id, dvbm_adr.line_cnt);
+		return MPP_NOK;
+	}
 	regs->reg_ctl.dvbm_cfg.dvbm_en = 1;
 	regs->reg_ctl.dvbm_cfg.src_badr_sel = 1;
 	regs->reg_ctl.dvbm_cfg.vinf_frm_match = 1;
@@ -2142,6 +2147,7 @@ static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ct
 	regs->reg_base.online_addr.reg0158_adr_vsy_b = 0;
 	regs->reg_base.online_addr.reg0159_adr_vsc_b = 0;
 #endif
+	return MPP_OK;
 }
 #endif
 
@@ -2174,6 +2180,10 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	setup_vepu540c_scl_cfg(&regs->reg_scl);
 	setup_vepu540c_rc_base(regs, sps, slice, &cfg->hw, task->rc_task);
 	setup_vepu540c_io_buf(ctx, task);
+	if (ctx->online) {
+		if (setup_vepu540c_dvbm(regs, ctx))
+			return MPP_NOK;
+	}
 	setup_vepu540c_recn_refr(ctx, regs);
 
 	regs->reg_base.meiw_addr =
@@ -2196,8 +2206,6 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 
 	setup_vepu540c_l2(ctx->regs_set, slice, &cfg->hw);
 	setup_vepu540c_ext_line_buf(regs, ctx);
-	if (ctx->online)
-		setup_vepu540c_dvbm(regs, ctx);
 	//  mpp_env_get_u32("dump_l1_reg", &dump_l1_reg, 1);
 
 	if (frm->save_pass1)
@@ -2585,7 +2593,8 @@ static MPP_RET hal_h264e_vepu540c_ret_comb_task(void *hal, HalEncTask *task, Hal
 
 	hal_h264e_dbg_func("enter %p\n", hal);
 	ret = hal_h264e_vepu540c_ret_task(hal, task);
-
+	if (ret)
+		return ret;
 	jpeg_task->hw_length += regs->reg_st.jpeg_head_bits_l32;
 	// update total hardware length
 	jpeg_task->length += jpeg_task->hw_length;
