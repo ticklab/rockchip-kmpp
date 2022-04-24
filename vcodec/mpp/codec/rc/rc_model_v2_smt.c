@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#ifdef USE_SMART_RC
 #define MODULE_TAG "rc_model_v2_smt"
 #include <linux/string.h>
 #include <linux/seq_file.h>
@@ -1298,3 +1299,4 @@ const RcImplApi smt_h265e = {
 	rc_model_v2_smt_hal_end,
 	NULL,
 };
+#endif

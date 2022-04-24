@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#ifdef USE_SMART_RC
 #define MODULE_TAG "mpp_rc"
 
 #include "mpp_mem.h"
@@ -185,3 +186,4 @@ RK_S32 mpp_pid_calc(MppPIDCtx * p)
 
 	return DIV(a, b);
 }
+#endif
