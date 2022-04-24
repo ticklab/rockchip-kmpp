@@ -12,7 +12,6 @@ rk_vcodec-$(RKVEPU580_ENABLE) += mpp/mpp_rkvenc2.o
 rk_vcodec-$(RKVEPU540C_ENABLE) += mpp/mpp_rkvenc_540c.o
 rk_vcodec-$(RKVEPU540C_PP_ENABLE) += mpp/mpp_rkvenc_pp.o
 
-
-# hack for workaround
-
-obj-m += rk_vcodec.o
+ifneq ($(BUILD_ONE_KO), y)
+	obj-m += rk_vcodec.o
+endif

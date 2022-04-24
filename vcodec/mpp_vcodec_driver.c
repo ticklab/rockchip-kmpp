@@ -552,10 +552,21 @@ struct vcodec_mpibuf_fn *get_mpibuf_ops(void)
 	return mpibuf_ops;
 }
 
+#ifdef BUILD_ONE_KO
+extern struct platform_driver mpp_service_driver;
+#endif
+
 static int __init vcodec_init(void)
 {
 	int ret;
 	pr_info("init new\n");
+#ifdef BUILD_ONE_KO
+	ret = platform_driver_register(&mpp_service_driver);
+	if (ret != 0) {
+		printk(KERN_ERR "mpp_service_driver device register failed (%d).\n", ret);
+		return ret;
+	}
+#endif
 	ret = platform_driver_register(&vcodec_driver);
 	if (ret != 0) {
 		printk(KERN_ERR "Platform device register failed (%d).\n", ret);
@@ -573,6 +584,11 @@ static void __exit vcodec_exit(void)
 	//test_end();
 	mpp_vcodec_deinit();
 	platform_driver_unregister(&vcodec_driver);
+
+#ifdef BUILD_ONE_KO
+	platform_driver_unregister(&mpp_service_driver);
+#endif
+
 	pr_info("exit\n");
 } MODULE_LICENSE("GPL");
 

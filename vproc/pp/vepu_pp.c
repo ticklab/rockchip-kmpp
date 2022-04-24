@@ -256,9 +256,9 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 
 		p->enc_pic_fmt.src_from_isp = !info->down_scale_en;
 		p->enc_pic_fmt.ref_pic0_updt_en = (info->smear_en || info->weightp_en) &&
-							(info->frm_accum_gop != (gop - 1));
+						  (info->frm_accum_gop != (gop - 1));
 		p->enc_pic_fmt.ref_pic1_updt_en = (info->md_en && md_od_switch) ||
-							(info->od_en && md_od_switch);
+						  (info->od_en && md_od_switch);
 
 		p->enc_pic_rsl.pic_wd8_m1 = (info->width >> 3) - 1;
 		p->enc_pic_rsl.pic_hd8_m1 = (info->height >> 3) - 1;
@@ -389,6 +389,7 @@ int vepu_pp_control(int chn, enum pp_cmd cmd, void *param)
 }
 EXPORT_SYMBOL(vepu_pp_control);
 
+#ifndef BUILD_ONE_KO
 static int __init vepu_pp_init(void)
 {
 	pr_info("vepu_pp init\n");
@@ -403,5 +404,5 @@ static void __exit vepu_pp_exit(void)
 module_init(vepu_pp_init);
 module_exit(vepu_pp_exit);
 
-
 MODULE_LICENSE("GPL");
+#endif

@@ -409,6 +409,8 @@ static const struct of_device_id mpp_dt_ids[] = {
 	{ },
 };
 
+
+#ifndef BUILD_ONE_KO
 static struct platform_driver mpp_service_driver = {
 	.probe = mpp_service_probe,
 	.remove = mpp_service_remove,
@@ -424,3 +426,15 @@ MODULE_LICENSE("Dual MIT/GPL");
 MODULE_VERSION(MPP_VERSION);
 MODULE_AUTHOR("Ding Wei leo.ding@rock-chips.com");
 MODULE_DESCRIPTION("Rockchip mpp service driver");
+#else
+
+struct platform_driver mpp_service_driver = {
+	.probe = mpp_service_probe,
+	.remove = mpp_service_remove,
+	.driver = {
+		.name = "mpp_service",
+		.of_match_table = of_match_ptr(mpp_dt_ids),
+	},
+};
+EXPORT_SYMBOL(mpp_service_driver);
+#endif

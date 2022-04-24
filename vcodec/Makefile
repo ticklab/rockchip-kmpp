@@ -47,4 +47,7 @@ EXTRA_CFLAGS += $(RC_CFLAGS)
 EXTRA_CFLAGS += -DSUPPORT_ENC
 EXTRA_CFLAGS += -DUSE_RING_BUF
 EXTRA_CFLAGS += -DVCODEC_VERSION="\"$(VCODEC_REVISION)\""
-obj-m += mpp_vcodec.o
+
+ifneq ($(BUILD_ONE_KO), y)
+	obj-m += mpp_vcodec.o
+endif

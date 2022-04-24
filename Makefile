@@ -11,6 +11,7 @@ OSTYPE=linux
 TOP := $(PWD)
 
 VEPU_CORE := RKVEPU540C
+BUILD_ONE_KO=y
 
 ifeq ($(CPU_TYPE), arm64)
 	export PREB_KO := ./prebuild/ko_64
@@ -31,9 +32,17 @@ VCODEC_REVISION   := $(subst ",\\\",$(VCODEC_REVISION_0))
 # add git hooks
 $(shell [ -d "$(TOP)/.git/" ] && [ -d "$(TOP)/tools/hooks" ] && cp -rf $(TOP)/tools/hooks $(TOP)/.git/)
 
+ifeq ($(BUILD_ONE_KO), y)
+	EXTRA_CFLAGS += -DBUILD_ONE_KO
+endif
 include $(TOP)/mpp/Makefile
 include $(TOP)/vcodec/Makefile
 include $(TOP)/vproc/Makefile
+ifeq ($(BUILD_ONE_KO), y)
+	mpp_vcodec-objs += rk_vcodec.o
+	mpp_vcodec-objs += vepu_pp.o
+	obj-m += mpp_vcodec.o
+endif
 
 DIRS := $(shell find . -maxdepth 5 -type d)
 
@@ -54,12 +63,16 @@ linux_build:
 	@$(MAKE) CROSS_COMPILE=${CROSS_COMPILE} ARCH=$(CPU_TYPE) -C $(KERNEL_ROOT) M=$(PWD) modules
 	@mkdir -p $(PREB_KO)
 	@cp mpp_vcodec.ko $(PREB_KO)
+ifneq ($(BUILD_ONE_KO), y)
 	@cp rk_vcodec.ko  $(PREB_KO)
 	@cp vepu_pp.ko  $(PREB_KO)
+endif
 	@mkdir -p $(REL_KO)
 	@cp mpp_vcodec.ko $(REL_KO)
+ifneq ($(BUILD_ONE_KO), y)
 	@cp rk_vcodec.ko  $(REL_KO)
 	@cp vepu_pp.ko  $(REL_KO)
+endif	
 	@find $(REL_KO) -name "*.ko" | xargs ${CROSS_COMPILE}strip --strip-debug --remove-section=.comment --remove-section=.note --preserve-dates
 
 linux_clean:
@@ -67,6 +80,7 @@ linux_clean:
 	@rm -f *.symvers *.order
 	@rm -rf .*.ko.cmd .*.o.cmd .tmp_versions
 	@rm -rf $(PREB_KO)
+	@rm -rf $(REL_KO)
 	@$(RM) $(OBJS)
 	@$(RM) $(CMDS)
 
