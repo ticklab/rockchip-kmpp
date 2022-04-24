@@ -23,10 +23,18 @@
 #include "h265e_rc.h"
 #include "jpege_rc.h"
 #include "vp8e_rc.h"
+#include "rc_model_v2_smt.h"
 
 const RcImplApi *rc_api_ops[] = {
 	&default_h264e,
 	&default_h265e,
+	&default_jpege,
+	&default_vp8e,
+};
+
+const RcImplApi *smt_rc_api_ops[] = {
+	&smt_h264e,
+	&smt_h265e,
 	&default_jpege,
 	&default_vp8e,
 };
@@ -66,8 +74,13 @@ MPP_RET rc_init(RcCtx * ctx, MppCodingType type, const char **request_name)
 	rc_dbg_func("enter type %x name %s\n", type, name);
 
 	for (i = 0; i < MPP_ARRAY_ELEMS(rc_api_ops); i++) {
-		if (rc_api_ops[i]->type == type)
-			api = (RcImplApi *) rc_api_ops[i];
+		if (!strcmp(name, "smart")) {
+			if (rc_api_ops[i]->type == type)
+				api = (RcImplApi *) smt_rc_api_ops[i];
+		} else {
+			if (rc_api_ops[i]->type == type)
+				api = (RcImplApi *) rc_api_ops[i];
+		}
 	}
 
 	mpp_assert(api);

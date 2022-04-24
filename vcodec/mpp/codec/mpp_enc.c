@@ -35,6 +35,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	MppEncHal enc_hal = NULL;
 	MppEncHalCfg enc_hal_cfg;
 	EncImplCfg ctrl_cfg;
+	const char *smart = "smart";
 
 	//  mpp_env_get_u32("mpp_enc_debug", &mpp_enc_debug, 0);
 
@@ -88,7 +89,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	}
 	mpp_enc_impl_alloc_task(p);
 
-	rc_init(&p->rc_ctx, coding, NULL);
+	rc_init(&p->rc_ctx, coding, cfg->smart_en ? &smart : NULL);
 
 	/*  ret = hal_info_init(&p->hal_info, MPP_CTX_ENC, coding);
 		if (ret) {

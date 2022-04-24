@@ -62,7 +62,8 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			online,
 			buf_size,
 			attr->max_strm_cnt,
-			attr->shared_buf_en
+			attr->shared_buf_en,
+			attr->smart_en
 		};
 
 		ret = mpp_enc_init(&enc, &cfg);
