@@ -172,7 +172,9 @@ typedef struct EncRcCommonInfo_t {
 	RK_S32          madp;
 
 	RK_U32          iblk4_prop; // scale 256
-	RK_S32          reserve[15];
+	RK_U32          motion_level;
+	RK_U32          complex_level;
+	RK_S32          reserve[13];
 } EncRcTaskInfo;
 
 typedef struct EncRcTask_s {

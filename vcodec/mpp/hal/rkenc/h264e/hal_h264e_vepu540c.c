@@ -2413,7 +2413,75 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 	MPP_RET ret = 0;
 
 	HalVepu540cRegSet *regs_set = (HalVepu540cRegSet *) ctx->regs_set;
+	vepu540c_status *reg_st = (vepu540c_status *)&regs_set->reg_st;
+	RK_U32 madi_th_cnt0 =
+		reg_st->st_madi_lt_num0.madi_th_lt_cnt0 +
+		reg_st->st_madi_rt_num0.madi_th_rt_cnt0 +
+		reg_st->st_madi_lb_num0.madi_th_lb_cnt0 +
+		reg_st->st_madi_rb_num0.madi_th_rb_cnt0;
+	RK_U32 madi_th_cnt1 =
+		reg_st->st_madi_lt_num0.madi_th_lt_cnt1 +
+		reg_st->st_madi_rt_num0.madi_th_rt_cnt1 +
+		reg_st->st_madi_lb_num0.madi_th_lb_cnt1 +
+		reg_st->st_madi_rb_num0.madi_th_rb_cnt1;
+	RK_U32 madi_th_cnt2 =
+		reg_st->st_madi_lt_num1.madi_th_lt_cnt2 +
+		reg_st->st_madi_rt_num1.madi_th_rt_cnt2 +
+		reg_st->st_madi_lb_num1.madi_th_lb_cnt2 +
+		reg_st->st_madi_rb_num1.madi_th_rb_cnt2;
+	RK_U32 madi_th_cnt3 =
+		reg_st->st_madi_lt_num1.madi_th_lt_cnt3 +
+		reg_st->st_madi_rt_num1.madi_th_rt_cnt3 +
+		reg_st->st_madi_lb_num1.madi_th_lb_cnt3 +
+		reg_st->st_madi_rb_num1.madi_th_rb_cnt3;
+	RK_U32 madp_th_cnt0 =
+		reg_st->st_madp_lt_num0.madp_th_lt_cnt0 +
+		reg_st->st_madp_rt_num0.madp_th_rt_cnt0 +
+		reg_st->st_madp_lb_num0.madp_th_lb_cnt0 +
+		reg_st->st_madp_rb_num0.madp_th_rb_cnt0;
+	RK_U32 madp_th_cnt1 =
+		reg_st->st_madp_lt_num0.madp_th_lt_cnt1 +
+		reg_st->st_madp_rt_num0.madp_th_rt_cnt1 +
+		reg_st->st_madp_lb_num0.madp_th_lb_cnt1 +
+		reg_st->st_madp_rb_num0.madp_th_rb_cnt1;
+	RK_U32 madp_th_cnt2 =
+		reg_st->st_madp_lt_num1.madp_th_lt_cnt2 +
+		reg_st->st_madp_rt_num1.madp_th_rt_cnt2 +
+		reg_st->st_madp_lb_num1.madp_th_lb_cnt2 +
+		reg_st->st_madp_rb_num1.madp_th_rb_cnt2;
+	RK_U32 madp_th_cnt3 =
+		reg_st->st_madp_lt_num1.madp_th_lt_cnt3 +
+		reg_st->st_madp_rt_num1.madp_th_rt_cnt3 +
+		reg_st->st_madp_lb_num1.madp_th_lb_cnt3 +
+		reg_st->st_madp_rb_num1.madp_th_rb_cnt3;
+
 	hal_h264e_dbg_func("enter %p\n", hal);
+
+	rc_info->motion_level = 2;
+	if (madp_th_cnt0 * 100 > 85 * mbs)
+		rc_info->motion_level = 0;
+	else if (madp_th_cnt0 * 100 > 75 * mbs && madp_th_cnt1 * 100 > 15 * mbs)
+		rc_info->motion_level = 0;
+	else if (madp_th_cnt0 * 100 > 50 * mbs && madp_th_cnt1 * 100 > 30 * mbs)
+		rc_info->motion_level = 1;
+	else if (madp_th_cnt0 * 100 > 40 * mbs && madp_th_cnt2 * 100 < 30 * mbs
+		 && madp_th_cnt3 * 100 < 10 * mbs)
+		rc_info->motion_level = 1;
+	else
+		rc_info->motion_level = 2;
+
+	rc_info->complex_level = 2;
+	if (madi_th_cnt0 * 100 > 85 * mbs)
+		rc_info->complex_level = 0;
+	else if (madi_th_cnt0 * 100 > 75 * mbs && madi_th_cnt1 * 100 > 15 * mbs)
+		rc_info->complex_level = 0;
+	else if (madi_th_cnt0 * 100 > 50 * mbs && madi_th_cnt1 * 100 > 30 * mbs)
+		rc_info->complex_level = 1;
+	else if (madi_th_cnt0 * 100 > 40 * mbs && madi_th_cnt2 * 100 < 30 * mbs
+		 && madi_th_cnt3 * 100 < 10 * mbs)
+		rc_info->complex_level = 1;
+	else
+		rc_info->complex_level = 2;
 
 	ret = hal_h264e_vepu540c_status_check(hal);
 	if (ret)

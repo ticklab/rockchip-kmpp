@@ -1956,10 +1956,78 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	MppEncCfgSet *cfg = ctx->cfg;
 	RK_S32 mb64_num =
 		((cfg->prep.width + 63) / 64) * ((cfg->prep.height + 63) / 64);
+	RK_S32 mbs =
+		((cfg->prep.width + 15) / 16) * ((cfg->prep.height + 15) / 16);
 	RK_S32 mb8_num = (mb64_num << 6);
 	RK_S32 mb4_num = (mb8_num << 2);
 	H265eV540cStatusElem *elem = (H265eV540cStatusElem *) ctx->reg_out[0];
 	RK_U32 hw_status = elem->hw_status;
+	RK_U32 madi_th_cnt0 =
+		elem->st.st_madi_lt_num0.madi_th_lt_cnt0 +
+		elem->st.st_madi_rt_num0.madi_th_rt_cnt0 +
+		elem->st.st_madi_lb_num0.madi_th_lb_cnt0 +
+		elem->st.st_madi_rb_num0.madi_th_rb_cnt0;
+	RK_U32 madi_th_cnt1 =
+		elem->st.st_madi_lt_num0.madi_th_lt_cnt1 +
+		elem->st.st_madi_rt_num0.madi_th_rt_cnt1 +
+		elem->st.st_madi_lb_num0.madi_th_lb_cnt1 +
+		elem->st.st_madi_rb_num0.madi_th_rb_cnt1;
+	RK_U32 madi_th_cnt2 =
+		elem->st.st_madi_lt_num1.madi_th_lt_cnt2 +
+		elem->st.st_madi_rt_num1.madi_th_rt_cnt2 +
+		elem->st.st_madi_lb_num1.madi_th_lb_cnt2 +
+		elem->st.st_madi_rb_num1.madi_th_rb_cnt2;
+	RK_U32 madi_th_cnt3 =
+		elem->st.st_madi_lt_num1.madi_th_lt_cnt3 +
+		elem->st.st_madi_rt_num1.madi_th_rt_cnt3 +
+		elem->st.st_madi_lb_num1.madi_th_lb_cnt3 +
+		elem->st.st_madi_rb_num1.madi_th_rb_cnt3;
+	RK_U32 madp_th_cnt0 =
+		elem->st.st_madp_lt_num0.madp_th_lt_cnt0 +
+		elem->st.st_madp_rt_num0.madp_th_rt_cnt0 +
+		elem->st.st_madp_lb_num0.madp_th_lb_cnt0 +
+		elem->st.st_madp_rb_num0.madp_th_rb_cnt0;
+	RK_U32 madp_th_cnt1 =
+		elem->st.st_madp_lt_num0.madp_th_lt_cnt1 +
+		elem->st.st_madp_rt_num0.madp_th_rt_cnt1 +
+		elem->st.st_madp_lb_num0.madp_th_lb_cnt1 +
+		elem->st.st_madp_rb_num0.madp_th_rb_cnt1;
+	RK_U32 madp_th_cnt2 =
+		elem->st.st_madp_lt_num1.madp_th_lt_cnt2 +
+		elem->st.st_madp_rt_num1.madp_th_rt_cnt2 +
+		elem->st.st_madp_lb_num1.madp_th_lb_cnt2 +
+		elem->st.st_madp_rb_num1.madp_th_rb_cnt2;
+	RK_U32 madp_th_cnt3 =
+		elem->st.st_madp_lt_num1.madp_th_lt_cnt3 +
+		elem->st.st_madp_rt_num1.madp_th_rt_cnt3 +
+		elem->st.st_madp_lb_num1.madp_th_lb_cnt3 +
+		elem->st.st_madp_rb_num1.madp_th_rb_cnt3;
+
+	hal_rc_ret->motion_level = 2;
+	if (madp_th_cnt0 * 100 > 85 * mbs)
+		hal_rc_ret->motion_level = 0;
+	else if (madp_th_cnt0 * 100 > 75 * mbs && madp_th_cnt1 * 100 > 15 * mbs)
+		hal_rc_ret->motion_level = 0;
+	else if (madp_th_cnt0 * 100 > 50 * mbs && madp_th_cnt1 * 100 > 30 * mbs)
+		hal_rc_ret->motion_level = 1;
+	else if (madp_th_cnt0 * 100 > 40 * mbs && madp_th_cnt2 * 100 < 30 * mbs
+		 && madp_th_cnt3 * 100 < 10 * mbs)
+		hal_rc_ret->motion_level = 1;
+	else
+		hal_rc_ret->motion_level = 2;
+
+	hal_rc_ret->complex_level = 2;
+	if (madi_th_cnt0 * 100 > 85 * mbs)
+		hal_rc_ret->complex_level = 0;
+	else if (madi_th_cnt0 * 100 > 75 * mbs && madi_th_cnt1 * 100 > 15 * mbs)
+		hal_rc_ret->complex_level = 0;
+	else if (madi_th_cnt0 * 100 > 50 * mbs && madi_th_cnt1 * 100 > 30 * mbs)
+		hal_rc_ret->complex_level = 1;
+	else if (madi_th_cnt0 * 100 > 40 * mbs && madi_th_cnt2 * 100 < 30 * mbs
+		 && madi_th_cnt3 * 100 < 10 * mbs)
+		hal_rc_ret->complex_level = 1;
+	else
+		hal_rc_ret->complex_level = 2;
 
 	hal_h265e_enter();
 
