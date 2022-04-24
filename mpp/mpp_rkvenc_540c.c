@@ -259,8 +259,8 @@ struct rkvenc_dev {
 
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct dvbm_port *port;
-	u32 line_cnt;
 #endif
+	u32 line_cnt;
 	u32 frm_id_start;
 	u32 frm_id_end;
 
@@ -1385,7 +1385,9 @@ static int rkvenc_finish(struct mpp_dev *mpp,
 {
 	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
 	struct rkvenc_task *task = to_rkvenc_task(mpp_task);
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct rkvenc2_session_priv *priv = mpp_task->session->priv;
+#endif
 
 	mpp_debug_enter();
 
@@ -1557,8 +1559,8 @@ static int rkvenc_free_session(struct mpp_session *session)
 		}
 	}
 	if (session) {
-		struct rkvenc2_session_priv *priv = (struct rkvenc2_session_priv *)session->priv;
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
+		struct rkvenc2_session_priv *priv = (struct rkvenc2_session_priv *)session->priv;
 		struct rkvenc_dev *enc = to_rkvenc_dev(session->mpp);
 
 		mpp_power_on(session->mpp);
