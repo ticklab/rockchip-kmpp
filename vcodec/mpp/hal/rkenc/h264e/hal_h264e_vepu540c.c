@@ -2411,6 +2411,7 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 	RK_U32 mb_h = ctx->sps->pic_height_in_mbs;
 	RK_U32 mbs = mb_w * mb_h;
 	MPP_RET ret = 0;
+	RK_U32 madi_cnt = 0, madp_cnt = 0;
 
 	HalVepu540cRegSet *regs_set = (HalVepu540cRegSet *) ctx->regs_set;
 	vepu540c_status *reg_st = (vepu540c_status *)&regs_set->reg_st;
@@ -2494,11 +2495,31 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 	// setup bit length for rate control
 	rc_info->bit_real = task->hw_length * 8;
 	rc_info->quality_real = regs_set->reg_st.qp_sum / mbs;
-	/*
-	    rc_info->madi = (!regs_set->reg_st.st_bnum_b16.num_b16) ? 0 :
-	                    regs_set->reg_st.madi /  regs_set->reg_st.st_bnum_b16.num_b16;
-	    rc_info->madp = (!regs_set->reg_st.st_bnum_cme.num_ctu) ? 0 :
-	                    regs_set->reg_st.madi / regs_set->reg_st.st_bnum_cme.num_ctu;*/
+
+
+	rc_info->madi = madi_th_cnt0 * regs_set->reg_rc_roi.madi_st_thd.madi_th0 +
+			madi_th_cnt1 * (regs_set->reg_rc_roi.madi_st_thd.madi_th0 +
+					regs_set->reg_rc_roi.madi_st_thd.madi_th1) / 2 +
+			madi_th_cnt2 * (regs_set->reg_rc_roi.madi_st_thd.madi_th1 +
+					regs_set->reg_rc_roi.madi_st_thd.madi_th2) / 2 +
+			madi_th_cnt3 * regs_set->reg_rc_roi.madi_st_thd.madi_th2;
+
+	madi_cnt = madi_th_cnt0 + madi_th_cnt1 + madi_th_cnt2 + madi_th_cnt3;
+
+	if (madi_cnt)
+		rc_info->madi = rc_info->madi / madi_cnt;
+
+	rc_info->madp = madp_th_cnt0 * regs_set->reg_rc_roi.madp_st_thd0.madp_th0 +
+			madp_th_cnt1 * (regs_set->reg_rc_roi.madp_st_thd0.madp_th0 +
+					regs_set->reg_rc_roi.madp_st_thd0.madp_th1) / 2 +
+			madp_th_cnt2 * (regs_set->reg_rc_roi.madp_st_thd0.madp_th1 +
+					regs_set->reg_rc_roi.madp_st_thd1.madp_th2) / 2 +
+			madp_th_cnt3 * regs_set->reg_rc_roi.madp_st_thd1.madp_th2;
+
+	madp_cnt = madp_th_cnt0 + madp_th_cnt1 + madp_th_cnt2 + madp_th_cnt3;
+
+	if (madp_cnt)
+		rc_info->madp = rc_info->madp / madp_cnt;
 
 	rc_info->iblk4_prop = (regs_set->reg_st.st_pnum_i4.pnum_i4 +
 			       regs_set->reg_st.st_pnum_i8.pnum_i8 +

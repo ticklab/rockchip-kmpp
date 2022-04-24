@@ -1954,6 +1954,7 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	EncRcTaskInfo *hal_rc_ret = (EncRcTaskInfo *) & enc_task->rc_task->info;
 	vepu540c_h265_fbk *fb = &ctx->feedback;
 	MppEncCfgSet *cfg = ctx->cfg;
+	H265eV540cRegSet *regs_set = ctx->regs;
 	RK_S32 mb64_num =
 		((cfg->prep.width + 63) / 64) * ((cfg->prep.height + 63) / 64);
 	RK_S32 mbs =
@@ -1962,6 +1963,8 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	RK_S32 mb4_num = (mb8_num << 2);
 	H265eV540cStatusElem *elem = (H265eV540cStatusElem *) ctx->reg_out[0];
 	RK_U32 hw_status = elem->hw_status;
+	RK_U32 madi_cnt = 0, madp_cnt = 0;
+
 	RK_U32 madi_th_cnt0 =
 		elem->st.st_madi_lt_num0.madi_th_lt_cnt0 +
 		elem->st.st_madi_rt_num0.madi_th_rt_cnt0 +
@@ -2077,8 +2080,32 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 		return MPP_NOK;
 	}
 
-	// fb->st_madi += elem->st.madi;
-	//fb->st_madp += elem->st.madp;
+	fb->st_madi = madi_th_cnt0 * regs_set->reg_rc_roi.madi_st_thd.madi_th0 +
+		      madi_th_cnt1 * (regs_set->reg_rc_roi.madi_st_thd.madi_th0 +
+				      regs_set->reg_rc_roi.madi_st_thd.madi_th1) / 2 +
+		      madi_th_cnt2 * (regs_set->reg_rc_roi.madi_st_thd.madi_th1 +
+				      regs_set->reg_rc_roi.madi_st_thd.madi_th2) / 2 +
+		      madi_th_cnt3 * regs_set->reg_rc_roi.madi_st_thd.madi_th2;
+
+	madi_cnt = madi_th_cnt0 + madi_th_cnt1 + madi_th_cnt2 + madi_th_cnt3;
+
+	if (madi_cnt)
+		fb->st_madi = fb->st_madi / madi_cnt;
+
+	fb->st_madp = madp_th_cnt0 * regs_set->reg_rc_roi.madp_st_thd0.madp_th0 +
+		      madp_th_cnt1 * (regs_set->reg_rc_roi.madp_st_thd0.madp_th0 +
+				      regs_set->reg_rc_roi.madp_st_thd0.madp_th1) / 2 +
+		      madp_th_cnt2 * (regs_set->reg_rc_roi.madp_st_thd0.madp_th1 +
+				      regs_set->reg_rc_roi.madp_st_thd1.madp_th2) / 2 +
+		      madp_th_cnt3 * regs_set->reg_rc_roi.madp_st_thd1.madp_th2;
+
+	madp_cnt = madp_th_cnt0 + madp_th_cnt1 + madp_th_cnt2 + madp_th_cnt3;
+
+	if (madp_cnt)
+		fb->st_madp =  fb->st_madp  / madp_cnt;
+
+
+
 	fb->st_mb_num += elem->st.st_bnum_b16.num_b16;
 	//  fb->st_ctu_num += elem->st.st_bnum_cme.num_ctu;
 
