@@ -2023,6 +2023,18 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 	}
 
 	{
+		/* 0x1064 */
+		regs->reg_rc_roi.madi_st_thd.madi_th0 = 4;
+		regs->reg_rc_roi.madi_st_thd.madi_th1 = 9;
+		regs->reg_rc_roi.madi_st_thd.madi_th2 = 15;
+		/* 0x1068 */
+		regs->reg_rc_roi.madp_st_thd0.madp_th0 = 4 << 4;
+		regs->reg_rc_roi.madp_st_thd0.madp_th1 = 9 << 4;
+		/* 0x106C */
+		regs->reg_rc_roi.madp_st_thd1.madp_th2 = 15 << 4;
+	}
+
+	{
 		RK_U8 *thd = (RK_U8 *) & regs->reg_rc_roi.aq_tthd0;
 		RK_U8 *step = (RK_U8 *) & regs->reg_rc_roi.aq_stp0;
 

@@ -783,6 +783,18 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 		regs->reg_wgt.cmv_st_th.cmv_th1 = 96;
 		regs->reg_wgt.cmv_st_th.cmv_th2 = 128;
 	}
+
+	{
+		/* 0x1064 */
+		regs->reg_rc_roi.madi_st_thd.madi_th0 = 4;
+		regs->reg_rc_roi.madi_st_thd.madi_th1 = 9;
+		regs->reg_rc_roi.madi_st_thd.madi_th2 = 15;
+		/* 0x1068 */
+		regs->reg_rc_roi.madp_st_thd0.madp_th0 = 4 << 4;
+		regs->reg_rc_roi.madp_st_thd0.madp_th1 = 9 << 4;
+		/* 0x106C */
+		regs->reg_rc_roi.madp_st_thd1.madp_th2 = 15 << 4;
+	}
 }
 
 MPP_RET hal_h265e_v540c_init(void *hal, MppEncHalCfg *cfg)
