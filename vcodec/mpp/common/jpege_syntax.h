@@ -13,6 +13,13 @@
 #include "mpp_frame.h"
 #include "rk_venc_cmd.h"
 
+#define QUANTIZE_TABLE_SIZE 64
+/*
+ *  from RFC435 spec.
+ */
+extern const RK_U8 jpege_luma_quantizer[QUANTIZE_TABLE_SIZE];
+extern const RK_U8 jpege_chroma_quantizer[QUANTIZE_TABLE_SIZE];
+
 typedef struct JpegeSyntax_t {
 	RK_U32              width;
 	RK_U32              height;

@@ -31,6 +31,13 @@
 #include <soc/rockchip/rockchip_dvbm.h>
 #endif
 
+typedef struct HalJpegeRc_t {
+	/* For quantization table */
+	RK_S32              q_factor;
+	RK_U8               *qtable_y;
+	RK_U8               *qtable_c;
+	RK_S32              last_quality;
+} HalJpegeRc;
 
 typedef struct jpegeV540cHalContext_t {
 	MppEncHalApi api;
@@ -64,7 +71,62 @@ typedef struct jpegeV540cHalContext_t {
 	JpegeBits bits;
 	JpegeSyntax syntax;
 	RK_S32	online;
+	HalJpegeRc hal_rc;
 } jpegeV540cHalContext;
+
+MPP_RET hal_jpege_vepu_rc(jpegeV540cHalContext *ctx, HalEncTask *task)
+{
+	HalJpegeRc *hal_rc = &ctx->hal_rc;
+	EncRcTaskInfo *rc_info = (EncRcTaskInfo *)&task->rc_task->info;
+
+	if (rc_info->quality_target != hal_rc->last_quality) {
+		RK_U32 i = 0;
+		RK_S32 q = 0;
+
+		hal_rc->q_factor = 100 - rc_info->quality_target;
+		hal_jpege_dbg_input("use qfactor=%d, rc_info->quality_target=%d\n", hal_rc->q_factor,
+				    rc_info->quality_target);
+
+		q = hal_rc->q_factor;
+		if (q < 50)
+			q = 5000 / q;
+		else
+			q = 200 - (q << 1);
+
+		for (i = 0; i < QUANTIZE_TABLE_SIZE; i++) {
+			RK_S16 lq = (jpege_luma_quantizer[i] * q + 50) / 100;
+			RK_S16 cq = (jpege_chroma_quantizer[i] * q + 50) / 100;
+
+			/* Limit the quantizers to 1 <= q <= 255 */
+			hal_rc->qtable_y[i] = MPP_CLIP3(1, 255, lq);
+			hal_rc->qtable_c[i] = MPP_CLIP3(1, 255, cq);
+		}
+	}
+
+	return MPP_OK;
+}
+
+MPP_RET hal_jpege_vepu_init_rc(HalJpegeRc *hal_rc)
+{
+	memset(hal_rc, 0, sizeof(HalJpegeRc));
+	hal_rc->qtable_y = mpp_malloc(RK_U8, QUANTIZE_TABLE_SIZE);
+	hal_rc->qtable_c = mpp_malloc(RK_U8, QUANTIZE_TABLE_SIZE);
+
+	if (NULL == hal_rc->qtable_y || NULL == hal_rc->qtable_c) {
+		mpp_err_f("qtable is null, malloc err\n");
+		return MPP_ERR_MALLOC;
+	}
+
+	return MPP_OK;
+}
+
+MPP_RET hal_jpege_vepu_deinit_rc(HalJpegeRc *hal_rc)
+{
+	MPP_FREE(hal_rc->qtable_y);
+	MPP_FREE(hal_rc->qtable_c);
+
+	return MPP_OK;
+}
 
 MPP_RET hal_jpege_v540c_init(void *hal, MppEncHalCfg * cfg)
 {
@@ -95,7 +157,7 @@ MPP_RET hal_jpege_v540c_init(void *hal, MppEncHalCfg * cfg)
 	ctx->osd_cfg.osd_data3 = NULL;
 	jpege_bits_init(&ctx->bits);
 	mpp_assert(ctx->bits);
-
+	hal_jpege_vepu_init_rc(&ctx->hal_rc);
 	hal_jpege_leave();
 	return ret;
 }
@@ -106,6 +168,9 @@ MPP_RET hal_jpege_v540c_deinit(void *hal)
 
 	hal_jpege_enter();
 	jpege_bits_deinit(ctx->bits);
+
+	hal_jpege_vepu_deinit_rc(&ctx->hal_rc);
+
 	MPP_FREE(ctx->regs);
 
 	MPP_FREE(ctx->reg_out);
@@ -208,6 +273,14 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 	/* seek length bytes data */
 	jpege_seek_bits(bits, length << 3);
 	/* NOTE: write header will update qtable */
+	if (ctx->cfg->rc.rc_mode != MPP_ENC_RC_MODE_FIXQP) {
+		hal_jpege_vepu_rc(ctx, task);
+		qtable[0] = ctx->hal_rc.qtable_y;
+		qtable[1] = ctx->hal_rc.qtable_c;
+	} else {
+		qtable[0] = NULL;
+		qtable[1] = NULL;
+	}
 	write_jpeg_header(bits, syntax, qtable);
 
 	bitpos = jpege_bits_get_bitpos(bits);
