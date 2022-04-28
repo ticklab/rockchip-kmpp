@@ -1153,21 +1153,17 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 		/* Flush the register before the start the device */
 		// mpp_err("enc_start_val=%08x\n", enc_start_val);
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
-		if (dvbm_en)
-			rk_dvbm_link(enc->port);
-#endif
-		wmb();
-		atomic_set(&enc->on_work, 1);
-		if (enc->link_run)
-			mpp_write(mpp, hw->enc_start_base, enc_start_val);
-#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 		if (dvbm_en) {
 			update_online_info(mpp);
+			rk_dvbm_link(enc->port);
 			enc->dvbm_overflow = 0;
 			priv->dvbm_link = 1;
 			priv->dvbm_en = dvbm_en;
 		}
 #endif
+		wmb();
+		atomic_set(&enc->on_work, 1);
+		mpp_write(mpp, hw->enc_start_base, enc_start_val);
 	} break;
 	case RKVENC_MODE_LINK_ONEFRAME: {
 		atomic_set(&enc->link_task_cnt, 0);
