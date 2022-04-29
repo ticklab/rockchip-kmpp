@@ -791,7 +791,7 @@ static void h265e_write_algin(MppWriteCtx * bitIf)
 }
 
 RK_S32 h265e_code_slice_skip_frame(void *ctx, h265_slice * slice,
-				      RK_U8 * buf, RK_S32 len)
+				   RK_U8 * buf, RK_S32 len)
 {
 	MppWriteCtx bitIf;
 	H265eCtx * p = (H265eCtx *) ctx;

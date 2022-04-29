@@ -100,6 +100,8 @@ typedef struct HalH264eVepu540cCtx_t {
 	MppBuffer ext_line_buf;
 	RK_S32	online;
 	struct hal_shared_buf *shared_buf;
+	RK_S32	qpmap_en;
+	RK_S32	smart_en;
 } HalH264eVepu540cCtx;
 
 static RK_U32 dump_l1_reg = 0;
@@ -172,6 +174,8 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 	p->online = cfg->online;
 	p->recn_ref_wrap = cfg->ref_buf_shared;
 	p->shared_buf = cfg->shared_buf;
+	p->qpmap_en = cfg->qpmap_en;
+	p->smart_en = cfg->smart_en;
 	/* update output to MppEnc */
 	cfg->type = VPU_CLIENT_RKVENC;
 	ret = mpp_dev_init(&cfg->dev, cfg->type);
@@ -2243,6 +2247,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 
 	regs->reg_base.meiw_addr =
 		task->mv_info ? mpp_dev_get_iova_address(ctx->dev, task->mv_info, 171) : 0;
+	regs->reg_base.enc_pic.mei_stor = task->mv_info ? 1 : 0;
 
 	regs->reg_base.pic_ofst.pic_ofst_y =
 		mpp_frame_get_offset_y(task->frame);
@@ -2254,6 +2259,23 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 
 	if (ctx->osd_cfg.osd_data3)
 		vepu540c_set_osd(&ctx->osd_cfg);
+
+	if (ctx->qpmap_en) {
+		MPP_RET ret;
+		if (ctx->smart_en)
+			vepu540c_set_qpmap_smart(&ctx->regs_set->reg_rc_roi.roi_cfg,
+						 task->mv_info, task->qpmap,
+						 task->mv_flag, task->mv_index, task->qp_out,
+						 prep->width, prep->height, 0, slice->idr_flag);
+		else
+			vepu540c_set_qpmap_normal(&ctx->regs_set->reg_rc_roi.roi_cfg,
+						  task->mv_info, task->qpmap,
+						  task->mv_flag, task->mv_index, task->qp_out,
+						  prep->width, prep->height, 0, slice->idr_flag);
+		if (ret == MPP_OK)
+			regs->reg_base.adr_roir =
+				mpp_dev_get_iova_address(ctx->dev, task->qpmap, 186);
+	}
 
 	if (ctx->roi_data)
 		vepu540c_set_roi(&ctx->regs_set->reg_rc_roi.roi_cfg,
@@ -2518,31 +2540,27 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 		reg_st->st_madp_rt_num1.madp_th_rt_cnt3 +
 		reg_st->st_madp_lb_num1.madp_th_lb_cnt3 +
 		reg_st->st_madp_rb_num1.madp_th_rb_cnt3;
+	RK_U32 md_cnt = (24 * madp_th_cnt3 + 22 * madp_th_cnt2 + 17 * madp_th_cnt1) >> 2;
 
 	hal_h264e_dbg_func("enter %p\n", hal);
 
-	rc_info->motion_level = 2;
-	if (madp_th_cnt0 * 100 > 85 * mbs)
-		rc_info->motion_level = 0;
-	else if (madp_th_cnt0 * 100 > 75 * mbs && madp_th_cnt1 * 100 > 15 * mbs)
-		rc_info->motion_level = 0;
-	else if (madp_th_cnt0 * 100 > 50 * mbs && madp_th_cnt1 * 100 > 30 * mbs)
-		rc_info->motion_level = 1;
-	else if (madp_th_cnt0 * 100 > 40 * mbs && madp_th_cnt2 * 100 < 30 * mbs
-		 && madp_th_cnt3 * 100 < 10 * mbs)
+	rc_info->motion_level = 0;
+	if (md_cnt * 100 > 20 * mbs)
+		rc_info->motion_level = 2;
+	else if (md_cnt * 100 > 13 * mbs)
 		rc_info->motion_level = 1;
 	else
-		rc_info->motion_level = 2;
+		rc_info->motion_level = 0;
 
-	rc_info->complex_level = 2;
-	if (madi_th_cnt0 * 100 > 85 * mbs)
+	rc_info->complex_level = 0;
+	if (madi_th_cnt0 * 100 > 40 * mbs)
 		rc_info->complex_level = 0;
-	else if (madi_th_cnt0 * 100 > 75 * mbs && madi_th_cnt1 * 100 > 15 * mbs)
+	else if (madi_th_cnt0 * 100 > 35 * mbs && madi_th_cnt1 * 100 > 15 * mbs)
 		rc_info->complex_level = 0;
-	else if (madi_th_cnt0 * 100 > 50 * mbs && madi_th_cnt1 * 100 > 30 * mbs)
+	else if (madi_th_cnt0 * 100 > 25 * mbs && madi_th_cnt1 * 100 > 20 * mbs)
 		rc_info->complex_level = 1;
-	else if (madi_th_cnt0 * 100 > 40 * mbs && madi_th_cnt2 * 100 < 30 * mbs
-		 && madi_th_cnt3 * 100 < 10 * mbs)
+	else if (madi_th_cnt0 * 100 > 20 * mbs && madi_th_cnt2 * 100 < 30 * mbs
+		 && madi_th_cnt3 * 100 < 25 * mbs)
 		rc_info->complex_level = 1;
 	else
 		rc_info->complex_level = 2;

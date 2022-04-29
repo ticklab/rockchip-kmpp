@@ -21,6 +21,8 @@ typedef struct MppEncHalCfg_t {
 	MppEncCfgSet *cfg;
 	RK_S32	online;
 	RK_U32  ref_buf_shared;
+	RK_S32	qpmap_en;
+	RK_S32	smart_en;
 
 	// output from enc_impl
 	MppClientType type;

@@ -110,6 +110,8 @@ typedef struct H265eV540cHalContext_t {
 	RK_S32 online;
 	/* recn and ref buffer offset */
 	RK_U32 recn_ref_wrap;
+	RK_S32 qpmap_en;
+	RK_S32 smart_en;
 	MppBuffer recn_ref_buf;
 	WrapBufInfo wrap_infos;
 	struct hal_shared_buf *shared_buf;
@@ -846,6 +848,8 @@ MPP_RET hal_h265e_v540c_init(void *hal, MppEncHalCfg *cfg)
 	ctx->online = cfg->online;
 	ctx->recn_ref_wrap = cfg->ref_buf_shared;
 	ctx->shared_buf = cfg->shared_buf;
+	ctx->qpmap_en = cfg->qpmap_en;
+	ctx->smart_en = cfg->smart_en;
 
 	//hal_bufs_init(&ctx->dpb_bufs);
 
@@ -1549,7 +1553,7 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	if (mv_info_buf) {
 		regs->reg0192_enc_pic.mei_stor = 1;
 		regs->reg0171_meiw_addr =
-			mpp_dev_get_iova_address(ctx->dev, mv_info_buf, 11);
+			mpp_dev_get_iova_address(ctx->dev, mv_info_buf, 171);
 	} else {
 		regs->reg0192_enc_pic.mei_stor = 0;
 		regs->reg0171_meiw_addr = 0;
@@ -1833,6 +1837,24 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	if (ctx->osd_cfg.osd_data3)
 		vepu540c_set_osd(&ctx->osd_cfg);
 
+	if (ctx->qpmap_en) {
+		MPP_RET ret;
+		if (ctx->smart_en)
+			ret = vepu540c_set_qpmap_smart(&reg_rc_roi->roi_cfg,
+						       task->mv_info, task->qpmap,
+						       task->mv_flag, task->mv_index, task->qp_out,
+						       prep->width, prep->height, 1, ctx->frame_type == INTRA_FRAME);
+		else
+			ret = vepu540c_set_qpmap_normal(&reg_rc_roi->roi_cfg,
+							task->mv_info, task->qpmap,
+							task->mv_flag, task->mv_index, task->qp_out,
+							prep->width, prep->height, 1, ctx->frame_type == INTRA_FRAME);
+
+		if (ret == MPP_OK)
+			reg_base->reg0186_adr_roir =
+				mpp_dev_get_iova_address(ctx->dev, task->qpmap, 186);
+	}
+
 	if (ctx->roi_data)
 		vepu540c_set_roi(&reg_rc_roi->roi_cfg,
 				 (MppEncROICfg *)ctx->roi_data, prep->width, prep->height);
@@ -2018,7 +2040,7 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	RK_S32 mb4_num = (mb8_num << 2);
 	H265eV540cStatusElem *elem = (H265eV540cStatusElem *) ctx->reg_out[0];
 	RK_U32 hw_status = elem->hw_status;
-	RK_U32 madi_cnt = 0, madp_cnt = 0;
+	RK_U32 madi_cnt = 0, madp_cnt = 0, md_cnt = 0, md_lvl = 0;
 
 	RK_U32 madi_th_cnt0 =
 		elem->st.st_madi_lt_num0.madi_th_lt_cnt0 +
@@ -2060,29 +2082,26 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 		elem->st.st_madp_rt_num1.madp_th_rt_cnt3 +
 		elem->st.st_madp_lb_num1.madp_th_lb_cnt3 +
 		elem->st.st_madp_rb_num1.madp_th_rb_cnt3;
+	md_cnt = (24 * madp_th_cnt3 + 22 * madp_th_cnt2 + 17 * madp_th_cnt1) >> 2;
 
-	hal_rc_ret->motion_level = 2;
-	if (madp_th_cnt0 * 100 > 85 * mbs)
-		hal_rc_ret->motion_level = 0;
-	else if (madp_th_cnt0 * 100 > 75 * mbs && madp_th_cnt1 * 100 > 15 * mbs)
-		hal_rc_ret->motion_level = 0;
-	else if (madp_th_cnt0 * 100 > 50 * mbs && madp_th_cnt1 * 100 > 30 * mbs)
-		hal_rc_ret->motion_level = 1;
-	else if (madp_th_cnt0 * 100 > 40 * mbs && madp_th_cnt2 * 100 < 30 * mbs
-		 && madp_th_cnt3 * 100 < 10 * mbs)
-		hal_rc_ret->motion_level = 1;
+	md_lvl = 0;
+	if (md_cnt * 100 > 20 * mbs)
+		md_lvl = 2;
+	else if (md_cnt * 100 > 13 * mbs)
+		md_lvl = 1;
 	else
-		hal_rc_ret->motion_level = 2;
-
-	hal_rc_ret->complex_level = 2;
-	if (madi_th_cnt0 * 100 > 85 * mbs)
+		md_lvl = 0;
+	hal_rc_ret->motion_level = md_lvl;
+	//mpp_log("c1=%d,c2=%d,c3=%d,hw_md_lvl=%d\n",madp_th_cnt1,madp_th_cnt2,madp_th_cnt3,md_lvl);
+	hal_rc_ret->complex_level = 0;
+	if (madi_th_cnt0 * 100 > 40 * mbs)
 		hal_rc_ret->complex_level = 0;
-	else if (madi_th_cnt0 * 100 > 75 * mbs && madi_th_cnt1 * 100 > 15 * mbs)
+	else if (madi_th_cnt0 * 100 > 35 * mbs && madi_th_cnt1 * 100 > 15 * mbs)
 		hal_rc_ret->complex_level = 0;
-	else if (madi_th_cnt0 * 100 > 50 * mbs && madi_th_cnt1 * 100 > 30 * mbs)
+	else if (madi_th_cnt0 * 100 > 25 * mbs && madi_th_cnt1 * 100 > 20 * mbs)
 		hal_rc_ret->complex_level = 1;
-	else if (madi_th_cnt0 * 100 > 40 * mbs && madi_th_cnt2 * 100 < 30 * mbs
-		 && madi_th_cnt3 * 100 < 10 * mbs)
+	else if (madi_th_cnt0 * 100 > 20 * mbs && madi_th_cnt2 * 100 < 30 * mbs
+		 && madi_th_cnt3 * 100 < 25 * mbs)
 		hal_rc_ret->complex_level = 1;
 	else
 		hal_rc_ret->complex_level = 2;

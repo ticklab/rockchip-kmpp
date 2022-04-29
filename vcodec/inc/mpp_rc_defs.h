@@ -183,6 +183,7 @@ typedef struct EncRcTask_s {
 	EncRcTaskInfo   info;
 	EncRcForceCfg   force;
 	MppFrame        frame;
+	RK_U32          qp_out;
 } EncRcTask;
 
 #endif /* __MPP_RC_DEFS_H__ */

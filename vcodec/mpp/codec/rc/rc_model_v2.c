@@ -1541,7 +1541,7 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 		if (p->qp_layer_id) {
 			RK_S32 hier_qp_delta =
 				usr_cfg->hier_qp_cfg.hier_qp_delta[p->qp_layer_id -
-								   1];
+										  1];
 
 			p->start_qp -= hier_qp_delta;
 			rc_dbg_qp("hier_qp: layer %d delta %d", p->qp_layer_id,
@@ -1684,6 +1684,8 @@ MPP_RET rc_model_v2_end(void *ctx, EncRcTask * task)
 
 	p->on_drop = 0;
 	p->on_pskip = 0;
+
+	task->qp_out = p->cur_scale_qp >> 6;
 
 DONE:
 	rc_dbg_func("leave %p\n", ctx);

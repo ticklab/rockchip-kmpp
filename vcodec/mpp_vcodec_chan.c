@@ -64,7 +64,8 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			attr->max_strm_cnt,
 			attr->shared_buf_en,
 			attr->smart_en,
-			&chan_entry->shared_buf
+			&chan_entry->shared_buf,
+			attr->smart_en ? 1 : attr->qpmap_en,
 		};
 
 		ret = mpp_enc_init(&enc, &cfg);

@@ -914,6 +914,18 @@ typedef struct Vepu540cRoiCfg_t {
 	Vepu540cRoiRegion regions[8];
 } Vepu540cRoiCfg;
 
+/*
+ * Vepu540cQpmapCfg
+ *
+ */
+typedef struct Vepu540cQpmapCfg {
+	RK_U32 roi_qp_adju: 8;
+	RK_U32 reserved: 12;
+	RK_U32 mdc_adju_inter: 4;
+	RK_U32 mdc_adju_skip: 4;
+	RK_U32 mdc_adju_intra: 4;
+} Vepu540cQpmapCfg;
+
 /* class: osd */
 /* 0x00003000 reg3072 - 0x00003084 reg3105*/
 typedef struct Vepu540cOsdRegs_t {
@@ -1911,6 +1923,12 @@ extern "C" {
 MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg);
 MPP_RET vepu540c_set_roi(void *roi_reg_base, MppEncROICfg * roi,
 			 RK_S32 w, RK_S32 h);
+MPP_RET vepu540c_set_qpmap_smart(void *roi_reg_base, MppBuffer mv_info, MppBuffer qpmap,
+				 RK_U8 *mv_flag[3], RK_U8 *mv_index, RK_U32 qp_out,
+				 RK_S32 w, RK_S32 h, RK_S32 is_hevc, RK_S32 is_idr);
+MPP_RET vepu540c_set_qpmap_normal(void *roi_reg_base, MppBuffer mv_info, MppBuffer qpmap,
+				  RK_U8 *mv_flag[3], RK_U8 *mv_index, RK_U32 qp_out,
+				  RK_S32 w, RK_S32 h, RK_S32 is_hevc, RK_S32 is_idr);
 MPP_RET vepu540c_set_osd(Vepu540cOsdCfg * cfg);
 void vepu540c_set_dvbm(vepu540c_online *online_addr);
 

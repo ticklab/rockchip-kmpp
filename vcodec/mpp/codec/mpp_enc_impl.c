@@ -1296,6 +1296,15 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 	MppPacket packet = hal_task->packet;
 	MppEncRefFrmUsrCfg *frm_cfg = &enc->frm_cfg;
 	MPP_RET ret = MPP_OK;
+	if (enc->qpmap_en) {
+		RK_U32 i;
+		hal_task->mv_info = enc->mv_info;
+		hal_task->qpmap = enc->qpmap;
+		for (i = 0; i < 3; i++)
+			hal_task->mv_flag[i] = enc->mv_flag[i];
+		hal_task->mv_index = &enc->mv_index;
+		hal_task->qp_out = enc->qp_out;
+	}
 	if (!enc->online && enc->cfg.rc.debreath_en && !enc->ref_buf_shared) {
 		if (!frm_cfg->force_flag) {
 			ret = mpp_enc_proc_two_pass(enc, task);
@@ -1466,6 +1475,7 @@ static MPP_RET mpp_enc_reenc_drop(MppEncImpl *enc, EncTask *task)
 
 	enc_dbg_detail("task %d rc frame end\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_frm_end, enc->rc_ctx, rc_task, enc, ret);
+	enc->qp_out = rc_task->qp_out;
 
 TASK_DONE:
 	enc_dbg_func("leave\n");
@@ -1505,6 +1515,7 @@ static MPP_RET mpp_enc_reenc_force_pskip(MppEncImpl *enc, EncTask *task)
 
 	enc_dbg_detail("task %d rc frame end\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_frm_end, enc->rc_ctx, rc_task, enc, ret);
+	enc->qp_out = rc_task->qp_out;
 
 TASK_DONE:
 	enc_dbg_func("leave\n");
@@ -1747,6 +1758,7 @@ static MPP_RET mpp_enc_comb_end_jpeg(MppEnc ctx, MppPacket *packet)
 	ENC_RUN_FUNC2(rc_hal_end, enc->rc_ctx, rc_task, enc, ret);
 	enc_dbg_detail("task %d rc enc->frame end\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_frm_end, enc->rc_ctx, rc_task, enc, ret);
+	enc->qp_out = rc_task->qp_out;
 	enc->time_end = mpp_time();
 	enc->frame_count++;
 
@@ -1828,6 +1840,7 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 	}
 	enc_dbg_detail("task %d rc enc->frame end\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_frm_end, enc->rc_ctx, rc_task, enc, ret);
+	enc->qp_out = rc_task->qp_out;
 	enc->time_end = mpp_time();
 	enc->frame_count++;
 

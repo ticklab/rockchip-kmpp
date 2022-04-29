@@ -152,6 +152,7 @@ typedef struct MppEncInitCfg_t {
 	RK_U32		ref_buf_shared;
 	RK_U32		smart_en;
 	struct hal_shared_buf *shared_buf;
+	RK_U32		qpmap_en;
 } MppEncInitCfg;
 
 #ifdef __cplusplus
