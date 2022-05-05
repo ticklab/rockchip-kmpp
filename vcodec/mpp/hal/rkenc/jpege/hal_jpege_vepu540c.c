@@ -220,17 +220,12 @@ static void vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
 	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 1;
 }
 #else
-static MPP_RET vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
+static void vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
 {
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct dvbm_addr_cfg dvbm_adr;
 
 	rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
-	if (dvbm_adr.overflow) {
-		mpp_err("cur frame already overflow [%d %d]!\n",
-			dvbm_adr.frame_id, dvbm_adr.line_cnt);
-		return MPP_NOK;
-	}
 	regs->reg_ctl.reg0024_dvbm_cfg.dvbm_en = 1;
 	regs->reg_ctl.reg0024_dvbm_cfg.src_badr_sel = 1;
 	regs->reg_ctl.reg0024_dvbm_cfg.vinf_frm_match = 1;
@@ -247,7 +242,6 @@ static MPP_RET vepu540c_jpeg_set_dvbm(JpegV540cRegSet *regs)
 	regs->reg_base.reg0194_dvbm_id.vrsp_rtn_en = 1;
 #else
 #endif
-	return MPP_OK;
 }
 #endif
 
@@ -325,10 +319,8 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 	reg_ctl->reg0014_enc_wdg.vs_load_thd = 0x1fffff;
 	reg_ctl->reg0014_enc_wdg.rfp_load_thd = 0xff;
 
-	if (ctx->online) {
-		if (vepu540c_jpeg_set_dvbm(regs))
-			return MPP_NOK;
-	}
+	if (ctx->online)
+		vepu540c_jpeg_set_dvbm(regs);
 	vepu540c_set_jpeg_reg(&cfg);
 	vepu540c_set_osd(&ctx->osd_cfg);
 	{
@@ -518,6 +510,18 @@ MPP_RET hal_jpege_v540c_get_task(void *hal, HalEncTask * task)
 	ctx->last_frame_type = ctx->frame_type;
 
 	ctx->osd_cfg.osd_data3 = mpp_frame_get_osd(task->frame);
+	if (ctx->cfg->rc.rc_mode != MPP_ENC_RC_MODE_FIXQP) {
+		if (!ctx->hal_rc.q_factor) {
+			task->rc_task->info.quality_target = syntax->q_factor ? (100 - syntax->q_factor) : 80;
+			task->rc_task->info.quality_min = 100 - syntax->qf_max;
+			task->rc_task->info.quality_max = 100 - syntax->qf_min;
+			task->rc_task->frm.is_intra = 1;
+		} else {
+			task->rc_task->info.quality_target = ctx->hal_rc.last_quality;
+			task->rc_task->info.quality_min = 100 - syntax->qf_max;
+			task->rc_task->info.quality_max = 100 - syntax->qf_min;
+		}
+	}
 
 	hal_jpege_leave();
 
@@ -528,8 +532,11 @@ MPP_RET hal_jpege_v540c_ret_task(void *hal, HalEncTask * task)
 {
 
 	EncRcTaskInfo *rc_info = &task->rc_task->info;
+	jpegeV540cHalContext *ctx = (jpegeV540cHalContext *) hal;
 	hal_jpege_enter();
 	(void)hal;
+
+	ctx->hal_rc.last_quality = task->rc_task->info.quality_target;
 	task->length += task->hw_length;
 
 	// setup bit length for rate control
