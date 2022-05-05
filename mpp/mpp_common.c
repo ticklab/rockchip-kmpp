@@ -532,6 +532,7 @@ static void mpp_task_timeout_work(struct work_struct *work_s)
 	}
 
 	mpp_err("task %p processing time out!\n", task);
+
 	if (!task->session) {
 		mpp_err("task %p, task->session is null.\n", task);
 		return;
@@ -544,6 +545,7 @@ static void mpp_task_timeout_work(struct work_struct *work_s)
 	}
 
 	mpp = mpp_get_task_used_device(task, session);
+	pr_err("reg[0x18]=0x%08x reg[0x60]=0x%08x\n", mpp_read(mpp, 0x18), mpp_read(mpp, 0x60));
 	/* hardware maybe dead, reset it */
 	mpp_reset_up_read(mpp->reset_group);
 	mpp_dev_reset(mpp);
@@ -1983,6 +1985,14 @@ int mpp_task_finish(struct mpp_session *session,
 	u32 clbk_en = task->clbk_en;
 	if (mpp->dev_ops->finish)
 		mpp->dev_ops->finish(mpp, task);
+	{
+		u32 val = 0;
+		mpp_write(mpp, 0x18, 0);
+		mpp_write(mpp, 0x60, 0);
+		val = mpp_read(mpp, 0x18);
+		if (val != 0)
+			pr_err("clear line cnt failed 0x%08x\n", val);
+	}
 
 	mpp_reset_up_read(mpp->reset_group);
 	if (atomic_read(&mpp->reset_request) > 0)
