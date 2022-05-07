@@ -735,14 +735,38 @@ static MPP_RET setup_vepu540c_prep(HalVepu540cRegSet *regs,
 	//    regs->reg_base.src_fmt.src_range  = cfg.src_range;
 	regs->reg_base.src_fmt.out_fmt = 1;
 
-	y_stride = (MPP_FRAME_FMT_IS_FBC(fmt)) ? (MPP_ALIGN(prep->width, 16)) :
-		   (prep->hor_stride) ? (prep->hor_stride) : (prep->width);
+	if (MPP_FRAME_FMT_IS_FBC(fmt))
+		y_stride = MPP_ALIGN(prep->width, 16);
 
-	y_stride = y_stride;
+	else if (prep->hor_stride)
+		y_stride = prep->hor_stride;
 
-	c_stride = (hw_fmt == VEPU541_FMT_YUV422SP
-		    || hw_fmt ==
-		    VEPU541_FMT_YUV420SP) ? y_stride : y_stride / 2;
+	else {
+		if (hw_fmt == VEPU541_FMT_BGRA8888 )
+			y_stride = prep->width * 4;
+		else if (hw_fmt == VEPU541_FMT_BGR888 )
+			y_stride = prep->width * 3;
+		else if (hw_fmt == VEPU541_FMT_BGR565 ||
+			 hw_fmt == VEPU541_FMT_YUYV422 ||
+			 hw_fmt == VEPU541_FMT_UYVY422)
+			y_stride = prep->width * 2;
+		else
+			y_stride = prep->width;
+	}
+
+	switch (hw_fmt) {
+	case VEPU540C_FMT_YUV444SP : {
+		c_stride = y_stride * 2;
+	} break;
+	case VEPU541_FMT_YUV422SP :
+	case VEPU541_FMT_YUV420SP :
+	case VEPU540C_FMT_YUV444P : {
+		c_stride = y_stride;
+	} break;
+	default : {
+		c_stride = y_stride / 2;
+	} break;
+	}
 
 	if (hw_fmt < VEPU541_FMT_ARGB1555) {
 		regs->reg_base.src_udfy.csc_wgt_b2y = 29;
@@ -1599,6 +1623,14 @@ static void setup_vepu540c_io_buf(HalH264eVepu540cCtx *ctx,
 			off_in[1] = 0;
 		}
 		break;
+		case VEPU540C_FMT_YUV444SP : {
+			off_in[0] = hor_stride * ver_stride;
+			off_in[1] = hor_stride * ver_stride;
+		} break;
+		case VEPU540C_FMT_YUV444P : {
+			off_in[0] = hor_stride * ver_stride;
+			off_in[1] = hor_stride * ver_stride * 2;
+		} break;
 		case VEPU540C_FMT_BUTT:
 		default: {
 			off_in[0] = 0;

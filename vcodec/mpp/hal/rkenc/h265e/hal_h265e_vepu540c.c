@@ -416,6 +416,8 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 		frame_size *= 2;
 	}
 	break;
+	case VEPU540C_FMT_YUV444P:
+	case VEPU540C_FMT_YUV444SP:
 	case VEPU541_FMT_BGR888: {
 		frame_size *= 3;
 	}
@@ -955,6 +957,14 @@ vepu540c_h265_uv_address(hevc_vepu540c_base *reg_base, H265eSyntax_new *syn,
 			v_offset = 0;
 		}
 		break;
+		case VEPU540C_FMT_YUV444SP : {
+			u_offset = frame_size;
+			v_offset = frame_size;
+		} break;
+		case VEPU540C_FMT_YUV444P : {
+			u_offset = frame_size;
+			v_offset = frame_size * 2;
+		} break;
 		case VEPU541_FMT_BGR565:
 		case VEPU541_FMT_BGR888:
 		case VEPU541_FMT_BGRA8888: {
@@ -1119,23 +1129,32 @@ static MPP_RET vepu540c_h265_set_pp_regs(H265eV540cRegSet *regs,
 		stridey = prep_cfg->hor_stride;
 
 	else {
-		if (reg_base->reg0198_src_fmt.src_cfmt == VEPU541_FMT_BGRA8888)
+		if (fmt->format == VEPU541_FMT_BGRA8888 )
 			stridey = prep_cfg->width * 4;
-		else if (reg_base->reg0198_src_fmt.src_cfmt ==
-			 VEPU541_FMT_BGR888)
+		else if (fmt->format == VEPU541_FMT_BGR888 )
 			stridey = prep_cfg->width * 3;
-		else if (reg_base->reg0198_src_fmt.src_cfmt ==
-			 VEPU541_FMT_BGR565
-			 || reg_base->reg0198_src_fmt.src_cfmt ==
-			 VEPU541_FMT_YUYV422
-			 || reg_base->reg0198_src_fmt.src_cfmt ==
-			 VEPU541_FMT_UYVY422)
+		else if (fmt->format == VEPU541_FMT_BGR565 ||
+			 fmt->format == VEPU541_FMT_YUYV422 ||
+			 fmt->format == VEPU541_FMT_UYVY422)
 			stridey = prep_cfg->width * 2;
+		else
+			stridey = prep_cfg->width;
 	}
 
-	stridec = (reg_base->reg0198_src_fmt.src_cfmt == VEPU541_FMT_YUV422SP ||
-		   reg_base->reg0198_src_fmt.src_cfmt == VEPU541_FMT_YUV420SP) ?
-		  stridey : stridey / 2;
+	switch (fmt->format) {
+	case VEPU540C_FMT_YUV444SP : {
+		stridec = stridey * 2;
+	} break;
+	case VEPU541_FMT_YUV422SP :
+	case VEPU541_FMT_YUV420SP :
+	case VEPU540C_FMT_YUV444P : {
+		stridec = stridey;
+	} break;
+	default : {
+		stridec = stridey / 2;
+	} break;
+	}
+
 
 	if (reg_base->reg0198_src_fmt.src_cfmt < VEPU541_FMT_ARGB1555) {
 		reg_base->reg0199_src_udfy.csc_wgt_r2y = 77;

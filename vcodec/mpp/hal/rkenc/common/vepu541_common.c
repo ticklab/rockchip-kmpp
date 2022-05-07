@@ -168,7 +168,7 @@ static VepuFmtCfg vepu541_yuv_cfg[MPP_FMT_YUV_BUTT] = {
 	{			/* MPP_FMT_YUV444P */
 		.format = VEPU540C_FMT_YUV444P,
 		.alpha_swap = 0,
-		.rbuv_swap = 0,
+		.rbuv_swap = 1,
 		.src_range = 0,
 		.src_endian = 0,
 		.weight = zeros,
