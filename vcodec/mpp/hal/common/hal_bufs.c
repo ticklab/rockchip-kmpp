@@ -235,11 +235,11 @@ HalBuf *hal_bufs_get_buf(HalBufs bufs, RK_S32 buf_idx)
 			size_t size = impl->sizes[i];
 			MppBuffer buf = hal_buf->buf[i];
 
-			if (size && NULL == buf)
+			if (size && NULL == buf) {
 				mpp_buffer_get(NULL, &buf, size);
-
-			mpp_assert(buf);
-			hal_buf->buf[i] = buf;
+				mpp_assert(buf);
+				hal_buf->buf[i] = buf;
+			}
 		}
 
 		impl->valid |= mask;

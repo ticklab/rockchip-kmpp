@@ -19,6 +19,13 @@ typedef struct HalBuf_t {
 	MppBuffer *buf;
 } HalBuf;
 
+typedef enum {
+	THUMB_TYPE       = 0,
+	CMV_TYPE         = 1,
+	SMEAR_TYPE       = 2,
+	RECREF_TYPE      = 3,
+} HalBufType;
+
 typedef void *HalBufs;
 
 #ifdef __cplusplus

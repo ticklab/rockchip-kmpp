@@ -515,12 +515,12 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 		ctx->pixel_buf_fbc_bdy_size = pixel_buf_fbc_bdy_size;
 
 		if (ctx->recn_ref_wrap) {
-			size_t sizes[2] = {thumb_buf_size, smera_size};
+			size_t sizes[4] = {thumb_buf_size, 0, smera_size, 0};
 
 			hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
 			get_wrap_buf(ctx, max_lt_cnt);
 		} else {
-			size_t sizes[3] = {thumb_buf_size, pixel_buf_size, smera_size};
+			size_t sizes[4] = {thumb_buf_size, 0, smera_size, pixel_buf_size};
 			hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
 			ctx->pixel_buf_fbc_bdy_offset = pixel_buf_fbc_hdr_size;
 			ctx->pixel_buf_size = pixel_buf_size;
@@ -1690,11 +1690,11 @@ static void setup_vepu540c_recn_refr(HalH264eVepu540cCtx *ctx,
 	hal_h264e_dbg_func("enter\n");
 
 	if (curr && curr->cnt) {
-		MppBuffer buf_thumb = curr->buf[0];
+		MppBuffer buf_thumb = curr->buf[THUMB_TYPE];
 		mpp_assert(buf_thumb);
 		regs->reg_base.dspw_addr = mpp_dev_get_iova_address(dev, buf_thumb, 169);
 		if (!recn_ref_wrap) {
-			MppBuffer buf_pixel = curr->buf[1];
+			MppBuffer buf_pixel = curr->buf[RECREF_TYPE];
 
 			mpp_assert(buf_pixel);
 			regs->reg_base.rfpw_h_addr =
@@ -1707,12 +1707,12 @@ static void setup_vepu540c_recn_refr(HalH264eVepu540cCtx *ctx,
 	}
 
 	if (refr && refr->cnt) {
-		MppBuffer buf_thumb = refr->buf[0];
+		MppBuffer buf_thumb = refr->buf[THUMB_TYPE];
 
 		mpp_assert(buf_thumb);
 		regs->reg_base.dspr_addr = mpp_dev_get_iova_address(dev, buf_thumb, 170);
 		if (!recn_ref_wrap) {
-			MppBuffer buf_pixel = refr->buf[1];
+			MppBuffer buf_pixel = refr->buf[RECREF_TYPE];
 
 			mpp_assert(buf_pixel);
 			regs->reg_base.rfpr_h_addr =
@@ -1722,18 +1722,17 @@ static void setup_vepu540c_recn_refr(HalH264eVepu540cCtx *ctx,
 		}
 	}
 
-	if (ctx->recn_ref_wrap) {
+	if (ctx->recn_ref_wrap)
 		setup_recn_refr_wrap(ctx, regs);
-		regs->reg_base.adr_smear_wr =  mpp_dev_get_iova_address(dev, curr->buf[1], 185);
-		regs->reg_base.adr_smear_rd =  mpp_dev_get_iova_address(dev, refr->buf[1], 184);
-	} else {
+
+	else {
 		regs->reg_base.rfpt_h_addr = 0xffffffff;
 		regs->reg_base.rfpb_h_addr = 0;
 		regs->reg_base.rfpt_b_addr = 0xffffffff;
 		regs->reg_base.rfpb_b_addr  = 0;
-		regs->reg_base.adr_smear_wr =  mpp_dev_get_iova_address(dev, curr->buf[2], 185);
-		regs->reg_base.adr_smear_rd =  mpp_dev_get_iova_address(dev, refr->buf[2], 184);
 	}
+	regs->reg_base.adr_smear_wr =  mpp_dev_get_iova_address(dev, curr->buf[SMEAR_TYPE], 185);
+	regs->reg_base.adr_smear_rd =  mpp_dev_get_iova_address(dev, refr->buf[SMEAR_TYPE], 184);
 	hal_h264e_dbg_func("leave\n");
 }
 
