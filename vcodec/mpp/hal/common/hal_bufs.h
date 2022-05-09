@@ -26,8 +26,6 @@ typedef enum {
 	RECREF_TYPE      = 3,
 } HalBufType;
 
-typedef void *HalBufs;
-
 #ifdef __cplusplus
 extern "C" {
 #endif

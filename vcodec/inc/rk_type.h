@@ -107,6 +107,7 @@ typedef void* MppEnc;
 typedef void* MppRoi;
 typedef void* MppOsd;
 typedef void* MpiBuf;
+typedef void *HalBufs;
 
 
 struct vcodec_attr {
@@ -117,8 +118,17 @@ struct vcodec_attr {
 	RK_U32		buf_size;
 	RK_U32		max_strm_cnt;
 	RK_U32		shared_buf_en;
-	RK_U32          smart_en;
-	RK_U32		res[7];
+	RK_U32      smart_en;
+	RK_U32      max_width;
+	RK_U32      max_height;
+	RK_U32      max_lt_cnt;
+	RK_U32      res[4];
+};
+
+struct hal_shared_buf {
+	HalBufs    dpb_bufs;
+	MppBuffer  recn_ref_buf;
+	MppBuffer  stream_buf;
 };
 
 struct venc_pack_info {

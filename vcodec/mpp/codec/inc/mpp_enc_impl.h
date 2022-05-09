@@ -126,6 +126,7 @@ typedef struct MppEncImpl_t {
 	RK_U32 ringbuf_fail_cnt;
 	RK_U32 cfg_fail_cnt;
 	RK_U32 start_fail_cnt;
+	struct hal_shared_buf *shared_buf;
 } MppEncImpl;
 
 enum enc_status {

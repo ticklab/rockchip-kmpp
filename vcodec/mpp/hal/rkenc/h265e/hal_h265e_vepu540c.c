@@ -112,6 +112,7 @@ typedef struct H265eV540cHalContext_t {
 	RK_U32 recn_ref_wrap;
 	MppBuffer recn_ref_buf;
 	WrapBufInfo wrap_infos;
+	struct hal_shared_buf *shared_buf;
 } H265eV540cHalContext;
 
 #define TILE_BUF_SIZE  MPP_ALIGN(128 * 1024, 256)
@@ -220,9 +221,13 @@ static void get_wrap_buf(H265eV540cHalContext *ctx, RK_S32 max_lt_cnt)
 		body->top = body->bottom + body->total_size;
 		body->cur_off = body->bottom;
 	}
-	if (ctx->recn_ref_buf)
-		mpp_buffer_put(ctx->recn_ref_buf);
-	mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
+
+	if (!ctx->shared_buf->recn_ref_buf) {
+		if (ctx->recn_ref_buf)
+			mpp_buffer_put(ctx->recn_ref_buf);
+		mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
+	} else
+		ctx->recn_ref_buf = ctx->shared_buf->recn_ref_buf;
 }
 
 static void setup_recn_refr_wrap(H265eV540cHalContext *ctx, hevc_vepu540c_base *regs,
@@ -456,8 +461,10 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 	    (new_max_cnt > old_max_cnt) ||
 	    (smera_size > ctx->smera_size)) {
 
-		hal_bufs_deinit(ctx->dpb_bufs);
-		hal_bufs_init(&ctx->dpb_bufs);
+		if (!ctx->shared_buf->dpb_bufs) {
+			hal_bufs_deinit(ctx->dpb_bufs);
+			hal_bufs_init(&ctx->dpb_bufs);
+		}
 		new_max_cnt = MPP_MAX(new_max_cnt, old_max_cnt);
 		if (ctx->recn_ref_wrap) {
 			size_t size[4] = { 0 };
@@ -472,7 +479,9 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 					     ctx->frame_size, frame_size, old_max_cnt,
 					     new_max_cnt);
 			get_wrap_buf(ctx, max_lt_cnt);
-			hal_bufs_setup(ctx->dpb_bufs, new_max_cnt, MPP_ARRAY_ELEMS(size), size);
+
+			if (!ctx->shared_buf->dpb_bufs)
+				hal_bufs_setup(ctx->dpb_bufs, new_max_cnt, MPP_ARRAY_ELEMS(size), size);
 		} else {
 			size_t size[4] = { 0 };
 
@@ -490,8 +499,12 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 					     ctx->frame_size, frame_size, old_max_cnt,
 					     new_max_cnt);
 
-			hal_bufs_setup(ctx->dpb_bufs, new_max_cnt, MPP_ARRAY_ELEMS(size), size);
+			if (!ctx->shared_buf->dpb_bufs)
+				hal_bufs_setup(ctx->dpb_bufs, new_max_cnt, MPP_ARRAY_ELEMS(size), size);
 		}
+
+		if (ctx->shared_buf->dpb_bufs)
+			ctx->dpb_bufs = ctx->shared_buf->dpb_bufs;
 
 		ctx->frame_size = frame_size;
 		ctx->max_buf_cnt = new_max_cnt;
@@ -832,7 +845,9 @@ MPP_RET hal_h265e_v540c_init(void *hal, MppEncHalCfg *cfg)
 	ctx->cfg = cfg->cfg;
 	ctx->online = cfg->online;
 	ctx->recn_ref_wrap = cfg->ref_buf_shared;
-	hal_bufs_init(&ctx->dpb_bufs);
+	ctx->shared_buf = cfg->shared_buf;
+
+	//hal_bufs_init(&ctx->dpb_bufs);
 
 	ctx->frame_cnt = 0;
 	ctx->frame_cnt_gen_ready = 0;
@@ -881,7 +896,10 @@ MPP_RET hal_h265e_v540c_deinit(void *hal)
 		MPP_FREE(ctx->reg_out[i]);
 
 	MPP_FREE(ctx->input_fmt);
-	hal_bufs_deinit(ctx->dpb_bufs);
+
+
+	if (!ctx->shared_buf->dpb_bufs && ctx->dpb_bufs)
+		hal_bufs_deinit(ctx->dpb_bufs);
 
 	if (ctx->hw_tile_buf[0]) {
 		mpp_buffer_put(ctx->hw_tile_buf[0]);
@@ -893,7 +911,7 @@ MPP_RET hal_h265e_v540c_deinit(void *hal)
 		ctx->hw_tile_buf[1] = NULL;
 	}
 
-	if (ctx->recn_ref_buf) {
+	if (!ctx->shared_buf->recn_ref_buf && ctx->recn_ref_buf) {
 		mpp_buffer_put(ctx->recn_ref_buf);
 		ctx->recn_ref_buf = NULL;
 	}

@@ -63,6 +63,11 @@ struct mpp_chan {
 	RK_S64 last_jeg_combo_end;
 	RK_S32 gap_time;
 	RK_S32 combo_gap_time;
+	RK_U32 max_width;
+	RK_U32 max_height;
+	RK_U32 ring_buf_size;
+	struct hal_shared_buf shared_buf;
+	RK_U32 max_lt_cnt;
 };
 
 struct stream_packet {
@@ -109,5 +114,7 @@ void mpp_vcodec_stream_clear(struct mpp_chan *entry);
 int mpp_vcodec_get_free_chan(MppCtxType type);
 int vcodec_create_mpi_dev(void);
 void enc_test(void);
+int mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_attr *attr);
+
 
 #endif

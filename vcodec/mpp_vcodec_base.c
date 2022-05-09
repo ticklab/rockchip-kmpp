@@ -24,6 +24,8 @@
 #include "rk_export_func.h"
 #include "mpp_packet_impl.h"
 #include "mpp_packet_pool.h"
+#include "hal_bufs.h"
+#include "mpp_maths.h"
 
 RK_U32 mpp_vcodec_debug = 0;
 
@@ -272,6 +274,127 @@ void mpp_vcodec_dec_chan_num(MppCtxType type)
 	return;
 }
 
+#define REF_BODY_SIZE(w, h)			MPP_ALIGN((((w) * (h) * 3 / 2) + 48 * (w)), SZ_4K)
+#define REF_WRAP_BODY_EXT_SIZE(w)		MPP_ALIGN((240 * (w)), SZ_4K)
+#define REF_HEADER_SIZE(w, h)			MPP_ALIGN((((w) * (h) / 64) + (w) / 2), SZ_4K)
+#define REF_WRAP_HEADER_EXT_SIZE(w)		MPP_ALIGN((3 * (w)), SZ_4K)
+
+static void get_wrap_buf(struct hal_shared_buf *ctx, struct vcodec_attr *attr, RK_S32 max_lt_cnt)
+{
+	RK_S32 alignment = 64;
+	RK_S32 aligned_w = MPP_ALIGN(attr->max_width, alignment);
+	RK_S32 aligned_h = MPP_ALIGN(attr->max_height, alignment);
+	RK_U32 total_wrap_size;
+	RK_U32 body_size, body_total_size, hdr_size, hdr_total_size;
+
+	body_size = REF_BODY_SIZE(aligned_w, aligned_h);
+	body_total_size = body_size + REF_WRAP_BODY_EXT_SIZE(aligned_w);
+	hdr_size = REF_HEADER_SIZE(aligned_w, aligned_h);
+	hdr_total_size = hdr_size + REF_WRAP_HEADER_EXT_SIZE(aligned_w);
+	total_wrap_size = body_total_size + hdr_total_size;
+	if (max_lt_cnt > 0) {
+#ifdef ONLY_SMART_P
+		total_wrap_size += body_size;
+		total_wrap_size += hdr_size;
+#else
+		total_wrap_size += total_wrap_size;
+#endif
+	}
+
+
+	if (ctx->recn_ref_buf)
+		mpp_buffer_put(ctx->recn_ref_buf);
+	mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
+}
+
+int mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_attr *attr)
+{
+
+	if (((attr->max_width * attr->max_height > entry->max_width * entry->max_height) ||
+	     (attr->max_lt_cnt > entry->max_lt_cnt)) &&
+	    (attr->coding != MPP_VIDEO_CodingMJPEG)) {
+		RK_S32 alignment = 64;
+		RK_S32 aligned_w = MPP_ALIGN(attr->max_width, alignment);
+		RK_S32 aligned_h = MPP_ALIGN(attr->max_height, alignment);
+
+		RK_S32 mb_wd64 = aligned_w / 64;
+		RK_S32 mb_h64 = aligned_h / 64;
+
+		RK_S32 pixel_buf_fbc_hdr_size = MPP_ALIGN(aligned_w * aligned_h / 64, SZ_8K);
+		RK_S32 pixel_buf_fbc_bdy_size = aligned_w * aligned_h * 3 / 2;
+		RK_S32 pixel_buf_size = pixel_buf_fbc_hdr_size + pixel_buf_fbc_bdy_size;
+
+		RK_S32 thumb_buf_size = MPP_ALIGN(aligned_w / 64 * aligned_h / 64 * 256, SZ_8K);
+		RK_S32 max_buf_cnt = 2 + attr->max_lt_cnt;
+		RK_U32 smera_size = 0;
+		RK_U32 smera_r_size = 0;
+		RK_U32 smera_size_t = 0;
+		RK_U32 cmv_size = 0 ;//MPP_ALIGN(mb_wd64 * mb_h64 * 4, 256) * 16;
+		RK_S32 max_lt_cnt = attr->max_lt_cnt;
+		struct hal_shared_buf *ctx = &entry->shared_buf;
+		RK_S32 pixel_buf_size_265 = MPP_ALIGN(((mb_wd64 * mb_h64) << 6), SZ_8K) +
+					    ((mb_wd64 * mb_h64) << 12) * 3 / 2;
+		RK_U32 i = 0;
+
+		mpp_log("attr->max_width = %d, attr->max_height = %d", attr->max_width, attr->max_height);
+		pixel_buf_size = MPP_MAX(pixel_buf_size, pixel_buf_size_265);
+
+		if (1) {
+			smera_size_t = MPP_ALIGN(aligned_w, 1024) / 1024 * MPP_ALIGN(aligned_h, 16) / 16 * 16;
+			smera_r_size = MPP_ALIGN(aligned_h, 1024) / 1024 * MPP_ALIGN(aligned_w, 16) / 16 * 16;
+		} else {
+			smera_size_t = MPP_ALIGN(aligned_w, 256) / 256 * MPP_ALIGN(aligned_h, 32) / 32;
+			smera_r_size = MPP_ALIGN(aligned_h, 256) / 256 * MPP_ALIGN(aligned_w, 32) / 32;;
+		}
+		smera_size = MPP_MAX(smera_size_t, smera_r_size);
+		if (1) {
+			smera_size_t = MPP_ALIGN(aligned_w, 512) / 512 * MPP_ALIGN(aligned_h, 32) / 32 * 16;
+			smera_r_size = MPP_ALIGN(aligned_h, 512) / 512 * MPP_ALIGN(aligned_w, 32) / 32 * 16;
+
+		} else {
+			smera_size_t = MPP_ALIGN(aligned_w, 256) / 256 * MPP_ALIGN(aligned_h, 32) / 32;
+			smera_r_size = MPP_ALIGN(aligned_h, 256) / 256 * MPP_ALIGN(aligned_w, 32) / 32;
+		}
+
+		smera_size_t = MPP_MAX(smera_size_t, smera_r_size);
+		smera_size = MPP_MAX(smera_size, smera_size_t);
+
+		if (ctx->dpb_bufs) {
+			hal_bufs_deinit(ctx->dpb_bufs);
+			ctx->dpb_bufs = NULL;
+		}
+		hal_bufs_init(&ctx->dpb_bufs);
+
+		if (attr->shared_buf_en) {
+			size_t sizes[4] = {thumb_buf_size, cmv_size, smera_size, 0};
+			hal_bufs_setup(ctx->dpb_bufs, max_buf_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
+			get_wrap_buf(ctx, attr, max_lt_cnt);
+		} else {
+			size_t sizes[4] = {thumb_buf_size, cmv_size, smera_size, pixel_buf_size};
+			hal_bufs_setup(ctx->dpb_bufs, max_buf_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
+		}
+
+		for (i = 0; i < max_buf_cnt; i++)
+			hal_bufs_get_buf(ctx->dpb_bufs, i);
+
+		entry->max_width = attr->max_width;
+		entry->max_height = attr->max_height;
+		entry->max_lt_cnt = attr->max_lt_cnt;
+
+	}
+	if (attr->buf_size > entry->ring_buf_size) {
+		struct hal_shared_buf *ctx = &entry->shared_buf;
+		entry->ring_buf_size = attr->buf_size;
+		if (ctx->stream_buf) {
+			mpp_buffer_put(ctx->stream_buf);
+			ctx->stream_buf = NULL;
+		}
+		mpp_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(attr->buf_size, 1024));
+	}
+	return 0;
+}
+
+
 int mpp_vcodec_chan_entry_init(struct mpp_chan *entry, MppCtxType type,
 			       MppCodingType coding, void *handle)
 {
@@ -311,6 +434,7 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 {
 	unsigned long lock_flag;
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+
 	if (!mpibuf_fn) {
 		mpp_err_f("mpibuf_ops get fail");
 		return -1;
@@ -325,6 +449,28 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 	atomic_set(&entry->runing, 0);
 	if (mpibuf_fn->buf_queue_destroy)
 		mpibuf_fn->buf_queue_destroy(entry->yuv_queue);
+
+#ifdef CHAN_RELEASE_BUF
+	{
+		struct hal_shared_buf *ctx = &entry->shared_buf;
+		if (ctx->dpb_bufs) {
+			hal_bufs_deinit(ctx->dpb_bufs);
+			ctx->dpb_bufs = NULL;
+		}
+		if (ctx->recn_ref_buf) {
+			mpp_buffer_put(ctx->recn_ref_buf);
+			ctx->recn_ref_buf = NULL;
+		}
+
+		if (ctx->stream_buf) {
+			mpp_buffer_put(ctx->stream_buf);
+			ctx->stream_buf = NULL;
+		}
+		entry->max_width = 0;
+		entry->max_height = 0;
+		entry->ring_buf_size = 0;
+	}
+#endif
 	return 0;
 }
 
@@ -484,6 +630,25 @@ int mpp_vcodec_unregister_mipdev(void)
 int mpp_vcodec_deinit(void)
 {
 	struct venc_module *venc = &g_vcodec_entry.venc;
+	int i = 0;
+
+	for (i = 0; i < MAX_ENC_NUM; i++) {
+		struct mpp_chan *entry = &venc->mpp_enc_chan_entry[i];
+		struct hal_shared_buf *ctx = &entry->shared_buf;
+		if (ctx->dpb_bufs) {
+			hal_bufs_deinit(ctx->dpb_bufs);
+			ctx->dpb_bufs = NULL;
+		}
+		if (ctx->recn_ref_buf) {
+			mpp_buffer_put(ctx->recn_ref_buf);
+			ctx->recn_ref_buf = NULL;
+		}
+
+		if (ctx->stream_buf) {
+			mpp_buffer_put(ctx->stream_buf);
+			ctx->stream_buf = NULL;
+		}
+	}
 
 	if (venc->thd) {
 		vcodec_thread_stop(venc->thd);

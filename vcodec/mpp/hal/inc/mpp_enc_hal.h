@@ -25,6 +25,7 @@ typedef struct MppEncHalCfg_t {
 	// output from enc_impl
 	MppClientType type;
 	MppDev dev;
+	struct hal_shared_buf *shared_buf;
 } MppEncHalCfg;
 
 typedef struct MppEncHalApi_t {

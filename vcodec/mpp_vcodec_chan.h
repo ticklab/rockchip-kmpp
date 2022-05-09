@@ -24,7 +24,6 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 			       struct venc_packet *enc_packet);
 
-
 /* return channel id to run. return -1 for no task to run */
 int mpp_vcodec_schedule(void);
 

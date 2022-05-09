@@ -99,6 +99,7 @@ typedef struct HalH264eVepu540cCtx_t {
 
 	MppBuffer ext_line_buf;
 	RK_S32	online;
+	struct hal_shared_buf *shared_buf;
 } HalH264eVepu540cCtx;
 
 static RK_U32 dump_l1_reg = 0;
@@ -140,7 +141,7 @@ static MPP_RET hal_h264e_vepu540c_deinit(void *hal)
 		p->ext_line_buf = NULL;
 	}
 
-	if (p->hw_recn) {
+	if (!p->shared_buf->dpb_bufs && p->hw_recn) {
 		hal_bufs_deinit(p->hw_recn);
 		p->hw_recn = NULL;
 	}
@@ -149,7 +150,7 @@ static MPP_RET hal_h264e_vepu540c_deinit(void *hal)
 		p->buf_pass1 = NULL;
 	}
 
-	if (p->recn_ref_buf) {
+	if (!p->shared_buf->recn_ref_buf && p->recn_ref_buf) {
 		mpp_buffer_put(p->recn_ref_buf);
 		p->recn_ref_buf = NULL;
 	}
@@ -170,6 +171,7 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 	p->cfg = cfg->cfg;
 	p->online = cfg->online;
 	p->recn_ref_wrap = cfg->ref_buf_shared;
+	p->shared_buf = cfg->shared_buf;
 	/* update output to MppEnc */
 	cfg->type = VPU_CLIENT_RKVENC;
 	ret = mpp_dev_init(&cfg->dev, cfg->type);
@@ -179,11 +181,11 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 	}
 	p->dev = cfg->dev;
 
-	ret = hal_bufs_init(&p->hw_recn);
+	/*ret = hal_bufs_init(&p->hw_recn);
 	if (ret) {
 		mpp_err_f("init vepu buffer failed ret: %d\n", ret);
 		goto DONE;
-	}
+	}*/
 	//
 	p->osd_cfg.dev = p->dev;
 
@@ -284,9 +286,13 @@ static void get_wrap_buf(HalH264eVepu540cCtx *ctx, RK_S32 max_lt_cnt)
 		body->top = body->bottom + body->total_size;
 		body->cur_off = body->bottom;
 	}
-	if (ctx->recn_ref_buf)
-		mpp_buffer_put(ctx->recn_ref_buf);
-	mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
+
+	if (!ctx->shared_buf->recn_ref_buf) {
+		if (ctx->recn_ref_buf)
+			mpp_buffer_put(ctx->recn_ref_buf);
+		mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
+	} else
+		ctx->recn_ref_buf = ctx->shared_buf->recn_ref_buf;
 }
 
 static void setup_recn_refr_wrap(HalH264eVepu540cCtx *ctx, HalVepu540cRegSet *regs)
@@ -514,17 +520,26 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 		ctx->pixel_buf_fbc_hdr_size = pixel_buf_fbc_hdr_size;
 		ctx->pixel_buf_fbc_bdy_size = pixel_buf_fbc_bdy_size;
 
+		if (!ctx->shared_buf->dpb_bufs)
+			hal_bufs_init(&ctx->hw_recn);
+
 		if (ctx->recn_ref_wrap) {
 			size_t sizes[4] = {thumb_buf_size, 0, smera_size, 0};
 
-			hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
+			if (!ctx->shared_buf->dpb_bufs)
+				hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
 			get_wrap_buf(ctx, max_lt_cnt);
 		} else {
 			size_t sizes[4] = {thumb_buf_size, 0, smera_size, pixel_buf_size};
-			hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
+
+			if (!ctx->shared_buf->dpb_bufs)
+				hal_bufs_setup(ctx->hw_recn, new_max_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
 			ctx->pixel_buf_fbc_bdy_offset = pixel_buf_fbc_hdr_size;
 			ctx->pixel_buf_size = pixel_buf_size;
 		}
+
+		if (ctx->shared_buf->dpb_bufs)
+			ctx->hw_recn = ctx->shared_buf->dpb_bufs;
 
 		ctx->pixel_buf_size = pixel_buf_size;
 		ctx->thumb_buf_size = thumb_buf_size;

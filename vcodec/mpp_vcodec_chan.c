@@ -63,7 +63,8 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			buf_size,
 			attr->max_strm_cnt,
 			attr->shared_buf_en,
-			attr->smart_en
+			attr->smart_en,
+			&chan_entry->shared_buf
 		};
 
 		ret = mpp_enc_init(&enc, &cfg);
@@ -74,6 +75,9 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 				     chan_id);
 		mpp_vcodec_chan_entry_init(chan_entry, type, coding,
 					   (void *)enc);
+#ifdef CHAN_BUF_SHARED
+		mpp_vcodec_chan_setup_hal_bufs(chan_entry, attr);
+#endif
 		mpp_vcodec_inc_chan_num(type);
 
 		chan_entry->last_yuv_time = mpp_time();
@@ -322,6 +326,33 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 	return 0;
 }
 
+static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
+{
+	struct vcodec_attr *attr = (struct vcodec_attr *)arg;
+	struct mpp_chan *entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
+	int ret;
+	mpp_assert(entry->handle != NULL);
+	mpp_assert(chan_id == attr->chan_id);
+
+	ret = mpp_vcodec_chan_stop(chan_id, MPP_CTX_ENC);
+	ret = wait_event_timeout(entry->stop_wait,
+				 !atomic_read(&entry->runing),
+				 msecs_to_jiffies
+				 (VCODEC_WAIT_TIMEOUT_DELAY));
+
+	mpp_vcodec_stream_clear(entry);
+	mpp_enc_deinit(entry->handle);
+	mpp_vcodec_dec_chan_num(MPP_CTX_ENC);
+
+	entry->handle = NULL;
+	entry->state = CHAN_STATE_NULL;
+	entry->reenc = 0;
+	entry->binder_chan_id = -1;
+	mpp_vcodec_chan_create(attr);
+	mpp_vcodec_chan_start(chan_id, MPP_CTX_ENC);
+	return 0;
+}
+
 int mpp_vcodec_chan_control(int chan_id, MppCtxType type, int cmd, void *arg)
 {
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
@@ -333,7 +364,10 @@ int mpp_vcodec_chan_control(int chan_id, MppCtxType type, int cmd, void *arg)
 	}
 	break;
 	case MPP_CTX_ENC: {
-		mpp_enc_control(chan_entry->handle, cmd, arg);
+		if (cmd == MPP_ENC_SET_CHANGE_STREAM_TYPE)
+			mpp_vcodec_chan_change_coding_type(chan_id, arg);
+		else
+			mpp_enc_control(chan_entry->handle, cmd, arg);
 	}
 	break;
 	default: {
@@ -343,3 +377,5 @@ int mpp_vcodec_chan_control(int chan_id, MppCtxType type, int cmd, void *arg)
 	}
 	return 0;
 }
+
+

@@ -119,6 +119,7 @@ typedef enum {
 	MPP_ENC_SET_QP_RANGE,               /* used for adjusting qp range, the parameter can be 1 or 2 */
 	MPP_ENC_SET_ROI_CFG,                /* set MppEncROICfg structure */
 	MPP_ENC_SET_CTU_QP,                 /* for H265 Encoder,set CTU's size and QP */
+	MPP_ENC_SET_CHANGE_STREAM_TYPE,     /* switch format for h265 or h264 */
 
 	/* User define rate control stategy API control */
 	MPP_ENC_CFG_RC_API                  = CMD_MODULE_CODEC | CMD_CTX_ID_ENC | CMD_ENC_CFG_RC_API,

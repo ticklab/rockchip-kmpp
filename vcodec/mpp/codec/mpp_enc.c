@@ -65,6 +65,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	enc_hal_cfg.dev = NULL;
 	enc_hal_cfg.online = cfg->online;
 	enc_hal_cfg.ref_buf_shared = cfg->ref_buf_shared;
+	enc_hal_cfg.shared_buf = cfg->shared_buf;
 	p->ring_buf_size = cfg->buf_size;
 	p->max_strm_cnt = cfg->max_strm_cnt;
 	ctrl_cfg.coding = coding;
@@ -128,6 +129,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	p->rb_userdata.free_cnt = MAX_USRDATA_CNT;
 	p->ring_pool = mpp_calloc(ring_buf_pool, 1);
 	p->online = cfg->online;
+	p->shared_buf = cfg->shared_buf;
 	*enc = p;
 	return ret;
 ERR_RET:
@@ -183,8 +185,10 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 	}
 
 	if (enc->ring_pool) {
-		if (enc->ring_pool->buf)
-			mpp_buffer_put(enc->ring_pool->buf);
+		if (!enc->shared_buf->stream_buf) {
+			if (enc->ring_pool->buf)
+				mpp_buffer_put(enc->ring_pool->buf);
+		}
 		MPP_FREE(enc->ring_pool);
 	}
 	mpp_enc_unref_osd_buf(&enc->cur_osd);
