@@ -249,6 +249,10 @@ static void get_wrap_buf(HalH264eVepu540cCtx *ctx, RK_S32 max_lt_cnt)
 
 		hdr_lt->size = hdr->size;
 		hdr_lt->total_size = hdr->total_size;
+#ifdef ONLY_SMART_P
+		body_lt->total_size = body->size;
+		hdr_lt->total_size =  hdr->size;
+#endif
 
 		total_wrap_size += (body_lt->total_size + hdr_lt->total_size);
 	}
@@ -385,6 +389,7 @@ static void setup_recn_refr_wrap(HalH264eVepu540cCtx *ctx, HalVepu540cRegSet *re
 			mpp_err("WARNING: not support lt ref to st when buf is wrap");
 		} break;
 		case LT_REF_TO_LT: {
+#ifndef ONLY_SMART_P
 			WrapInfo tmp;
 			/* the case is hard to implement */
 			rfpr_h_off = hdr_lt->cur_off;
@@ -408,7 +413,9 @@ static void setup_recn_refr_wrap(HalH264eVepu540cCtx *ctx, HalVepu540cRegSet *re
 			memcpy(&tmp, bdy, sizeof(WrapInfo));
 			memcpy(bdy, bdy_lt, sizeof(WrapInfo));
 			memcpy(bdy_lt, &tmp, sizeof(WrapInfo));
-
+#else
+			mpp_err("WARNING: not support lt ref to lt when buf is wrap");
+#endif
 		} break;
 		default: {
 		} break;
