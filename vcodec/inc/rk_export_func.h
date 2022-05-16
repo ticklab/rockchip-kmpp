@@ -28,7 +28,9 @@ struct mpp_frame_infos {
 	RK_S32  mpi_buf_id;
 	void    *jpg_combo_osd_buf;
 	RK_U32  is_gray;
-	RK_U32  res[7];
+	RK_U32  is_full;
+	RK_U32  phy_addr;
+	RK_U32  res[5];
 };
 
 struct vcodec_mpibuf_fn {

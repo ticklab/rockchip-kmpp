@@ -737,20 +737,33 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 	if (cfg->online) {
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 		struct dvbm_addr_cfg dvbm_adr;
+		RK_U32 is_full = mpp_frame_get_is_full(task->frame);
 
-		rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
-		if (dvbm_adr.overflow) {
-			mpp_err("cur frame already overflow [%d %d]!\n",
-				dvbm_adr.frame_id, dvbm_adr.line_cnt);
-			return MPP_NOK;
+		if (!is_full) {
+			rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+			if (dvbm_adr.overflow) {
+				mpp_err("cur frame already overflow [%d %d]!\n",
+					dvbm_adr.frame_id, dvbm_adr.line_cnt);
+				return MPP_NOK;
+			}
+			regs->reg0260_adr_vsy_b = dvbm_adr.ybuf_bot;
+			regs->reg0261_adr_vsc_b = dvbm_adr.cbuf_bot;
+			regs->reg0262_adr_vsy_t = dvbm_adr.ybuf_top;
+			regs->reg0263_adr_vsc_t = dvbm_adr.cbuf_top;
+			regs->reg0264_adr_src0 = dvbm_adr.ybuf_sadr;
+			regs->reg0265_adr_src1 = dvbm_adr.cbuf_sadr;
+			regs->reg0266_adr_src2 = dvbm_adr.cbuf_sadr;
+		} else {
+
+			RK_U32 phy_addr = mpp_frame_get_phy_addr(task->frame);
+			if (phy_addr) {
+				regs->reg0264_adr_src0 = phy_addr;
+				regs->reg0265_adr_src1 = regs->reg0264_adr_src0;
+				regs->reg0266_adr_src2 = regs->reg0264_adr_src0;
+				vepu540c_jpeg_set_uv_offset(regs, syn, (Vepu541Fmt) fmt->format, task);
+			} else
+				mpp_err("online case set full frame err");
 		}
-		regs->reg0260_adr_vsy_b = dvbm_adr.ybuf_bot;
-		regs->reg0261_adr_vsc_b = dvbm_adr.cbuf_bot;
-		regs->reg0262_adr_vsy_t = dvbm_adr.ybuf_top;
-		regs->reg0263_adr_vsc_t = dvbm_adr.cbuf_top;
-		regs->reg0264_adr_src0 = dvbm_adr.ybuf_sadr;
-		regs->reg0265_adr_src1 = dvbm_adr.cbuf_sadr;
-		regs->reg0266_adr_src2 = dvbm_adr.cbuf_sadr;
 #else
 		regs->reg0260_adr_vsy_b = 0;
 		regs->reg0261_adr_vsc_b = 0;

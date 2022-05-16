@@ -2156,7 +2156,7 @@ static void setup_vepu540c_ext_line_buf(HalVepu540cRegSet *regs,
 	}
 }
 #ifdef HW_DVBM
-static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx)
+static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx, HalEncTask *task)
 {
 	RK_U32 soft_resync = 1;
 	RK_U32 frame_match = 0;
@@ -2177,41 +2177,61 @@ static void setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ct
 	vepu540c_set_dvbm(&regs->reg_base.online_addr);
 }
 #else
-static MPP_RET setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx)
+static MPP_RET setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx *ctx,
+				   HalEncTask *task)
 {
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 	struct dvbm_addr_cfg dvbm_adr;
-
+	MppFrame frm = task->frame;
+	RK_U32 is_full = mpp_frame_get_is_full(frm);
 	(void)ctx;
-	rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
-	if (dvbm_adr.overflow) {
-		mpp_err("cur frame already overflow [%d %d]!\n",
-			dvbm_adr.frame_id, dvbm_adr.line_cnt);
-		return MPP_NOK;
+
+	if (!is_full) {
+		rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+		if (dvbm_adr.overflow) {
+			mpp_err("cur frame already overflow [%d %d]!\n",
+				dvbm_adr.frame_id, dvbm_adr.line_cnt);
+			return MPP_NOK;
+		}
+		regs->reg_ctl.dvbm_cfg.dvbm_en = 1;
+		regs->reg_ctl.dvbm_cfg.src_badr_sel = 1;
+		regs->reg_ctl.dvbm_cfg.vinf_frm_match = 1;
+		regs->reg_ctl.dvbm_cfg.vrsp_half_cycle = 8;
+
+		regs->reg_ctl.vs_ldly.vswm_lcnt_soft = dvbm_adr.line_cnt;
+		regs->reg_ctl.vs_ldly.vswm_fcnt_soft = dvbm_adr.frame_id;
+		regs->reg_ctl.vs_ldly.dvbm_ack_sel = 1;
+		regs->reg_ctl.vs_ldly.dvbm_ack_soft = 1;
+		regs->reg_ctl.vs_ldly.dvbm_inf_sel = 1;
+
+		regs->reg_base.dvbm_id.ch_id = 1;
+		regs->reg_base.dvbm_id.frame_id = dvbm_adr.frame_id;
+		regs->reg_base.dvbm_id.vrsp_rtn_en = 1;
+
+
+		regs->reg_base.online_addr.reg0156_adr_vsy_t = dvbm_adr.ybuf_top;
+		regs->reg_base.online_addr.reg0157_adr_vsc_t = dvbm_adr.cbuf_top;
+		regs->reg_base.online_addr.reg0158_adr_vsy_b = dvbm_adr.ybuf_bot;
+		regs->reg_base.online_addr.reg0159_adr_vsc_b = dvbm_adr.cbuf_bot;
+		regs->reg_base.adr_src0 = dvbm_adr.ybuf_sadr;
+		regs->reg_base.adr_src1 = dvbm_adr.cbuf_sadr;
+		regs->reg_base.adr_src2 = dvbm_adr.cbuf_sadr;
+	} else {
+		RK_U32 phy_addr = mpp_frame_get_phy_addr(frm);
+		//  MppFrameFormat fmt = mpp_frame_get_fmt(frm);
+		RK_S32 hor_stride = mpp_frame_get_hor_stride(frm);
+		RK_S32 ver_stride = mpp_frame_get_ver_stride(frm);
+		RK_U32 off_in[2] = { 0 };
+		off_in[0] = hor_stride * ver_stride;
+		off_in[1] = hor_stride * ver_stride;
+		if (phy_addr) {
+			regs->reg_base.adr_src0 = phy_addr;
+			regs->reg_base.adr_src1 = phy_addr + off_in[0];
+			regs->reg_base.adr_src2 = phy_addr +  off_in[1];
+
+		} else
+			mpp_err("online case set full frame err");
 	}
-	regs->reg_ctl.dvbm_cfg.dvbm_en = 1;
-	regs->reg_ctl.dvbm_cfg.src_badr_sel = 1;
-	regs->reg_ctl.dvbm_cfg.vinf_frm_match = 1;
-	regs->reg_ctl.dvbm_cfg.vrsp_half_cycle = 8;
-
-	regs->reg_ctl.vs_ldly.vswm_lcnt_soft = dvbm_adr.line_cnt;
-	regs->reg_ctl.vs_ldly.vswm_fcnt_soft = dvbm_adr.frame_id;
-	regs->reg_ctl.vs_ldly.dvbm_ack_sel = 1;
-	regs->reg_ctl.vs_ldly.dvbm_ack_soft = 1;
-	regs->reg_ctl.vs_ldly.dvbm_inf_sel = 1;
-
-	regs->reg_base.dvbm_id.ch_id = 1;
-	regs->reg_base.dvbm_id.frame_id = dvbm_adr.frame_id;
-	regs->reg_base.dvbm_id.vrsp_rtn_en = 1;
-
-
-	regs->reg_base.online_addr.reg0156_adr_vsy_t = dvbm_adr.ybuf_top;
-	regs->reg_base.online_addr.reg0157_adr_vsc_t = dvbm_adr.cbuf_top;
-	regs->reg_base.online_addr.reg0158_adr_vsy_b = dvbm_adr.ybuf_bot;
-	regs->reg_base.online_addr.reg0159_adr_vsc_b = dvbm_adr.cbuf_bot;
-	regs->reg_base.adr_src0 = dvbm_adr.ybuf_sadr;
-	regs->reg_base.adr_src1 = dvbm_adr.cbuf_sadr;
-	regs->reg_base.adr_src2 = dvbm_adr.cbuf_sadr;
 #else
 	regs->reg_base.online_addr.reg0156_adr_vsy_t = 0;
 	regs->reg_base.online_addr.reg0157_adr_vsc_t = 0;
@@ -2254,7 +2274,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	setup_vepu540c_rc_base(regs, sps, slice, &cfg->hw, task->rc_task);
 	setup_vepu540c_io_buf(ctx, task);
 	if (ctx->online) {
-		if (setup_vepu540c_dvbm(regs, ctx))
+		if (setup_vepu540c_dvbm(regs, ctx, task))
 			return MPP_NOK;
 	}
 	setup_vepu540c_recn_refr(ctx, regs);

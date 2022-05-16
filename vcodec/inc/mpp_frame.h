@@ -335,6 +335,11 @@ RK_U32  mpp_frame_get_errinfo(const MppFrame frame);
 void    mpp_frame_set_errinfo(MppFrame frame, RK_U32 errinfo);
 size_t  mpp_frame_get_buf_size(const MppFrame frame);
 void    mpp_frame_set_buf_size(MppFrame frame, size_t buf_size);
+RK_U32  mpp_frame_get_is_full(const MppFrame frame);
+void    mpp_frame_set_is_full(MppFrame frame, RK_U32 is_full);
+RK_U32  mpp_frame_get_phy_addr(const MppFrame frame);
+void    mpp_frame_set_phy_addr(MppFrame frame, RK_U32 phy_addr);
+
 /*
  * flow control parmeter
  */
