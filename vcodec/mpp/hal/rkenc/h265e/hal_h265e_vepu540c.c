@@ -1703,7 +1703,12 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	reg_ctl->reg0012_dtrns_map.roir_bus_edin = 0x0;
 	reg_ctl->reg0012_dtrns_map.lktw_bus_edin = 0x0;
 	reg_ctl->reg0012_dtrns_map.rec_nfbc_bus_edin = 0x0;
+	/* enable rdo clk gating */
+	{
+		RK_U32 *rdo_ckg = (RK_U32*)&reg_ctl->reg0022_rdo_ckg;
 
+		*rdo_ckg = 0xffffffff;
+	}
 	//   reg_ctl->reg0013_dtrns_cfg.dspr_otsd        = (ctx->frame_type == INTER_P_FRAME);
 	reg_ctl->reg0013_dtrns_cfg.axi_brsp_cke = 0x0;
 	reg_ctl->reg0014_enc_wdg.vs_load_thd = 0x1fffff;

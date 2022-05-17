@@ -701,6 +701,12 @@ static void setup_vepu540c_normal(HalVepu540cRegSet *regs)
 	regs->reg_ctl.dtrns_map.rec_nfbc_bus_edin = 0;
 
 	regs->reg_ctl.dtrns_cfg.axi_brsp_cke = 0;
+	/* enable rdo clk gating */
+	{
+		RK_U32 *rdo_ckg = (RK_U32*)&regs->reg_ctl.rdo_ckg;
+
+		*rdo_ckg = 0xffffffff;
+	}
 	hal_h264e_dbg_func("leave\n");
 }
 
