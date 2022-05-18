@@ -182,8 +182,6 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 					mpp_err("combo cfg fail \n");
 					atomic_dec(&comb_chan->runing);
 					atomic_dec(&chan_entry->cfg.comb_runing);
-					if (comb_frame)
-						mpp_frame_deinit(&comb_frame);
 					wake_up(&comb_chan->stop_wait);
 					ret = mpp_enc_hw_start(
 						      (MppEnc)chan_entry->handle,
