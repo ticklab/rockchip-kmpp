@@ -194,11 +194,13 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		}
 
 		if (MPP_OK != ret) {
-
+			struct venc_module *venc = NULL;
+			venc = mpp_vcodec_get_enc_module_entry();
 			atomic_dec(&chan_entry->runing);
 			wake_up(&chan_entry->stop_wait);
 			if (comb_frame)
 				mpp_frame_deinit(&comb_frame);
+			vcodec_thread_trigger(venc->thd);
 		}
 		cfg_end = mpp_time();
 		chan_entry->last_cfg_time = cfg_end - cfg_start;

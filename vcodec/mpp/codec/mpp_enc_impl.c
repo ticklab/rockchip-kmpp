@@ -1572,6 +1572,27 @@ MPP_RET mpp_enc_impl_get_roi_osd(MppEncImpl *enc, MppFrame frame)
 	return MPP_OK;
 }
 
+static MPP_RET mpp_enc_check_frm_valid(MppEncImpl *enc)
+{
+	if (enc->frame) {
+		RK_U32 hor_stride = 0, ver_stride = 0;
+		RK_U32 width = 0, height = 0;
+		MppEncPrepCfg *prep = &enc->cfg.prep;
+		hor_stride = mpp_frame_get_hor_stride(enc->frame);
+		ver_stride = mpp_frame_get_ver_stride(enc->frame);
+		width = mpp_frame_get_width(enc->frame);
+		height = mpp_frame_get_height(enc->frame);
+		if (hor_stride != prep->hor_stride ||
+		    ver_stride != prep->ver_stride ||
+		    width != prep->width ||
+		    height != prep->height) {
+			mpp_log("frame info no equal set drop ");
+			return MPP_NOK;
+		}
+	}
+	return  MPP_OK;
+}
+
 MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 {
 	MppEncImpl *enc = (MppEncImpl *)ctx;
@@ -1592,8 +1613,11 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 
 	enc->frame = frame;
 	enc->packet = NULL;
-	// mpp_enc_check_frm_pkt(enc);
 
+	if (mpp_enc_check_frm_valid(enc) != MPP_OK) {
+		ret = MPP_NOK;
+		goto TASK_DONE;
+	}
 	reset_hal_enc_task(hal_task);
 	reset_enc_rc_task(rc_task);
 	frm->seq_idx = task->seq_idx++;
