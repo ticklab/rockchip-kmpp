@@ -35,7 +35,7 @@ RK_U32 mpp_vcodec_debug = 0;
 
 static struct vcodec_entry g_vcodec_entry;
 
-static void *mpp_vcodec_bind(void *in_param, void *out_param)
+static void *mpp_vcodec_bind(void *out_param)
 {
 	struct mpp_chan *entry = NULL;
 	int id = -1;
@@ -59,7 +59,7 @@ static void *mpp_vcodec_bind(void *in_param, void *out_param)
 	return &entry->yuv_queue;
 }
 
-static int mpp_vcodec_unbind(void *ctx, int discard)
+static int mpp_vcodec_unbind(void *ctx)
 {
 	return 0;
 }

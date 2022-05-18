@@ -51,8 +51,8 @@ struct vcodec_mpibuf_fn {
 };
 
 struct vcodec_set_dev_fn {
-	void *(*bind) (void *in_param, void *out_param);
-	int (*unbind) (void *ctx, int discard);
+	void *(*bind) (void *out_param);
+	int (*unbind) (void *ctx);
 	int (*msg_callback)(struct mpi_obj *obj, int event, void *args);
 
 };
