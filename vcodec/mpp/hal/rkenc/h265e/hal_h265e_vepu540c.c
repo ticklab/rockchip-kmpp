@@ -1842,12 +1842,12 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 		if (ctx->smart_en)
 			ret = vepu540c_set_qpmap_smart(&reg_rc_roi->roi_cfg,
 						       task->mv_info, task->qpmap,
-						       task->mv_flag, task->mv_index, task->qp_out,
+						       task->mv_flag, task->mv_index, reg_base->reg0192_enc_pic.pic_qp,
 						       prep->width, prep->height, 1, ctx->frame_type == INTRA_FRAME);
 		else
 			ret = vepu540c_set_qpmap_normal(&reg_rc_roi->roi_cfg,
 							task->mv_info, task->qpmap,
-							task->mv_flag, task->mv_index, task->qp_out,
+							task->mv_flag, task->mv_index, reg_base->reg0192_enc_pic.pic_qp,
 							prep->width, prep->height, 1, ctx->frame_type == INTRA_FRAME);
 
 		if (ret == MPP_OK)

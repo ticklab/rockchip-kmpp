@@ -2265,12 +2265,12 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 		if (ctx->smart_en)
 			vepu540c_set_qpmap_smart(&ctx->regs_set->reg_rc_roi.roi_cfg,
 						 task->mv_info, task->qpmap,
-						 task->mv_flag, task->mv_index, task->qp_out,
+						 task->mv_flag, task->mv_index, regs->reg_base.enc_pic.pic_qp,
 						 prep->width, prep->height, 0, slice->idr_flag);
 		else
 			vepu540c_set_qpmap_normal(&ctx->regs_set->reg_rc_roi.roi_cfg,
 						  task->mv_info, task->qpmap,
-						  task->mv_flag, task->mv_index, task->qp_out,
+						  task->mv_flag, task->mv_index, regs->reg_base.enc_pic.pic_qp,
 						  prep->width, prep->height, 0, slice->idr_flag);
 		if (ret == MPP_OK)
 			regs->reg_base.adr_roir =
