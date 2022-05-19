@@ -310,6 +310,7 @@ MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame)
 		up(&enc->enc_sem);
 		return MPP_NOK;
 	}
+	mpp_enc_proc_rc_update(enc);
 	enc->enc_status = ENC_STATUS_CFG_IN;
 	if (enc->qpmap_en && !enc->mv_info) {
 		RK_U32 mb_w = 0;
@@ -490,7 +491,6 @@ MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param)
 		down(&enc->enc_sem);
 		mpp_enc_proc_cfg(enc, cmd, param);
 		mpp_enc_hal_prepare(enc->enc_hal);
-		mpp_enc_proc_rc_update(enc);
 		up(&enc->enc_sem);
 		enc_dbg_ctrl("sending cmd %d done\n", cmd);
 		break;
