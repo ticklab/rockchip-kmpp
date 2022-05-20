@@ -338,6 +338,7 @@ struct mpp_dev {
 
 	int irq;
 	u32 irq_status;
+	u32 overflow_status;
 
 	void __iomem *reg_base;
 	struct mpp_grf_info *grf_info;

@@ -44,8 +44,17 @@
 
 #define	RKVENC_SESSION_MAX_BUFFERS		40
 
-#define RKVENC_DVBM_DISCONNECT	(BIT(15))
+/* irq status definition */
+#define RKVENC_DVBM_DISCONNECT		(BIT(15))
+#define RKVENC_JPEG_OVERFLOW		(BIT(13))
+#define RKVENC_VIDEO_OVERFLOW		(BIT(4))
+#define RKVENC_ENC_DONE_STATUS		(BIT(0))
 #define REC_FBC_DIS_CLASS_OFFSET	(36)
+
+#define RKVENC_VIDEO_BSBS	(0x2b8)
+#define RKVENC_VIDEO_BSBR	(0x2bc)
+#define RKVENC_JPEG_BSBS	(0x40c)
+#define RKVENC_JPEG_BSBR	(0x408)
 
 #define to_rkvenc_info(info)		\
 		container_of(info, struct rkvenc_hw_info, hw)
@@ -1229,6 +1238,35 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 	return 0;
 }
 
+static int rkvenc_check_bs_overflow(struct mpp_dev *mpp)
+{
+	u32 w_adr, r_adr;
+	int ret = 0;
+
+	if (!(mpp->irq_status & RKVENC_ENC_DONE_STATUS)) {
+		if (mpp->irq_status & RKVENC_JPEG_OVERFLOW) {
+			/* the w/r address need to be read in reversed*/
+			r_adr = mpp_read(mpp, RKVENC_JPEG_BSBS);
+			w_adr = mpp_read(mpp, RKVENC_JPEG_BSBR);
+			mpp_write(mpp, RKVENC_JPEG_BSBS, w_adr + 16);
+			mpp_write(mpp, RKVENC_JPEG_BSBR, r_adr + 0xc);
+			mpp->overflow_status = mpp->irq_status;
+			pr_err("jpeg overflow\n");
+			ret = 1;
+		}
+		if (mpp->irq_status & RKVENC_VIDEO_OVERFLOW) {
+			w_adr = mpp_read(mpp, RKVENC_VIDEO_BSBS);
+			r_adr = mpp_read(mpp, RKVENC_VIDEO_BSBR);
+			mpp_write(mpp, RKVENC_VIDEO_BSBS, w_adr + 16);
+			mpp_write(mpp, RKVENC_VIDEO_BSBR, r_adr + 0xc);
+			mpp->overflow_status = mpp->irq_status;
+			pr_err("video overflow\n");
+			ret = 1;
+		}
+	}
+	return ret;
+}
+
 static int rkvenc_irq(struct mpp_dev *mpp)
 {
 	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
@@ -1245,7 +1283,8 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 	mpp_write(mpp, hw->int_sta_base, 0);
 	if (mpp->irq_status == RKVENC_DVBM_DISCONNECT)
 		return IRQ_HANDLED;
-
+	if (rkvenc_check_bs_overflow(mpp))
+		return IRQ_HANDLED;
 	mpp_debug_leave();
 
 	return IRQ_WAKE_THREAD;
@@ -1393,10 +1432,11 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 			mpp->irq_status |= BIT(6);
 			enc->dvbm_overflow = 0;
 		}
-		task->irq_status = mpp->irq_status;
+		task->irq_status = (mpp->irq_status | mpp->overflow_status);
+		mpp->overflow_status = 0;
 		mpp_debug(DEBUG_IRQ_STATUS, "irq_status: %08x\n", task->irq_status);
 
-		if (task->irq_status & enc->hw_info->err_mask) {
+		if (mpp->irq_status & enc->hw_info->err_mask) {
 			dev_err(mpp->dev, "irq_status 0x%08x\n", task->irq_status);
 			atomic_inc(&mpp->reset_request);
 			/* dump register */
