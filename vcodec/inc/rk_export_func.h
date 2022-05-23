@@ -79,14 +79,56 @@ struct vcodec_mppdev_svr_fn {
 	unsigned int (*chnl_get_iova_addr)(struct mpp_session *session,  struct dma_buf *buf,
 					   unsigned int offset);
 	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
+
+	struct device *(*mpp_chnl_get_dev)(struct mpp_session *session);
 };
+
+#define VENC_MAX_PACK_INFO_NUM 8
+
+struct venc_pack_info {
+	RK_U32      flag;
+	RK_U32      temporal_id;
+	RK_U32      packet_offset;
+	RK_U32      packet_len;
+};
+
+struct venc_packet {
+	RK_S64               u64priv_data;  //map mpi_id
+	RK_U64               u64packet_addr; //packet address in kernel space
+	RK_U32               len;
+	RK_U32               buf_size;
+
+	RK_U64               u64pts;
+	RK_U64               u64dts;
+	RK_U32               flag;
+	RK_U32               temporal_id;
+	RK_U32               offset;
+	RK_U32               data_num;
+	struct venc_pack_info       packet[8];
+};
+
+struct vsm_buf {
+	unsigned int phy_addr;
+	void *vir_addr;
+	int buf_size;
+};
+
+struct vcodec_vsm_buf_fn {
+	int (*GetBuf) (struct vsm_buf *buf, int type, int flag, int chan_id);
+	int (*PutBuf)(struct vsm_buf *buf, struct venc_packet *packet, int flag, int chan_id);
+	int (*FreeBuf)(struct vsm_buf *buf, int chan_id);
+};
+
+extern void vsm_buf_register_fn2vcocdec (struct vcodec_vsm_buf_fn *vsm_fn);
+
 
 struct vcodec_mpidev_fn *get_mpidev_ops(void);
 struct vcodec_mpibuf_fn *get_mpibuf_ops(void);
+struct vcodec_vsm_buf_fn *get_vsm_ops(void);
+
 extern void vmpi_register_fn2vcocdec (struct vcodec_mpidev_fn *mpidev_fn,
 				      struct vcodec_mpibuf_fn *mpibuf_f);
 extern void vmpi_unregister_fn2vcocdec(void);
-
 extern struct vcodec_mppdev_svr_fn *get_mppdev_svr_ops(void);
 
 extern int mpp_vcodec_clear_buf_resource(void);

@@ -417,7 +417,9 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 	mb_h64 = (prep->max_height + 63) / 64;
 
 	frame_size = MPP_ALIGN(prep->max_width, 16) * MPP_ALIGN(prep->max_height, 16);
+
 	vepu541_set_fmt(fmt, ctx->cfg->prep.format);
+
 	input_fmt = (Vepu541Fmt) fmt->format;
 	switch (input_fmt) {
 	case VEPU541_FMT_YUV420P:
@@ -1575,8 +1577,12 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 		regs->reg0171_meiw_addr = 0;
 	}
 
-	regs->reg0174_bsbs_addr =
-		mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, 174) + enc_task->output->start_offset;
+	if (enc_task->output->buf) {
+		regs->reg0174_bsbs_addr =
+			mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, 174) + enc_task->output->start_offset;
+	} else
+		regs->reg0174_bsbs_addr = enc_task->output->mpi_buf_id + enc_task->output->start_offset;
+
 	/* TODO: stream size relative with syntax */
 	regs->reg0172_bsbt_addr = regs->reg0174_bsbs_addr;
 	regs->reg0173_bsbb_addr = regs->reg0174_bsbs_addr;
@@ -1585,9 +1591,12 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	regs->reg0172_bsbt_addr += enc_task->output->size - 1;
 	regs->reg0174_bsbs_addr = regs->reg0174_bsbs_addr + len;
 
-	if (len) {
+	if (len && task->output->buf) {
 		dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),
 					       DMA_TO_DEVICE, task->output->start_offset, len);
+	} else if (len && enc_task->output->mpi_buf_id) {
+		struct device *dev = mpp_get_dev(ctx->dev);
+		dma_sync_single_for_device(dev, enc_task->output->mpi_buf_id, len, DMA_TO_DEVICE);
 	}
 	regs->reg0204_pic_ofst.pic_ofst_y = mpp_frame_get_offset_y(task->frame);
 	regs->reg0204_pic_ofst.pic_ofst_x = mpp_frame_get_offset_x(task->frame);

@@ -148,12 +148,12 @@ typedef struct MppEncInitCfg_t {
 	MppCodingType	coding;
 	RK_S32		online;
 	RK_U32		buf_size;
-	RK_U32      	max_strm_cnt;
+	RK_U32      max_strm_cnt;
 	RK_U32		ref_buf_shared;
 	RK_U32		smart_en;
-	struct hal_shared_buf *shared_buf;
+	struct      hal_shared_buf *shared_buf;
 	RK_U32		qpmap_en;
-	RK_U32      chn_id;
+	RK_U32		chan_id;
 } MppEncInitCfg;
 
 #ifdef __cplusplus

@@ -72,6 +72,8 @@ MPP_RET mpp_enc_refs_stash(MppEncRefs refs);
 MPP_RET mpp_enc_refs_rollback(MppEncRefs refs);
 
 RK_S32  mpp_enc_refs_next_frm_is_intra(MppEncRefs refs);
+RK_S32 mpp_enc_refs_next_frm_is_kpfrm(MppEncRefs refs);
+
 MPP_RET mpp_enc_refs_get_cpb_pass1(MppEncRefs refs, EncCpbStatus *status);
 #define dump_frm(frm)   _dump_frm(frm, __FUNCTION__, __LINE__)
 

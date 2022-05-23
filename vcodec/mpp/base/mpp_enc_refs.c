@@ -968,6 +968,41 @@ RK_S32 mpp_enc_refs_next_frm_is_intra(MppEncRefs refs)
 	return is_intra;
 }
 
+RK_S32 mpp_enc_refs_next_frm_is_kpfrm(MppEncRefs refs)
+{
+	MppEncRefsImpl *p = (MppEncRefsImpl *)refs;
+	EncVirtualCpb *cpb = &p->cpb;
+	MppEncRefFrmUsrCfg *usr_cfg = &p->usr_cfg;
+	RK_S32 is_kpfrm = 0;
+
+	if (NULL == refs) {
+		mpp_err_f("invalid NULL input refs\n");
+		return MPP_ERR_VALUE;
+	}
+
+	enc_refs_dbg_func("enter %p\n", refs);
+
+	if (p->changed & ENC_REFS_IGOP_CHANGED)
+		is_kpfrm = 0;
+
+	if (p->igop && cpb->seq_idx >= p->igop)
+		is_kpfrm = 0;
+
+	if (usr_cfg->force_flag & ENC_FORCE_IDR)
+		is_kpfrm = 0;
+
+	if (!cpb->frm_idx)
+		is_kpfrm = 0;
+
+	if (!is_kpfrm && cpb->info.lt_gop)
+		is_kpfrm  =  !((cpb->seq_idx + 1) % cpb->info.st_gop);
+
+	enc_refs_dbg_func("leave %p\n", refs);
+
+	return is_kpfrm;
+}
+
+
 MPP_RET mpp_enc_refs_get_cpb_pass1(MppEncRefs refs, EncCpbStatus *status)
 {
 	MppEncRefsImpl *p = (MppEncRefsImpl *)refs;

@@ -129,11 +129,13 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	sema_init(&p->enc_sem, 1);
 	p->stop_flag = 1;
 	p->rb_userdata.free_cnt = MAX_USRDATA_CNT;
-	p->ring_pool = mpp_calloc(ring_buf_pool, 1);
+
+	if (!get_vsm_ops())
+		p->ring_pool = mpp_calloc(ring_buf_pool, 1);
 	p->online = cfg->online;
 	p->shared_buf = cfg->shared_buf;
 	p->qpmap_en = cfg->qpmap_en;
-	p->chn_id = cfg->chn_id;
+	p->chan_id = cfg->chan_id;
 	*enc = p;
 	return ret;
 ERR_RET:

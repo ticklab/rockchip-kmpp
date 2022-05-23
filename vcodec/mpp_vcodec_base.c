@@ -382,14 +382,16 @@ int mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_attr *a
 		entry->max_lt_cnt = attr->max_lt_cnt;
 
 	}
-	if (attr->buf_size > entry->ring_buf_size) {
-		struct hal_shared_buf *ctx = &entry->shared_buf;
-		entry->ring_buf_size = attr->buf_size;
-		if (ctx->stream_buf) {
-			mpp_buffer_put(ctx->stream_buf);
-			ctx->stream_buf = NULL;
+	if (!get_vsm_ops()) {
+		if (attr->buf_size > entry->ring_buf_size) {
+			struct hal_shared_buf *ctx = &entry->shared_buf;
+			entry->ring_buf_size = attr->buf_size;
+			if (ctx->stream_buf) {
+				mpp_buffer_put(ctx->stream_buf);
+				ctx->stream_buf = NULL;
+			}
+			mpp_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(attr->buf_size, 1024));
 		}
-		mpp_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(attr->buf_size, 1024));
 	}
 	return 0;
 }

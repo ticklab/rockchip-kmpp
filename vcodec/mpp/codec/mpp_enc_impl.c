@@ -1169,6 +1169,19 @@ MPP_RET mpp_enc_alloc_output_from_bufpool(MppEncImpl *enc)
 	}
 	return MPP_OK;
 }
+
+static RK_U32 mpp_enc_check_next_frm_type(MppEncImpl *enc)
+{
+	EncTask *task = (EncTask *)enc->enc_task;
+	RK_U32 is_intra = 0;
+
+	if (mpp_enc_refs_next_frm_is_intra(enc->refs) || (task->seq_idx == 1) ||
+	    mpp_enc_refs_next_frm_is_kpfrm(enc->refs))
+		is_intra =  1;
+	return is_intra;
+}
+
+
 MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 {
 	MPP_RET ret = MPP_OK;
@@ -1179,7 +1192,10 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 	RK_U32 size = (enc->coding == MPP_VIDEO_CodingMJPEG) ?
 		      (width * height) :
 		      (width * height / 2);
-	if (enc->ring_pool && !enc->ring_pool->init_done) {
+
+	RK_U32 is_intra = mpp_enc_check_next_frm_type(enc);
+
+	if (enc->ring_pool && !enc->ring_pool->init_done && !get_vsm_ops()) {
 		if (!enc->ring_buf_size)
 			enc->ring_buf_size = size;
 		enc->ring_buf_size = MPP_ALIGN(enc->ring_buf_size, 1024);
@@ -1195,7 +1211,7 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 		}
 		ring_buf_init(enc->ring_pool, buffer, enc->max_strm_cnt);
 	}
-	ret = mpp_packet_new_ring_buf(&enc->packet, enc->ring_pool, 0);
+	ret = mpp_packet_new_ring_buf(&enc->packet, enc->ring_pool, 0, is_intra, enc->chan_id);
 	if (ret) {
 		if (ret == MPP_ERR_NULL_PTR)
 			enc->pkt_fail_cnt++ ;
@@ -1546,7 +1562,7 @@ static void mpp_enc_terminate_task(MppEncImpl *enc, EncTask *task)
 	if (enc->packet) {
 		/* setup output packet and meta data */
 		mpp_packet_set_length(enc->packet, 0);
-		mpp_packet_ring_buf_put_used(enc->packet);
+		mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev);
 		mpp_packet_deinit(&enc->packet);
 	}
 
@@ -1743,7 +1759,7 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 		if (mpidev_fn && mpidev_fn->set_intra_info) {
 			RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
 			RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
-			mpidev_fn->set_intra_info(jpeg_enc->chn_id, dts, pts);
+			mpidev_fn->set_intra_info(jpeg_enc->chan_id, dts, pts);
 		}
 	}
 	enc_dbg_detail("task %d hal start\n", frm->seq_idx);
@@ -1754,7 +1770,7 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 						       || frm->is_intra)) {
 		RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
 		RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
-		mpidev_fn->set_intra_info(enc->chn_id, dts, pts);
+		mpidev_fn->set_intra_info(enc->chan_id, dts, pts);
 	}
 
 
@@ -1802,11 +1818,11 @@ TASK_DONE:
 	*packet = enc->packet;
 	/* setup output packet and meta data */
 	mpp_packet_set_length(enc->packet, hal_task->length);
-	if (mpp_packet_ring_buf_put_used(enc->packet))
-		mpp_err_f("ring_buf_put_used fail \n");
-
-	mpp_packet_set_flag(enc->packet, frm->is_intra); //set as key frame
+	if (frm->is_intra)
+		mpp_packet_set_flag(enc->packet, MPP_PACKET_FLAG_INTRA); //set as key frame
 	mpp_packet_set_temporal_id(enc->packet, frm->temporal_id);
+	if (mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev))
+		mpp_err_f("ring_buf_put_used fail \n");
 	/*
 	 * First return output packet.
 	 * Then enqueue task back to input port.
@@ -1888,15 +1904,16 @@ TASK_DONE:
 		enc->frm_cfg.force_flag |= ENC_FORCE_IDR;
 		enc->hdr_status.val = 0;
 		mpp_packet_set_length(enc->packet, 0);
-		mpp_packet_ring_buf_put_used(enc->packet);
+		mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev);
 		mpp_packet_deinit(&enc->packet);
 	} else {
 		/* setup output packet and meta data */
 		mpp_packet_set_length(enc->packet, hal_task->length);
-		if (mpp_packet_ring_buf_put_used(enc->packet))
-			mpp_err_f("ring_buf_put_used fail \n");
-		mpp_packet_set_flag(enc->packet, frm->is_intra); //set as key frame
+		if (frm->is_intra)
+			mpp_packet_set_flag(enc->packet, MPP_PACKET_FLAG_INTRA); //set as key frame
 		mpp_packet_set_temporal_id(enc->packet, frm->temporal_id);
+		if (mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev))
+			mpp_err_f("ring_buf_put_used fail \n");
 	}
 	*packet = enc->packet;
 	/*

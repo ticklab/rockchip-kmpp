@@ -11,6 +11,7 @@
 #define __MPP_PACKET_H__
 
 #include "mpp_stream_ring_buf.h"
+#include "mpp_device.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,12 +24,13 @@ extern "C" {
  */
 MPP_RET mpp_packet_new(MppPacket *packet);
 
-MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t min_size);
+MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t min_size,
+				RK_U32 type, RK_S32 chan_id);
 
 MPP_RET mpp_packet_init(MppPacket *packet, void *data, size_t size);
 MPP_RET mpp_packet_init_with_buffer(MppPacket *packet, MppBuffer buffer);
 MPP_RET mpp_packet_deinit(MppPacket *packet);
-MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet);
+MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet, RK_S32 chan_id, MppDev dev_ctx);
 /*
  * data   : ( R/W ) start address of the whole packet memory
  * size   : ( R/W ) total size of the whole packet memory

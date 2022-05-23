@@ -538,6 +538,18 @@ void vmpi_unregister_fn2vcocdec (void)
 }
 EXPORT_SYMBOL(vmpi_unregister_fn2vcocdec);
 
+static struct vcodec_vsm_buf_fn *vsm_buf_ops = NULL;
+
+void vsm_buf_register_fn2vcocdec(struct vcodec_vsm_buf_fn *vsm_fn)
+{
+	vsm_buf_ops = vsm_fn;
+	mpp_log("vsm_buf_register_function ok");
+	return;
+}
+
+EXPORT_SYMBOL(vsm_buf_register_fn2vcocdec);
+
+
 struct vcodec_mpidev_fn *get_mpidev_ops(void)
 {
 	if (!mpidev_ops)
@@ -551,6 +563,15 @@ struct vcodec_mpibuf_fn *get_mpibuf_ops(void)
 		mpp_err("should call vmpi_register_fn2vcocdec \n");
 	return mpibuf_ops;
 }
+
+struct vcodec_vsm_buf_fn *get_vsm_ops(void)
+{
+	if (vsm_buf_ops)
+		return vsm_buf_ops;
+	else
+		return NULL;
+}
+
 
 #ifdef BUILD_ONE_KO
 extern struct platform_driver mpp_service_driver;

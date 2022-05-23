@@ -467,6 +467,15 @@ void mpp_service_iova_release(void *ctx, struct dma_buf *buf)
 	return;
 }
 
+struct device * mpp_service_get_dev(void *ctx)
+{
+	MppDevMppService *p = (MppDevMppService *)ctx;
+	if (p->mppdev_ops->mpp_chnl_get_dev)
+		return p->mppdev_ops->mpp_chnl_get_dev(p->chnl);
+	return NULL;
+}
+
+
 const MppDevApi mpp_service_api = {
 	"mpp_service",
 	sizeof(MppDevMppService),
@@ -482,4 +491,5 @@ const MppDevApi mpp_service_api = {
 	mpp_service_iova_address,
 	mpp_service_iova_release,
 	mpp_service_chnl_register,
+	mpp_service_get_dev,
 };

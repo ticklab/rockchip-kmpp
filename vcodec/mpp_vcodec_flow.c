@@ -222,11 +222,15 @@ void mpp_vcodec_enc_add_packet_list(struct mpp_chan *chan_entry,
 	MppPacketImpl *p = NULL;
 	p = (MppPacketImpl *) packet;
 	mpp_vcodec_detail("packet size %zu", mpp_packet_get_length(packet));
-	mutex_lock(&chan_entry->stream_done_lock);
-	list_add_tail(&p->list, &chan_entry->stream_done);
-	atomic_inc(&chan_entry->stream_count);
-	mutex_unlock(&chan_entry->stream_done_lock);
-	wake_up(&chan_entry->wait);
+	if (!get_vsm_ops()) {
+		mutex_lock(&chan_entry->stream_done_lock);
+		list_add_tail(&p->list, &chan_entry->stream_done);
+		atomic_inc(&chan_entry->stream_count);
+		mutex_unlock(&chan_entry->stream_done_lock);
+		wake_up(&chan_entry->wait);
+	} else
+		mpp_packet_deinit(&packet);
+
 	chan_entry->reenc = 0;
 }
 

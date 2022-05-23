@@ -9,6 +9,7 @@
 #ifndef __ROCKCHIP_MPP_VCODEC_CHAN_H__
 #define __ROCKCHIP_MPP_VCODEC_CHAN_H__
 #include "rk_type.h"
+#include "rk_export_func.h"
 
 int mpp_vcodec_chan_create(struct vcodec_attr *attr);
 int mpp_vcodec_chan_destory(int chan_id, MppCtxType type);

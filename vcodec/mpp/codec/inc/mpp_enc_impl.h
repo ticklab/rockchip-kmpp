@@ -133,7 +133,7 @@ typedef struct MppEncImpl_t {
 	RK_U8 mv_index;
 	RK_U8 *mv_flag[3];
 	RK_U32 qp_out;
-	RK_U32 chn_id;
+	RK_U32		chan_id;
 } MppEncImpl;
 
 enum enc_status {

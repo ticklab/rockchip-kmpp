@@ -83,6 +83,7 @@ typedef struct MppDevApi_t {
 	RK_U32(*get_address) (void *ctx, struct dma_buf * buf, RK_U32 offset);
 	void (*release_address) (void *ctx, struct dma_buf * buf);
 	void (*chnl_register) (void *ctx, void *func, RK_S32 chan_id);
+	struct device *(*chnl_get_dev)(void *ctx);
 } MppDevApi;
 
 typedef void *MppDev;
@@ -109,6 +110,9 @@ RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf,
 RK_U32 mpp_dev_release_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf);
 
 void mpp_dev_chnl_register(MppDev ctx, void *func, RK_S32 chan_id);
+
+struct device * mpp_get_dev(MppDev ctx);
+
 
 #ifdef __cplusplus
 }

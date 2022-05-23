@@ -2692,6 +2692,12 @@ static void mpp_chnl_release_iova_addr(struct mpp_session *session,  struct dma_
 	return;
 }
 
+static struct device *mpp_chnl_get_dev(struct mpp_session *session)
+{
+	struct mpp_dev *mpp = session->mpp;
+	return mpp->dev;
+}
+
 
 struct vcodec_mppdev_svr_fn {
 	struct mpp_session *(*chnl_open)(int client_type);
@@ -2701,6 +2707,7 @@ struct vcodec_mppdev_svr_fn {
 	unsigned int (*chnl_get_iova_addr)(struct mpp_session *session,
 					   struct dma_buf *buf, unsigned int reg_idx);
 	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
+	struct device *(*mpp_chnl_get_dev)(struct mpp_session *session);
 };
 
 struct vcodec_mppdev_svr_fn g_mpp_svr_fn_ops    = {
@@ -2710,6 +2717,7 @@ struct vcodec_mppdev_svr_fn g_mpp_svr_fn_ops    = {
 	.chnl_add_req                               = mpp_chnl_add_req,
 	.chnl_get_iova_addr                         = mpp_chnl_get_iova_addr,
 	.chnl_release_iova_addr                     = mpp_chnl_release_iova_addr,
+	.mpp_chnl_get_dev                           = mpp_chnl_get_dev,
 };
 
 struct vcodec_mppdev_svr_fn *get_mppdev_svr_ops(void)

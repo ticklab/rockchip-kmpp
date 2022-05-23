@@ -219,3 +219,14 @@ void mpp_dev_chnl_register(MppDev ctx, void *func, RK_S32 chan_id)
 	return;
 
 }
+
+struct device * mpp_get_dev(MppDev ctx)
+{
+	MppDevImpl *p = (MppDevImpl *) ctx;
+	const MppDevApi *api = p->api;
+	void *impl_ctx = p->ctx;
+	if (api->chnl_get_dev)
+		return api->chnl_get_dev(impl_ctx);
+	return NULL;
+}
+
