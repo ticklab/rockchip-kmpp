@@ -1753,7 +1753,11 @@ static MPP_RET mpp_enc_comb_end_jpeg(MppEnc ctx, MppPacket *packet)
 	EncRcTask *rc_task = &enc->rc_task;
 	HalEncTask *hal_task = &task->info.enc;
 	EncFrmStatus *frm = &rc_task->frm;
+	MppEncHal hal = enc->enc_hal;
 
+	hal_task->length -= hal_task->hw_length;
+	ENC_RUN_FUNC3(mpp_enc_hal_ret_task, hal, hal_task, NULL, enc, ret);
+	ENC_RUN_FUNC2(rc_hal_end, enc->rc_ctx, rc_task, enc, ret);
 	enc_dbg_detail("task %d hal wait\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_hal_end, enc->rc_ctx, rc_task, enc, ret);
 	enc_dbg_detail("task %d rc enc->frame end\n", frm->seq_idx);

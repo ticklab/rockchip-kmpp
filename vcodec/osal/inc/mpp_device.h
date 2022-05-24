@@ -105,6 +105,9 @@ RK_U32 mpp_dev_release_iova_address(MppDev ctx, MppBuffer mpp_buf);
 
 RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf,
 				 RK_U32 offset);
+
+RK_U32 mpp_dev_release_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf);
+
 void mpp_dev_chnl_register(MppDev ctx, void *func, RK_S32 chan_id);
 
 #ifdef __cplusplus

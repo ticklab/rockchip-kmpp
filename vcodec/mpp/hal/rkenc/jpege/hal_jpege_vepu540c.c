@@ -71,6 +71,7 @@ typedef struct jpegeV540cHalContext_t {
 	JpegeBits bits;
 	JpegeSyntax syntax;
 	RK_S32	online;
+	RK_U32	session_run;
 	HalJpegeRc hal_rc;
 } jpegeV540cHalContext;
 
@@ -428,6 +429,7 @@ MPP_RET hal_jpege_v540c_start(void *hal, HalEncTask * enc_task)
 	ret = mpp_dev_ioctl(ctx->dev, MPP_DEV_CMD_SEND, NULL);
 	if (ret)
 		mpp_err_f("send cmd failed %d\n", ret);
+	ctx->session_run = 1;
 	hal_jpege_leave();
 	return ret;
 }
@@ -543,6 +545,13 @@ MPP_RET hal_jpege_v540c_ret_task(void *hal, HalEncTask * task)
 	rc_info->bit_real = task->hw_length * 8;
 	rc_info->quality_real = rc_info->quality_target;
 
+	if (ctx->osd_cfg.osd_data3)
+		vepu540c_osd_put_dma_buf(&ctx->osd_cfg);
+
+	if (!ctx->session_run) {
+		vepu540c_osd_put_dma_buf(&ctx->osd_cfg); //combo case session no run must release agin
+	}
+	ctx->session_run = 0;
 	hal_jpege_leave();
 	return MPP_OK;
 }

@@ -177,6 +177,23 @@ RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf, RK_U32 offset)
 	return -EINVAL;
 }
 
+RK_U32 mpp_dev_release_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf)
+{
+	MppDevImpl *p = (MppDevImpl *) ctx;
+	const MppDevApi *api = p->api;
+	void *impl_ctx = p->ctx;
+	struct dma_buf *dma_buf = NULL;
+	if (!mpi_buf) {
+		mpp_err_f("input NULL");
+		return -EINVAL;
+	}
+	dma_buf = mpi_buf_get_dma(mpi_buf);
+	mpp_assert(dma_buf);
+	if (api->release_address && dma_buf)
+		api->release_address(impl_ctx, dma_buf);
+	return -EINVAL;
+}
+
 
 RK_U32 mpp_dev_release_iova_address(MppDev ctx, MppBuffer mpp_buf)
 {
