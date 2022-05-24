@@ -124,6 +124,14 @@ MPP_RET bits_model_param_deinit(RcModelV2Ctx * ctx)
 		mpp_data_deinit_v2(ctx->gop_bits);
 		ctx->gop_bits = NULL;
 	}
+	if (ctx->motion_level != NULL) {
+		mpp_data_deinit_v2(ctx->motion_level);
+		ctx->motion_level = NULL;
+	}
+	if (ctx->complex_level != NULL) {
+		mpp_data_deinit_v2(ctx->complex_level);
+		ctx->complex_level = NULL;
+	}
 	rc_dbg_func("leave %p\n", ctx);
 	return MPP_OK;
 }
@@ -132,6 +140,7 @@ MPP_RET bits_model_param_init(RcModelV2Ctx * ctx)
 {
 	RK_S32 gop_len = ctx->usr_cfg.igop;
 	RcFpsCfg *fps = &ctx->usr_cfg.fps;
+	RK_S32 mad_len = 10;
 	RK_U32 stat_len =
 		fps->fps_out_num * ctx->usr_cfg.stats_time / fps->fps_out_denorm;
 	stat_len = stat_len ? stat_len : 1;
@@ -198,6 +207,19 @@ MPP_RET bits_model_param_init(RcModelV2Ctx * ctx)
 		mpp_err("gop_bits init fail gop_len %d", gop_len);
 		return MPP_ERR_MALLOC;
 	}
+
+	mpp_data_init_v2(&ctx->motion_level, mad_len, 0);
+	if (ctx->motion_level == NULL) {
+		mpp_err("motion_level init fail mad_len %d", mad_len);
+		return MPP_ERR_MALLOC;
+	}
+
+	mpp_data_init_v2(&ctx->complex_level, mad_len, 0);
+	if (ctx->complex_level == NULL) {
+		mpp_err("complex_level init fail mad_len %d", mad_len);
+		return MPP_ERR_MALLOC;
+	}
+
 	return MPP_OK;
 }
 
@@ -1428,6 +1450,9 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 	RK_S32 quality_min = info->quality_min;
 	RK_S32 quality_max = info->quality_max;
 	RK_S32 quality_target = info->quality_target;
+	RK_S32 qpmin = info->quality_min;
+	RK_S32 max_i_frame_qp = usr_cfg->fm_lv_min_i_quality;
+	RK_S32 max_p_frame_qp = usr_cfg->fm_lv_min_quality;
 
 	rc_dbg_func("enter p %p task %p\n", p, task);
 
@@ -1476,9 +1501,38 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 		p->cur_scale_qp =
 			mpp_clip(p->cur_scale_qp, (info->quality_min << 6),
 				 (info->quality_max << 6));
+
 	} else {
 		RK_S32 qp_scale = p->cur_scale_qp + p->next_ratio;
 		RK_S32 start_qp = 0;
+		RK_S32 cplx = mpp_data_sum_v2(p->complex_level);
+		RK_S32 md = mpp_data_sum_v2(p->motion_level);
+		if (RC_AVBR == usr_cfg->mode || RC_VBR == usr_cfg->mode || RC_CBR == usr_cfg->mode) {
+			if (md >= 7) {
+				if (md >= 14)
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 3;
+				else
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 2;
+
+				if (cplx >= 15)
+					qpmin ++;
+			} else if (RC_CBR != usr_cfg->mode) {
+				if (md >= 2) {
+					if (cplx >= 16)
+						qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 2;
+					else if (cplx >= 10)
+						qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 1;
+				} else {
+					qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp);
+					if (cplx >= 15)
+						qpmin ++;
+				}
+			}
+			if (qpmin > info->quality_max)
+				qpmin = info->quality_max;
+			if (qpmin < info->quality_min)
+				qpmin = info->quality_min;
+		}
 
 		if (frm->is_intra) {
 			RK_S32 i_quality_delta = usr_cfg->i_quality_delta;
@@ -1508,7 +1562,7 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 				start_qp -= i_quality_delta;
 			}
 			start_qp =
-				mpp_clip(start_qp, info->quality_min,
+				mpp_clip(start_qp, qpmin,
 					 info->quality_max);
 			p->start_qp = start_qp;
 
@@ -1521,7 +1575,7 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 			p->gop_qp_sum = 0;
 		} else {
 			qp_scale =
-				mpp_clip(qp_scale, (info->quality_min << 6),
+				mpp_clip(qp_scale, (qpmin << 6),
 					 (info->quality_max << 6));
 			p->cur_scale_qp = qp_scale;
 			rc_dbg_rc("qp %d -> %d\n", p->start_qp, qp_scale >> 6);
@@ -1550,7 +1604,7 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 	}
 
 	p->start_qp =
-		mpp_clip(p->start_qp, info->quality_min, info->quality_max);
+		mpp_clip(p->start_qp, qpmin, info->quality_max);
 	info->quality_target = p->start_qp;
 
 	rc_dbg_rc("bitrate [%d : %d : %d] -> [%d : %d : %d]\n",
@@ -1654,6 +1708,10 @@ MPP_RET rc_model_v2_end(void *ctx, EncRcTask * task)
 	rc_dbg_func("enter ctx %p cfg %p\n", ctx, cfg);
 
 	rc_dbg_rc("bits_mode_update real_bit %d", cfg->bit_real);
+
+	rc_dbg_rc("motion_level %u, complex_level %u\n", cfg->motion_level, cfg->complex_level);
+	mpp_data_update_v2(p->motion_level, cfg->motion_level);
+	mpp_data_update_v2(p->complex_level, cfg->complex_level);
 
 	if (usr_cfg->mode == RC_FIXQP)
 		goto DONE;

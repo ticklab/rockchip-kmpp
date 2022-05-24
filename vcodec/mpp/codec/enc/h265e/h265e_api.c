@@ -87,8 +87,9 @@ static MPP_RET h265e_init(void *ctx, EncImplCfg * ctrlCfg)
 
 	h265->slice_cfg.split_enable = 0;
 	h265->entropy_cfg.cabac_init_flag = 0;
-	h265->sao_cfg.slice_sao_chroma_disable = 0;
-	h265->sao_cfg.slice_sao_luma_disable = 0;
+	h265->sao_cfg.slice_sao_chroma_disable = 1;
+	h265->sao_cfg.slice_sao_luma_disable = 1;
+	h265->sao_cfg.sao_bit_ratio = 5;
 	h265->dblk_cfg.slice_deblocking_filter_disabled_flag = 0;
 	h265->pu_cfg.strg_intra_smth_disable = 0;
 	h265->merge_cfg.max_mrg_cnd = 2;
@@ -144,6 +145,8 @@ static MPP_RET h265e_init(void *ctx, EncImplCfg * ctrlCfg)
 	rc_cfg->qp_min_i = 15;
 	rc_cfg->qp_delta_ip = 4;
 	rc_cfg->qp_delta_vi = 2;
+	rc_cfg->fm_lvl_qp_min_i = 27;
+	rc_cfg->fm_lvl_qp_min_p = 30;
 
 	h265e_dbg_func("leave ctx %p\n", ctx);
 	return ret;

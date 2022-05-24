@@ -935,8 +935,8 @@ static void set_rc_cfg(RcCfg *cfg, MppEncCfgSet *cfg_set)
 	cfg->max_i_bit_prop = rc->max_i_prop;
 	cfg->min_i_bit_prop = rc->min_i_prop;
 	cfg->init_ip_ratio = rc->init_ip_ratio;
-	cfg->fm_lv_min_quality = rc->fm_lvl_qp_min_i;
-	cfg->fm_lv_min_i_quality = rc->fm_lvl_qp_min_p;
+	cfg->fm_lv_min_quality = rc->fm_lvl_qp_min_p;
+	cfg->fm_lv_min_i_quality = rc->fm_lvl_qp_min_i;
 	cfg->bps_target = rc->bps_target;
 	cfg->bps_max = rc->bps_max;
 	cfg->bps_min = rc->bps_min;

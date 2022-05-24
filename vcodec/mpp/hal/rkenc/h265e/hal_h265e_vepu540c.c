@@ -621,12 +621,12 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_rdo_skip->atf_thd0.madp_thd0 = 5;
 	p_rdo_skip->atf_thd0.madp_thd1 = 10;
 	p_rdo_skip->atf_thd1.madp_thd2 = 15;
-	p_rdo_skip->atf_thd1.madp_thd3 = 25;
+	p_rdo_skip->atf_thd1.madp_thd3 = 72;
 	p_rdo_skip->atf_wgt0.wgt0 = 20;
 	p_rdo_skip->atf_wgt0.wgt1 = 16;
 	p_rdo_skip->atf_wgt0.wgt2 = 16;
 	p_rdo_skip->atf_wgt0.wgt3 = 16;
-	p_rdo_skip->atf_wgt1.wgt4 = 16;
+	p_rdo_skip->atf_wgt1.wgt4 = 24;
 
 	p_rdo_noskip = &reg->rdo_b32_inter;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;
@@ -635,7 +635,7 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_rdo_noskip->atf_wgt.wgt0 = 16;
 	p_rdo_noskip->atf_wgt.wgt1 = 16;
 	p_rdo_noskip->atf_wgt.wgt2 = 16;
-	p_rdo_noskip->atf_wgt.wgt3 = 16;
+	p_rdo_noskip->atf_wgt.wgt3 = 24;
 
 	p_rdo_noskip = &reg->rdo_b32_intra;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;
@@ -644,7 +644,7 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_rdo_noskip->atf_wgt.wgt0 = 27;
 	p_rdo_noskip->atf_wgt.wgt1 = 25;
 	p_rdo_noskip->atf_wgt.wgt2 = 20;
-	p_rdo_noskip->atf_wgt.wgt3 = 16;
+	p_rdo_noskip->atf_wgt.wgt3 = 24;
 
 	p_rdo_skip = &reg->rdo_b16_skip;
 	p_rdo_skip->atf_thd0.madp_thd0 = 1;
@@ -1285,7 +1285,6 @@ static void vepu540c_h265_set_slice_regs(H265eSyntax_new *syn,
 	regs->reg0239_synt_sli0.sli_sao_luma_flg = syn->sp.sli_sao_luma_flg;
 	regs->reg0239_synt_sli0.sli_tmprl_mvp_e = syn->sp.sli_tmprl_mvp_en;
 	regs->reg0192_enc_pic.num_pic_tot_cur = syn->sp.tot_poc_num;
-	regs->reg0248_sao_cfg.sao_lambda_multi = 5;
 
 	regs->reg0239_synt_sli0.pic_out_flg = syn->sp.pic_out_flg;
 	regs->reg0239_synt_sli0.sli_type = syn->sp.slice_type;
@@ -1794,6 +1793,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 
 	reg_base->reg0218_sli_cnum.sli_splt_cnum_m1 = syn->sp.sli_splt_cnum_m1;
 	reg_base->reg0217_sli_byte.sli_splt_byte = syn->sp.sli_splt_byte;
+	reg_base->reg0248_sao_cfg.sao_lambda_multi = ctx->cfg->codec.h265.sao_cfg.sao_bit_ratio;
 
 	vepu540c_h265_set_me_regs(ctx, syn, reg_base);
 

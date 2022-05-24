@@ -45,6 +45,8 @@ typedef struct RcModelV2Ctx_t {
 	MppDataV2 *pre_i_mean_qp;
 	MppDataV2 *madi;
 	MppDataV2 *madp;
+	MppDataV2 *motion_level;
+	MppDataV2 *complex_level;
 
 	RK_S32 target_bps;
 	RK_S32 pre_target_bits;
