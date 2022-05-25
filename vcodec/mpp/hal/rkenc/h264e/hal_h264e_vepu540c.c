@@ -102,6 +102,7 @@ typedef struct HalH264eVepu540cCtx_t {
 	struct hal_shared_buf *shared_buf;
 	RK_S32	qpmap_en;
 	RK_S32	smart_en;
+	RK_U32  is_gray;
 } HalH264eVepu540cCtx;
 
 static RK_U32 dump_l1_reg = 0;
@@ -2228,6 +2229,8 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	H264eSlice *slice = ctx->slice;
 	MppEncPrepCfg *prep = &ctx->cfg->prep;
 	MPP_RET ret = MPP_OK;
+	RK_U32 is_gray = 0;
+	vepu540c_rdo_cfg *reg_rdo = &ctx->regs_set->reg_rdo;
 
 	hal_h264e_dbg_func("enter %p\n", hal);
 	hal_h264e_dbg_detail("frame %d generate regs now", ctx->frms->seq_idx);
@@ -2287,6 +2290,28 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	if (ctx->roi_data)
 		vepu540c_set_roi(&ctx->regs_set->reg_rc_roi.roi_cfg,
 				 (MppEncROICfg *)ctx->roi_data, prep->width, prep->height);
+
+	is_gray = mpp_frame_get_is_gray(task->frame);
+	if (ctx->is_gray != is_gray) {
+		if (ctx->is_gray) {
+			//mpp_log("gray to color.\n");
+			// TODO
+		} else {
+			//mpp_log("color to gray.\n");
+			reg_rdo->rdo_b16_intra.atf_wgt.wgt0 = 0;
+			reg_rdo->rdo_b16_intra.atf_wgt.wgt1 = 0;
+			reg_rdo->rdo_b16_intra.atf_wgt.wgt2 = 0;
+			reg_rdo->rdo_b16_intra.atf_wgt.wgt3 = 0;
+			reg_rdo->rdo_smear_cfg_comb.rdo_smear_en = 0;
+			if (regs->reg_base.enc_pic.pic_qp < 30)
+				regs->reg_base.enc_pic.pic_qp = 30;
+			else if (regs->reg_base.enc_pic.pic_qp < 32)
+				regs->reg_base.enc_pic.pic_qp = 32;
+			else if (regs->reg_base.enc_pic.pic_qp < 34)
+				regs->reg_base.enc_pic.pic_qp = 34;
+		}
+		ctx->is_gray = is_gray;
+	}
 
 	setup_vepu540c_l2(ctx->regs_set, slice, &cfg->hw);
 	setup_vepu540c_ext_line_buf(regs, ctx);

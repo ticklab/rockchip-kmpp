@@ -119,6 +119,7 @@ struct MppFrameImpl_t {
 
 	MppRoi   roi;
 	MppOsd   osd;
+	RK_U32   is_gray;
 
 	/*
 	 * pointer for multiple frame output at one time

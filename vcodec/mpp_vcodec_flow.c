@@ -64,6 +64,7 @@ static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 	mpp_frame_set_fmt(*frame, frm_info->fmt);
 	mpp_frame_set_offset_x(*frame, frm_info->offset_x);
 	mpp_frame_set_offset_y(*frame, frm_info->offset_y);
+	mpp_frame_set_is_gray(*frame, frm_info->is_gray);
 	if (frm_info->osd_buf)
 		frame_add_osd(*frame, (MppEncOSDData3 *)frm_info->osd_buf);
 	return MPP_OK;

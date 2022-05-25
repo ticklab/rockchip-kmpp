@@ -115,6 +115,7 @@ typedef struct H265eV540cHalContext_t {
 	MppBuffer recn_ref_buf;
 	WrapBufInfo wrap_infos;
 	struct hal_shared_buf *shared_buf;
+	RK_U32 is_gray;
 } H265eV540cHalContext;
 
 #define TILE_BUF_SIZE  MPP_ALIGN(128 * 1024, 256)
@@ -1705,6 +1706,8 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	hevc_vepu540c_rc_roi *reg_rc_roi = &regs->reg_rc_roi;
 	MppEncPrepCfg *prep = &ctx->cfg->prep;
 	EncFrmStatus *frm = &task->rc_task->frm;
+	RK_U32 is_gray = 0;
+	rdo_noskip_par *p_rdo_intra = NULL;
 
 	hal_h265e_enter();
 	pic_width_align8 = (syn->pp.pic_width + 7) & (~7);
@@ -1867,6 +1870,38 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 
 	/*paramet cfg */
 	vepu540c_h265_global_cfg_set(ctx, regs);
+
+	is_gray = mpp_frame_get_is_gray(task->frame);
+	if (ctx->is_gray != is_gray) {
+		if (ctx->is_gray) {
+			//mpp_log("gray to color.\n");
+			// TODO
+		} else {
+			//mpp_log("color to gray.\n");
+			p_rdo_intra = &regs->reg_rdo.rdo_b16_intra;
+			p_rdo_intra->atf_wgt.wgt0 = 0;
+			p_rdo_intra->atf_wgt.wgt1 = 0;
+			p_rdo_intra->atf_wgt.wgt2 = 0;
+			p_rdo_intra->atf_wgt.wgt3 = 0;
+			p_rdo_intra = &regs->reg_rdo.rdo_b32_intra;
+			p_rdo_intra->atf_wgt.wgt0 = 0;
+			p_rdo_intra->atf_wgt.wgt1 = 0;
+			p_rdo_intra->atf_wgt.wgt2 = 0;
+			p_rdo_intra->atf_wgt.wgt3 = 0;
+			regs->reg_rdo.rdo_smear_cfg_comb.rdo_smear_en = 0;
+			if (reg_base->reg0192_enc_pic.pic_qp < 30) {
+				reg_base->reg0192_enc_pic.pic_qp = 30;
+				reg_base->reg0240_synt_sli1.sli_qp = 30;
+			} else if (reg_base->reg0192_enc_pic.pic_qp < 32) {
+				reg_base->reg0192_enc_pic.pic_qp = 32;
+				reg_base->reg0240_synt_sli1.sli_qp = 32;
+			} else if (reg_base->reg0192_enc_pic.pic_qp < 34) {
+				reg_base->reg0192_enc_pic.pic_qp = 34;
+				reg_base->reg0240_synt_sli1.sli_qp = 34;
+			}
+		}
+		ctx->is_gray = is_gray;
+	}
 
 	/* two pass register patch */
 	if (frm->save_pass1)

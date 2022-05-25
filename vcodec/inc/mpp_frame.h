@@ -312,6 +312,8 @@ RK_U32  mpp_frame_get_ver_stride(const MppFrame frame);
 void    mpp_frame_set_ver_stride(MppFrame frame, RK_U32 ver_stride);
 void    mpp_frame_set_hor_stride_pixel(MppFrame frame, RK_U32 hor_stride_pixel);
 RK_U32  mpp_frame_get_hor_stride_pixel(const MppFrame frame);
+RK_U32  mpp_frame_get_is_gray(const MppFrame frame);
+void    mpp_frame_set_is_gray(MppFrame frame, RK_U32 is_gray);
 
 RK_U32  mpp_frame_get_offset_x(const MppFrame frame);
 void    mpp_frame_set_offset_x(MppFrame frame, RK_U32 offset_x);
