@@ -1174,7 +1174,8 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 				}
 				if (off == hw->dvbm_cfg)
 					dvbm_en = regs[j];
-				mpp_write_relaxed(mpp, off, regs[j]);
+				else
+					mpp_write_relaxed(mpp, off, regs[j]);
 			}
 		}
 
@@ -1190,10 +1191,12 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 			update_online_info(mpp);
 			priv->dvbm_link = 1;
 			priv->dvbm_en = dvbm_en;
+			mpp_write_relaxed(mpp, hw->dvbm_cfg, dvbm_en);
 		}
 #endif
 		wmb();
-		mpp_write(mpp, hw->enc_start_base, enc_start_val);
+		if (!dvbm_en)
+			mpp_write(mpp, hw->enc_start_base, enc_start_val);
 		atomic_set(&enc->on_work, 1);
 	} break;
 	case RKVENC_MODE_LINK_ONEFRAME: {
