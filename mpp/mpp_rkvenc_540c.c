@@ -1580,7 +1580,6 @@ static int rkvenc_result(struct mpp_dev *mpp,
 	switch (enc->link_mode) {
 	case RKVENC_MODE_ONEFRAME:
 	case RKVENC_MODE_LINK_ONEFRAME: {
-		;
 	} break;
 	case RKVENC_MODE_LINK_ADD: {
 		u32 i;
@@ -1946,6 +1945,15 @@ static int rkvenc_reset(struct mpp_dev *mpp)
 		mpp_safe_unreset(enc->rst_h);
 		mpp_safe_unreset(enc->rst_core);
 		mpp_pmu_idle_request(mpp, false);
+	}
+	{
+		u32 val = 0;
+
+		mpp_write(mpp, 0x18, 0);
+		mpp_write(mpp, 0x60, 0);
+		val = mpp_read(mpp, 0x18);
+		if (val != 0)
+			pr_err("clear line cnt failed 0x%08x\n", val);
 	}
 
 	mpp_debug_leave();

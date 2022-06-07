@@ -41,8 +41,8 @@
 #define MPP_WAIT_TIMEOUT_DELAY		(2000)
 #else
 /* fpga test */
-#define MPP_WORK_TIMEOUT_DELAY		(2000)
-#define MPP_WAIT_TIMEOUT_DELAY		(5000)
+#define MPP_WORK_TIMEOUT_DELAY		(100)
+#define MPP_WAIT_TIMEOUT_DELAY		(2000)
 #endif
 
 /* Use 'v' as magic number */
