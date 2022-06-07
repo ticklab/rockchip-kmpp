@@ -136,11 +136,19 @@ RK_U32 mpp_enc_cfg_debug = 0;
     ENTRY(rc,   qp_step,        S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_QP_MAX_STEP,      rc, qp_max_step) \
     ENTRY(rc,   qp_ip,          S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_QP_IP,            rc, qp_delta_ip) \
     ENTRY(rc,   qp_vi,          S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_QP_VI,            rc, qp_delta_vi) \
+    ENTRY(rc,   hier_qp_en,     S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_HIER_QP,          rc, hier_qp_en) \
+    ENTRY(rc,   hier_qp_delta,  St,  RK_S32 *,          MPP_ENC_RC_CFG_CHANGE_HIER_QP,          rc, hier_qp_delta) \
+    ENTRY(rc,   hier_frame_num, St,  RK_S32 *,          MPP_ENC_RC_CFG_CHANGE_HIER_QP,          rc, hier_frame_num) \
+    ENTRY(rc,   stats_time,     S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_ST_TIME,          rc, stats_time) \
+    ENTRY(rc,   fm_lvl_qp_i,    S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_FM_LV_QP,         rc, fm_lvl_qp_min_i) \
+    ENTRY(rc,   fm_lvl_qp_p,    S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_FM_LV_QP,         rc, fm_lvl_qp_min_p) \
     /* prep config */ \
     ENTRY(prep, width,          S32, RK_S32,            MPP_ENC_PREP_CFG_CHANGE_INPUT,          prep, width) \
     ENTRY(prep, height,         S32, RK_S32,            MPP_ENC_PREP_CFG_CHANGE_INPUT,          prep, height) \
     ENTRY(prep, hor_stride,     S32, RK_S32,            MPP_ENC_PREP_CFG_CHANGE_INPUT,          prep, hor_stride) \
     ENTRY(prep, ver_stride,     S32, RK_S32,            MPP_ENC_PREP_CFG_CHANGE_INPUT,          prep, ver_stride) \
+    ENTRY(prep, max_width,      S32, RK_S32,            MPP_ENC_PREP_CFG_CHANGE_INPUT,          prep, max_width) \
+    ENTRY(prep, max_height,     S32, RK_S32,            MPP_ENC_PREP_CFG_CHANGE_INPUT,          prep, max_height) \
     ENTRY(prep, format,         S32, MppFrameFormat,    MPP_ENC_PREP_CFG_CHANGE_FORMAT,         prep, format) \
     ENTRY(prep, colorspace,     S32, MppFrameColorSpace,MPP_ENC_PREP_CFG_CHANGE_COLOR_SPACE,    prep, color) \
     ENTRY(prep, colorprim,      S32, MppFrameColorPrimaries, MPP_ENC_PREP_CFG_CHANGE_COLOR_PRIME, prep, colorprim) \
@@ -165,7 +173,7 @@ RK_U32 mpp_enc_cfg_debug = 0;
     ENTRY(h264, const_intra,    S32, RK_S32,            MPP_ENC_H264_CFG_CHANGE_CONST_INTRA,    codec.h264, constrained_intra_pred_mode) \
     ENTRY(h264, scaling_list,   S32, RK_S32,            MPP_ENC_H264_CFG_CHANGE_SCALING_LIST,   codec.h264, scaling_list_mode) \
     ENTRY(h264, cb_qp_offset,   S32, RK_S32,            MPP_ENC_H264_CFG_CHANGE_CHROMA_QP,      codec.h264, chroma_cb_qp_offset) \
-    ENTRY(h264, cr_qp_offset,   S32, RK_S32,            MPP_ENC_H264_CFG_CHANGE_CHROMA_QP,      codec.h264, chroma_cb_qp_offset) \
+    ENTRY(h264, cr_qp_offset,   S32, RK_S32,            MPP_ENC_H264_CFG_CHANGE_CHROMA_QP,      codec.h264, chroma_cr_qp_offset) \
     ENTRY(h264, dblk_disable,   S32, RK_S32,            MPP_ENC_H264_CFG_CHANGE_DEBLOCKING,     codec.h264, deblock_disable) \
     ENTRY(h264, dblk_alpha,     S32, RK_S32,            MPP_ENC_H264_CFG_CHANGE_DEBLOCKING,     codec.h264, deblock_offset_alpha) \
     ENTRY(h264, dblk_beta,      S32, RK_S32,            MPP_ENC_H264_CFG_CHANGE_DEBLOCKING,     codec.h264, deblock_offset_beta) \
@@ -196,6 +204,9 @@ RK_U32 mpp_enc_cfg_debug = 0;
     ENTRY(h265, qp_max_i,       S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_QP_RANGE_I,       rc, qp_max_i) \
     ENTRY(h265, qp_step,        S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_QP_MAX_STEP,      rc, qp_max_step) \
     ENTRY(h265, qp_delta_ip,    S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_QP_IP,            rc, qp_delta_ip) \
+    ENTRY(h265, sao_luma_disable,   S32, RK_S32,        MPP_ENC_H265_CFG_SAO_CHANGE,            codec.h265, sao_cfg.slice_sao_luma_disable) \
+    ENTRY(h265, sao_chroma_disable, S32, RK_S32,        MPP_ENC_H265_CFG_SAO_CHANGE,            codec.h265, sao_cfg.slice_sao_chroma_disable) \
+    ENTRY(h265, sao_bit_ratio, S32, RK_S32,             MPP_ENC_H265_CFG_SAO_CHANGE,            codec.h265, sao_cfg.sao_bit_ratio) \
     /* vp8 config */ \
     ENTRY(vp8,  qp_init,        S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_QP_INIT,          rc, qp_init) \
     ENTRY(vp8,  qp_min,         S32, RK_S32,            MPP_ENC_RC_CFG_CHANGE_QP_RANGE,         rc, qp_min) \
