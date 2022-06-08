@@ -658,3 +658,32 @@ int mpp_vcodec_deinit(void)
 	mpp_packet_pool_deinit();
 	return 0;
 }
+
+int mpp_vcodec_clear_buf_resource(void)
+{
+	struct venc_module *venc = &g_vcodec_entry.venc;
+	int i = 0;
+
+	for (i = 0; i < MAX_ENC_NUM; i++) {
+		struct mpp_chan *entry = &venc->mpp_enc_chan_entry[i];
+		struct hal_shared_buf *ctx = &entry->shared_buf;
+		if (ctx->dpb_bufs) {
+			hal_bufs_deinit(ctx->dpb_bufs);
+			ctx->dpb_bufs = NULL;
+		}
+		if (ctx->recn_ref_buf) {
+			mpp_buffer_put(ctx->recn_ref_buf);
+			ctx->recn_ref_buf = NULL;
+		}
+
+		if (ctx->stream_buf) {
+			mpp_buffer_put(ctx->stream_buf);
+			ctx->stream_buf = NULL;
+		}
+		entry->max_width = 0;
+		entry->max_height = 0;
+		entry->max_lt_cnt = 0;
+	}
+	return 0;
+}
+EXPORT_SYMBOL(mpp_vcodec_clear_buf_resource);

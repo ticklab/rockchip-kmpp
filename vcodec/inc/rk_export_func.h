@@ -85,4 +85,6 @@ extern void vmpi_unregister_fn2vcocdec(void);
 
 extern struct vcodec_mppdev_svr_fn *get_mppdev_svr_ops(void);
 
+extern int mpp_vcodec_clear_buf_resource(void);
+
 #endif
