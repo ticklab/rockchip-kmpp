@@ -1431,9 +1431,20 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 		mpp_time_diff(mpp_task);
 		mpp->cur_task = NULL;
 		task = to_rkvenc_task(mpp_task);
-		if (priv->dvbm_en && enc->dvbm_overflow) {
-			mpp->irq_status |= BIT(6);
-			enc->dvbm_overflow = 0;
+
+		if (priv->dvbm_en) {
+			/*
+			* Workaround:
+			* The line cnt is updated in the mcu.
+			* When line cnt is set to max value 0x3fff,
+			* the cur frame has overflow.
+			*/
+			if ((mpp_read(mpp, 0x18) & 0x3fff) == 0x3fff)
+				enc->dvbm_overflow = 1;
+			if (enc->dvbm_overflow) {
+				mpp->irq_status |= BIT(6);
+				enc->dvbm_overflow = 0;
+			}
 		}
 		task->irq_status = (mpp->irq_status | mpp->overflow_status);
 		mpp->overflow_status = 0;
