@@ -1240,7 +1240,8 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		}
 	}
 
-	qp_add = 0;
+	qp_add = 2;
+	qp_add_p = 3;
 	if (mpp_data_sum_v2(p->motion_level) >= 7 || mpp_data_get_pre_val_v2(p->motion_level, -1) == 2) {
 		qp_add_p = 4;
 		qp_add = 5;
@@ -1254,8 +1255,8 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		if (p->qp_out < LIMIT_QP_MORE_MOVE_I + qp_add)
 			p->qp_out = LIMIT_QP_MORE_MOVE_I + qp_add;
 	} else {
-		if (p->qp_out < LIMIT_QP_MORE_MOVE_P + qp_add)
-			p->qp_out = LIMIT_QP_MORE_MOVE_P + qp_add;
+		if (p->qp_out < LIMIT_QP_MORE_MOVE_P + qp_add_p)
+			p->qp_out = LIMIT_QP_MORE_MOVE_P + qp_add_p;
 	}
 
 	info->bit_target = p->bits_target_use;

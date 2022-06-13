@@ -627,6 +627,11 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_rdo_skip->atf_wgt0.wgt2 = 16;
 	p_rdo_skip->atf_wgt0.wgt3 = 16;
 	p_rdo_skip->atf_wgt1.wgt4 = 24;
+	if (ctx->smart_en) {
+		p_rdo_skip->atf_thd0.madp_thd0 = 1;
+		p_rdo_skip->atf_thd0.madp_thd1 = 7;
+		p_rdo_skip->atf_wgt0.wgt1 = 14;
+	}
 
 	p_rdo_noskip = &reg->rdo_b32_inter;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;
@@ -656,6 +661,10 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_rdo_skip->atf_wgt0.wgt2 = 16;
 	p_rdo_skip->atf_wgt0.wgt3 = 16;
 	p_rdo_skip->atf_wgt1.wgt4 = 16;
+	if (ctx->smart_en) {
+		p_rdo_skip->atf_thd0.madp_thd1 = 7;
+		p_rdo_skip->atf_wgt0.wgt1 = 14;
+	}
 
 	p_rdo_noskip = &reg->rdo_b16_inter;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;

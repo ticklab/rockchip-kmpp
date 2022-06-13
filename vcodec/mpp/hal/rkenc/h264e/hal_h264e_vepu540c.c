@@ -1273,6 +1273,10 @@ static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 	p_rdo_skip->atf_wgt0.wgt2 = 16;
 	p_rdo_skip->atf_wgt0.wgt3 = 16;
 	p_rdo_skip->atf_wgt1.wgt4 = 16;
+	if (ctx->smart_en) {
+		p_rdo_skip->atf_thd0.madp_thd1 = 7;
+		p_rdo_skip->atf_wgt0.wgt1 = 14;
+	}
 
 	p_rdo_noskip = &reg->rdo_b16_inter;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;
