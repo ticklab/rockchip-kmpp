@@ -30,7 +30,8 @@ struct mpp_frame_infos {
 	RK_U32  is_gray;
 	RK_U32  is_full;
 	RK_U32  phy_addr;
-	RK_U32  res[5];
+	RK_U64  dts;
+	RK_U32  res[3];
 };
 
 struct vcodec_mpibuf_fn {
@@ -67,6 +68,7 @@ struct vcodec_mpidev_fn {
 	void *(*get_chnl_ctx)(struct mpi_obj *obj);
 	int (*get_chnl_id)(void *out_parm);
 	int (*get_chnl_type)(void *out_parm);
+	int (*set_intra_info)(RK_S32 chn_id, RK_U64 dts, RK_U64 pts);
 };
 
 struct vcodec_mppdev_svr_fn {

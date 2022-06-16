@@ -61,6 +61,7 @@ static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 	mpp_frame_set_hor_stride(*frame, frm_info->hor_stride);
 	mpp_frame_set_ver_stride(*frame, frm_info->ver_stride);
 	mpp_frame_set_pts(*frame, frm_info->pts);
+	mpp_frame_set_dts(*frame, frm_info->dts);
 	mpp_frame_set_fmt(*frame, frm_info->fmt);
 	mpp_frame_set_offset_x(*frame, frm_info->offset_x);
 	mpp_frame_set_offset_y(*frame, frm_info->offset_y);

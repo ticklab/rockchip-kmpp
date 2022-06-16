@@ -66,6 +66,7 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			attr->smart_en,
 			&chan_entry->shared_buf,
 			attr->smart_en ? 1 : attr->qpmap_en,
+			chan_id,
 		};
 
 		ret = mpp_enc_init(&enc, &cfg);
@@ -221,6 +222,7 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 		enc_packet->len = mpp_packet_get_length(packet);
 		enc_packet->temporal_id = mpp_packet_get_temporal_id(packet);
 		enc_packet->u64pts = mpp_packet_get_pts(packet);
+		enc_packet->u64dts = mpp_packet_get_dts(packet);
 		enc_packet->data_num = 1;
 		enc_packet->u64priv_data = packet->buf.mpi_buf_id; //get mpp_buffer fd from ring buf
 		enc_packet->offset = packet->buf.start_offset;

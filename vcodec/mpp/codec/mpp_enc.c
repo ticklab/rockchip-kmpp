@@ -133,7 +133,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	p->online = cfg->online;
 	p->shared_buf = cfg->shared_buf;
 	p->qpmap_en = cfg->qpmap_en;
-
+	p->chn_id = cfg->chn_id;
 	*enc = p;
 	return ret;
 ERR_RET:

@@ -1083,6 +1083,7 @@ static MPP_RET mpp_enc_check_frm_pkt(MppEncImpl *enc)
 	if (enc->frame) {
 		RK_U32 hor_stride = 0, ver_stride = 0;
 		RK_S64 pts = mpp_frame_get_pts(enc->frame);
+		RK_S64 dts = mpp_frame_get_dts(enc->frame);
 		MppBuffer frm_buf = mpp_frame_get_buffer(enc->frame);
 		MppEncPrepCfg *prep = &enc->cfg.prep;
 		hor_stride = mpp_frame_get_hor_stride(enc->frame);
@@ -1094,6 +1095,7 @@ static MPP_RET mpp_enc_check_frm_pkt(MppEncImpl *enc)
 		enc->frm_buf = frm_buf;
 
 		mpp_packet_set_pts(enc->packet, pts);
+		mpp_packet_set_dts(enc->packet, dts);
 
 		if (mpp_frame_get_eos(enc->frame))
 			mpp_packet_set_eos(enc->packet);
@@ -1731,14 +1733,30 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 	HalEncTask *hal_task = &task->info.enc;
 	MPP_RET ret = MPP_OK;
 	HalEncTask *jpeg_hal_task = NULL;
+	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
+	MppEncCfgSet *cfg = &enc->cfg;
+
 	if (jpeg_ctx) {
 		MppEncImpl *jpeg_enc = (MppEncImpl *)jpeg_ctx;
 		EncTask *jpeg_task = (EncTask *)jpeg_enc->enc_task;
 		jpeg_hal_task = &jpeg_task->info.enc;
+		if (mpidev_fn && mpidev_fn->set_intra_info) {
+			RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
+			RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
+			mpidev_fn->set_intra_info(jpeg_enc->chn_id, dts, pts);
+		}
 	}
 	enc_dbg_detail("task %d hal start\n", frm->seq_idx);
 	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, jpeg_hal_task, enc,
 		      ret);
+
+	if (mpidev_fn && mpidev_fn->set_intra_info && (cfg->codec.coding == MPP_VIDEO_CodingMJPEG
+						       || frm->is_intra)) {
+		RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
+		RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
+		mpidev_fn->set_intra_info(enc->chn_id, dts, pts);
+	}
+
 
 TASK_DONE:
 	if (ret) {
