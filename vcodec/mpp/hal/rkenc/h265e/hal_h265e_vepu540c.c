@@ -125,6 +125,7 @@ typedef struct H265eV540cHalContext_t {
 
 	RK_S32 ext_line_buf_size;
 	MppBuffer ext_line_buf;
+	RK_U32 only_smartp;
 } H265eV540cHalContext;
 
 #define TILE_BUF_SIZE  MPP_ALIGN(128 * 1024, 256)
@@ -218,10 +219,10 @@ static void get_wrap_buf(H265eV540cHalContext *ctx, RK_S32 max_lt_cnt)
 
 		hdr_lt->size = hdr->size;
 		hdr_lt->total_size = hdr->total_size;
-#ifdef ONLY_SMART_P
-		body_lt->total_size = body->size;
-		hdr_lt->total_size =  hdr->size;
-#endif
+		if (ctx->only_smartp) {
+			body_lt->total_size = body->size;
+			hdr_lt->total_size =  hdr->size;
+		}
 
 		total_wrap_size += (body_lt->total_size + hdr_lt->total_size);
 	}
@@ -361,33 +362,32 @@ static void setup_recn_refr_wrap(H265eV540cHalContext *ctx, hevc_vepu540c_base *
 			mpp_err("WARNING: not support lt ref to st when buf is wrap");
 		} break;
 		case LT_REF_TO_LT: {
-#ifndef ONLY_SMART_P
-			WrapInfo tmp;
-			/* the case is hard to implement */
-			rfpr_h_off = hdr_lt->cur_off;
-			rfpr_b_off = bdy_lt->cur_off;
+			if (ctx->only_smartp) {
+				WrapInfo tmp;
+				/* the case is hard to implement */
+				rfpr_h_off = hdr_lt->cur_off;
+				rfpr_b_off = bdy_lt->cur_off;
 
-			hdr->cur_off = hdr->bottom;
-			bdy->cur_off = bdy->bottom;
-			rfpw_h_off = hdr->cur_off;
-			rfpw_b_off = bdy->cur_off;
+				hdr->cur_off = hdr->bottom;
+				bdy->cur_off = bdy->bottom;
+				rfpw_h_off = hdr->cur_off;
+				rfpw_b_off = bdy->cur_off;
 
-			rfp_h_bot = hdr->bottom < hdr_lt->bottom ? hdr->bottom : hdr_lt->bottom;
-			rfp_h_top = hdr->top > hdr_lt->top ? hdr->top : hdr_lt->top;
-			rfp_b_bot = bdy->bottom < bdy_lt->bottom ? bdy->bottom : bdy_lt->bottom;
-			rfp_b_top = bdy->top > bdy_lt->top ? bdy->top : bdy_lt->top;
+				rfp_h_bot = hdr->bottom < hdr_lt->bottom ? hdr->bottom : hdr_lt->bottom;
+				rfp_h_top = hdr->top > hdr_lt->top ? hdr->top : hdr_lt->top;
+				rfp_b_bot = bdy->bottom < bdy_lt->bottom ? bdy->bottom : bdy_lt->bottom;
+				rfp_b_top = bdy->top > bdy_lt->top ? bdy->top : bdy_lt->top;
 
-			/* swap */
-			memcpy(&tmp, hdr, sizeof(WrapInfo));
-			memcpy(hdr, hdr_lt, sizeof(WrapInfo));
-			memcpy(hdr_lt, &tmp, sizeof(WrapInfo));
+				/* swap */
+				memcpy(&tmp, hdr, sizeof(WrapInfo));
+				memcpy(hdr, hdr_lt, sizeof(WrapInfo));
+				memcpy(hdr_lt, &tmp, sizeof(WrapInfo));
 
-			memcpy(&tmp, bdy, sizeof(WrapInfo));
-			memcpy(bdy, bdy_lt, sizeof(WrapInfo));
-			memcpy(bdy_lt, &tmp, sizeof(WrapInfo));
-#else
-			mpp_err("WARNING: not support lt ref to lt when buf is wrap");
-#endif
+				memcpy(&tmp, bdy, sizeof(WrapInfo));
+				memcpy(bdy, bdy_lt, sizeof(WrapInfo));
+				memcpy(bdy_lt, &tmp, sizeof(WrapInfo));
+			} else
+				mpp_err("WARNING: not support lt ref to lt when buf is wrap");
 		} break;
 		default: {
 		} break;
@@ -1095,6 +1095,7 @@ MPP_RET hal_h265e_v540c_init(void *hal, MppEncHalCfg *cfg)
 	ctx->qpmap_en = cfg->qpmap_en;
 	ctx->smart_en = cfg->smart_en;
 	ctx->motion_static_switch_en = cfg->motion_static_switch_en;
+	ctx->only_smartp = cfg->only_smartp;
 
 	//hal_bufs_init(&ctx->dpb_bufs);
 

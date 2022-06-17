@@ -293,15 +293,12 @@ static MPP_RET get_wrap_buf(struct hal_shared_buf *ctx, struct vcodec_attr *attr
 	hdr_total_size = hdr_size + REF_WRAP_HEADER_EXT_SIZE(aligned_w, aligned_h);
 	total_wrap_size = body_total_size + hdr_total_size;
 	if (max_lt_cnt > 0) {
-#ifdef ONLY_SMART_P
-		total_wrap_size += body_size;
-		total_wrap_size += hdr_size;
-#else
-		total_wrap_size += total_wrap_size;
-#endif
+		if (attr->only_smartp) {
+			total_wrap_size += body_size;
+			total_wrap_size += hdr_size;
+		} else
+			total_wrap_size += total_wrap_size;
 	}
-
-
 	if (ctx->recn_ref_buf)
 		mpp_buffer_put(ctx->recn_ref_buf);
 	return mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);

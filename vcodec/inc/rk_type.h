@@ -126,7 +126,7 @@ struct vcodec_attr {
 	RK_U32      qpmap_en;
 	RK_U32      chan_dup;
 	RK_U32      motion_static_switch_en;
-	RK_U32      res[1];
+	RK_U32      only_smartp;
 };
 
 struct hal_shared_buf {

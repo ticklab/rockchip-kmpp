@@ -155,6 +155,7 @@ typedef struct MppEncInitCfg_t {
 	RK_U32		qpmap_en;
 	RK_U32		chan_id;
 	RK_U32		motion_static_switch_en;
+	RK_U32      only_smartp;
 } MppEncInitCfg;
 
 #ifdef __cplusplus

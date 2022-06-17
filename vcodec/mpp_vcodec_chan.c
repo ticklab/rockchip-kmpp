@@ -80,6 +80,7 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			attr->smart_en ? 1 : attr->qpmap_en,
 			chan_id,
 			attr->motion_static_switch_en,
+			attr->only_smartp,
 		};
 
 		ret = mpp_enc_init(&enc, &cfg);
