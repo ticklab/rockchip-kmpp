@@ -1709,12 +1709,12 @@ MPP_RET rc_model_v2_end(void *ctx, EncRcTask * task)
 
 	rc_dbg_rc("bits_mode_update real_bit %d", cfg->bit_real);
 
+	if (usr_cfg->mode == RC_FIXQP)
+		goto DONE;
+
 	rc_dbg_rc("motion_level %u, complex_level %u\n", cfg->motion_level, cfg->complex_level);
 	mpp_data_update_v2(p->motion_level, cfg->motion_level);
 	mpp_data_update_v2(p->complex_level, cfg->complex_level);
-
-	if (usr_cfg->mode == RC_FIXQP)
-		goto DONE;
 
 	p->last_inst_bps = p->ins_bps;
 	p->first_frm_flg = 0;
