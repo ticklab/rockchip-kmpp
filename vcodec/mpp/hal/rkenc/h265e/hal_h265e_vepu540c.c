@@ -1497,10 +1497,11 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	H265eSyntax_new *syn = (H265eSyntax_new *) enc_task->syntax.data;
 	VepuFmtCfg *fmt = (VepuFmtCfg *) ctx->input_fmt;
 	RK_U32 len = mpp_packet_get_length(task->packet);
+	RK_U32 is_phys = mpp_frame_get_is_full(task->frame);
 
 	hal_h265e_enter();
 
-	if (!ctx->online) {
+	if (!ctx->online && !is_phys) {
 		regs->reg0160_adr_src0 =
 			mpp_dev_get_iova_address(ctx->dev, enc_task->input, 160);
 		regs->reg0161_adr_src1 = regs->reg0160_adr_src0;
@@ -1735,6 +1736,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	EncFrmStatus *frm = &task->rc_task->frm;
 	RK_U32 is_gray = 0;
 	rdo_noskip_par *p_rdo_intra = NULL;
+	RK_U32 is_phys = mpp_frame_get_is_full(task->frame);
 
 	hal_h265e_enter();
 	pic_width_align8 = (syn->pp.pic_width + 7) & (~7);
@@ -1862,7 +1864,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 		reg_base->reg0236_synt_nal.nal_unit_type = i_nal_type;
 	}
 
-	if (ctx->online) {
+	if (ctx->online || is_phys) {
 		if (vepu540c_h265_set_dvbm(regs, task))
 			return MPP_NOK;
 	}

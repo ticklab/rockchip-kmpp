@@ -1623,6 +1623,7 @@ static void setup_vepu540c_io_buf(HalH264eVepu540cCtx *ctx,
 	RK_U32 off_in[2] = { 0 };
 	RK_U32 off_out = mpp_packet_get_length(pkt);
 	size_t siz_out = buf_out->size;
+	RK_U32 is_phys = mpp_frame_get_is_full(task->frame);
 
 	hal_h264e_dbg_func("enter\n");
 
@@ -1680,7 +1681,7 @@ static void setup_vepu540c_io_buf(HalH264eVepu540cCtx *ctx,
 		}
 	}
 
-	if (ctx->online) {
+	if (ctx->online || is_phys) {
 		regs->reg_base.adr_src0 = 0;
 		regs->reg_base.adr_src1 = 0;
 		regs->reg_base.adr_src2 = 0;
@@ -2255,6 +2256,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	MPP_RET ret = MPP_OK;
 	RK_U32 is_gray = 0;
 	vepu540c_rdo_cfg *reg_rdo = &ctx->regs_set->reg_rdo;
+	RK_U32 is_phys = mpp_frame_get_is_full(task->frame);
 
 	hal_h264e_dbg_func("enter %p\n", hal);
 	hal_h264e_dbg_detail("frame %d generate regs now", ctx->frms->seq_idx);
@@ -2273,7 +2275,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	setup_vepu540c_scl_cfg(&regs->reg_scl);
 	setup_vepu540c_rc_base(regs, sps, slice, &cfg->hw, task->rc_task);
 	setup_vepu540c_io_buf(ctx, task);
-	if (ctx->online) {
+	if (ctx->online || is_phys) {
 		if (setup_vepu540c_dvbm(regs, ctx, task))
 			return MPP_NOK;
 	}
