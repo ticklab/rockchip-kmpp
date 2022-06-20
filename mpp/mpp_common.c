@@ -2098,22 +2098,6 @@ int mpp_task_dump_hw_reg(struct mpp_dev *mpp)
 	return 0;
 }
 
-static int mpp_iommu_handle(struct iommu_domain *iommu,
-			    struct device *iommu_dev,
-			    unsigned long iova,
-			    int status, void *arg)
-{
-	struct mpp_dev *mpp = (struct mpp_dev *)arg;
-
-	dev_err(mpp->dev, "fault addr 0x%08lx status %x\n", iova, status);
-	mpp_task_dump_hw_reg(mpp);
-
-	if (mpp->iommu_info->hdl)
-		mpp->iommu_info->hdl(iommu, iommu_dev, iova, status, arg);
-
-	return 0;
-}
-
 /* The device will do more probing work after this */
 int mpp_dev_probe(struct mpp_dev *mpp,
 		  struct platform_device *pdev)
@@ -2121,20 +2105,11 @@ int mpp_dev_probe(struct mpp_dev *mpp,
 	int ret;
 	struct resource *res = NULL;
 	struct device *dev = &pdev->dev;
-	struct device_node *np = dev->of_node;
 	struct mpp_hw_info *hw_info = mpp->var->hw_info;
 
-	/* Get disable auto frequent flag from dtsi */
-	mpp->auto_freq_en = !device_property_read_bool(dev, "rockchip,disable-auto-freq");
-	/* read flag for pum idle request */
-	mpp->skip_idle = device_property_read_bool(dev, "rockchip,skip-pmu-idle-request");
-
-	/* read link table capacity */
-	ret = of_property_read_u32(np, "rockchip,task-capacity",
-				   &mpp->task_capacity);
-	if (ret)
-		mpp->task_capacity = 1;
-
+	mpp->auto_freq_en = 1;
+	mpp->skip_idle = 0;
+	mpp->task_capacity = 1;
 	mpp->dev = dev;
 	mpp->hw_ops = mpp->var->hw_ops;
 	mpp->dev_ops = mpp->var->dev_ops;
@@ -2195,23 +2170,14 @@ int mpp_dev_probe(struct mpp_dev *mpp,
 
 	pm_runtime_get_sync(dev);
 	/*
-	 * TODO: here or at the device itself, some device does not
-	 * have the iommu, maybe in the device is better.
+	 * rv1106 has no iommu
 	 */
-	mpp->iommu_info = mpp_iommu_probe(dev);
-	if (IS_ERR(mpp->iommu_info)) {
-		dev_err(dev, "failed to attach iommu\n");
-		mpp->iommu_info = NULL;
-	}
+	mpp->iommu_info = NULL;
 	if (mpp->hw_ops->init) {
 		ret = mpp->hw_ops->init(mpp);
 		if (ret)
 			goto failed_init;
 	}
-	/* set iommu fault handler */
-	if (mpp->iommu_info)
-		iommu_set_fault_handler(mpp->iommu_info->domain,
-					mpp_iommu_handle, mpp);
 
 	/* read hardware id */
 	if (hw_info->reg_id >= 0) {
