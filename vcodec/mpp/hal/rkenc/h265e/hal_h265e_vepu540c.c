@@ -836,9 +836,9 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 
 	{
 		/* 0x1064 */
-		regs->reg_rc_roi.madi_st_thd.madi_th0 = 4;
-		regs->reg_rc_roi.madi_st_thd.madi_th1 = 9;
-		regs->reg_rc_roi.madi_st_thd.madi_th2 = 15;
+		regs->reg_rc_roi.madi_st_thd.madi_th0 = 5;
+		regs->reg_rc_roi.madi_st_thd.madi_th1 = 12;
+		regs->reg_rc_roi.madi_st_thd.madi_th2 = 20;
 		/* 0x1068 */
 		regs->reg_rc_roi.madp_st_thd0.madp_th0 = 4 << 4;
 		regs->reg_rc_roi.madp_st_thd0.madp_th1 = 9 << 4;
@@ -2111,7 +2111,7 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	RK_S32 mb4_num = (mb8_num << 2);
 	H265eV540cStatusElem *elem = (H265eV540cStatusElem *) ctx->reg_out[0];
 	RK_U32 hw_status = elem->hw_status;
-	RK_U32 madi_cnt = 0, madp_cnt = 0, md_cnt = 0, md_lvl = 0;
+	RK_U32 madi_cnt = 0, madp_cnt = 0, md_cnt = 0, md_lvl = 0, madi_lvl = 0;
 
 	RK_U32 madi_th_cnt0 =
 		elem->st.st_madi_lt_num0.madi_th_lt_cnt0 +
@@ -2154,28 +2154,25 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 		elem->st.st_madp_lb_num1.madp_th_lb_cnt3 +
 		elem->st.st_madp_rb_num1.madp_th_rb_cnt3;
 	md_cnt = (24 * madp_th_cnt3 + 22 * madp_th_cnt2 + 17 * madp_th_cnt1) >> 2;
+	madi_cnt = (6 * madi_th_cnt3 + 5 * madi_th_cnt2 + 4 * madi_th_cnt1) >> 2;
 
 	md_lvl = 0;
-	if (md_cnt * 100 > 20 * mbs)
+	if (md_cnt * 100 > 15 * mbs)
 		md_lvl = 2;
-	else if (md_cnt * 100 > 13 * mbs)
+	else if (md_cnt * 100 > 5 * mbs)
 		md_lvl = 1;
 	else
 		md_lvl = 0;
 	hal_rc_ret->motion_level = md_lvl;
-	//mpp_log("c1=%d,c2=%d,c3=%d,hw_md_lvl=%d\n",madp_th_cnt1,madp_th_cnt2,madp_th_cnt3,md_lvl);
-	hal_rc_ret->complex_level = 0;
-	if (madi_th_cnt0 * 100 > 40 * mbs)
-		hal_rc_ret->complex_level = 0;
-	else if (madi_th_cnt0 * 100 > 35 * mbs && madi_th_cnt1 * 100 > 15 * mbs)
-		hal_rc_ret->complex_level = 0;
-	else if (madi_th_cnt0 * 100 > 25 * mbs && madi_th_cnt1 * 100 > 20 * mbs)
-		hal_rc_ret->complex_level = 1;
-	else if (madi_th_cnt0 * 100 > 20 * mbs && madi_th_cnt2 * 100 < 30 * mbs
-		 && madi_th_cnt3 * 100 < 25 * mbs)
-		hal_rc_ret->complex_level = 1;
+
+	madi_lvl = 0;
+	if (madi_cnt * 100 > 30 * mbs)
+		madi_lvl = 2;
+	else if (madi_cnt * 100 > 13 * mbs)
+		madi_lvl = 1;
 	else
-		hal_rc_ret->complex_level = 2;
+		madi_lvl = 0;
+	hal_rc_ret->complex_level = madi_lvl;
 
 	hal_h265e_enter();
 

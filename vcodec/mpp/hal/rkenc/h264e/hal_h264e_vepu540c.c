@@ -2096,9 +2096,9 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 
 	{
 		/* 0x1064 */
-		regs->reg_rc_roi.madi_st_thd.madi_th0 = 4;
-		regs->reg_rc_roi.madi_st_thd.madi_th1 = 9;
-		regs->reg_rc_roi.madi_st_thd.madi_th2 = 15;
+		regs->reg_rc_roi.madi_st_thd.madi_th0 = 5;
+		regs->reg_rc_roi.madi_st_thd.madi_th1 = 12;
+		regs->reg_rc_roi.madi_st_thd.madi_th2 = 20;
 		/* 0x1068 */
 		regs->reg_rc_roi.madp_st_thd0.madp_th0 = 4 << 4;
 		regs->reg_rc_roi.madp_st_thd0.madp_th1 = 9 << 4;
@@ -2602,29 +2602,25 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 		reg_st->st_madp_lb_num1.madp_th_lb_cnt3 +
 		reg_st->st_madp_rb_num1.madp_th_rb_cnt3;
 	RK_U32 md_cnt = (24 * madp_th_cnt3 + 22 * madp_th_cnt2 + 17 * madp_th_cnt1) >> 2;
+	madi_cnt = (6 * madi_th_cnt3 + 5 * madi_th_cnt2 + 4 * madi_th_cnt1) >> 2;
 
 	hal_h264e_dbg_func("enter %p\n", hal);
 
 	rc_info->motion_level = 0;
-	if (md_cnt * 100 > 20 * mbs)
+	if (md_cnt * 100 > 15 * mbs)
 		rc_info->motion_level = 2;
-	else if (md_cnt * 100 > 13 * mbs)
+	else if (md_cnt * 100 > 5 * mbs)
 		rc_info->motion_level = 1;
 	else
 		rc_info->motion_level = 0;
 
 	rc_info->complex_level = 0;
-	if (madi_th_cnt0 * 100 > 40 * mbs)
-		rc_info->complex_level = 0;
-	else if (madi_th_cnt0 * 100 > 35 * mbs && madi_th_cnt1 * 100 > 15 * mbs)
-		rc_info->complex_level = 0;
-	else if (madi_th_cnt0 * 100 > 25 * mbs && madi_th_cnt1 * 100 > 20 * mbs)
-		rc_info->complex_level = 1;
-	else if (madi_th_cnt0 * 100 > 20 * mbs && madi_th_cnt2 * 100 < 30 * mbs
-		 && madi_th_cnt3 * 100 < 25 * mbs)
+	if (madi_cnt * 100 > 30 * mbs)
+		rc_info->complex_level = 2;
+	else if (madi_cnt * 100 > 13 * mbs)
 		rc_info->complex_level = 1;
 	else
-		rc_info->complex_level = 2;
+		rc_info->complex_level = 0;
 
 	ret = hal_h264e_vepu540c_status_check(hal);
 	if (ret)

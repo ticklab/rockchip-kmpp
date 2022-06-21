@@ -1510,22 +1510,26 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 		if (RC_AVBR == usr_cfg->mode || RC_VBR == usr_cfg->mode || RC_CBR == usr_cfg->mode) {
 			if (md >= 7) {
 				if (md >= 14)
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 3;
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 1;
 				else
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 2;
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 0;
 
 				if (cplx >= 15)
 					qpmin ++;
 			} else if (RC_CBR != usr_cfg->mode) {
-				if (md >= 2) {
+				if (md >= 1) {
 					if (cplx >= 16)
-						qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 2;
-					else if (cplx >= 10)
 						qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 1;
+					else if (cplx >= 10)
+						qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 0;
 				} else {
 					qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp);
 					if (cplx >= 15)
-						qpmin ++;
+						qpmin += 3;
+					else if (cplx >= 10)
+						qpmin += 2;
+					else if (cplx >= 5)
+						qpmin += 1;
 				}
 			}
 			if (qpmin > info->quality_max)
@@ -1715,7 +1719,6 @@ MPP_RET rc_model_v2_end(void *ctx, EncRcTask * task)
 	rc_dbg_rc("motion_level %u, complex_level %u\n", cfg->motion_level, cfg->complex_level);
 	mpp_data_update_v2(p->motion_level, cfg->motion_level);
 	mpp_data_update_v2(p->complex_level, cfg->complex_level);
-
 	p->last_inst_bps = p->ins_bps;
 	p->first_frm_flg = 0;
 
