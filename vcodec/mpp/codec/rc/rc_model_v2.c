@@ -1823,7 +1823,7 @@ void rc_model_v2_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 
 		seq_printf(seq, "%7d%10u%10u%8u%8u%8u%8u%15d\n", chl_id, usr_cfg->min_i_bit_prop,
 			   usr_cfg->max_i_bit_prop,
-			   usr_cfg->min_quality, usr_cfg->max_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
+			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
 			   usr_cfg->max_reencode_times);
 
 	} break;
@@ -1836,7 +1836,7 @@ void rc_model_v2_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 
 		seq_printf(seq, "%7d%8d%10u%10u%8u%8u%8u%8u%15d\n", chl_id, ChgPs, usr_cfg->min_i_bit_prop,
 			   usr_cfg->max_i_bit_prop,
-			   usr_cfg->min_quality, usr_cfg->max_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
+			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
 			   usr_cfg->max_reencode_times);
 
 
