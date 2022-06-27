@@ -865,8 +865,8 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				      p->bits_target_low_rate;
 		p->qp_out = cal_first_i_start_qp(p->bits_target_high_rate * 5, mb_w * mb_h);
 
-		if (p->qp_out < 29)
-			p->qp_out = 29;
+		if (p->qp_out < LIMIT_QP_MORE_MOVE_I + 3)
+			p->qp_out = LIMIT_QP_MORE_MOVE_I + 3;
 		p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
 		p->qp_preavg = 0;
 	}
@@ -919,9 +919,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 			else if (p->qp_prev_out  > 35)
 				qp_minus = 3;
 			p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
-			//mpp_log("lbr=%d, hbr=%d, qp_prev=%d, qpout=%d\n",p->bits_target_low_rate, p->bits_target_high_rate, p->qp_prev_out, p->qp_out);
 			p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out - 4 - qp_minus, p->qp_prev_out + qp_add);
-			//mpp_log("qpout_clip=%d\n", p->qp_out);
 			if (p->bits_target_low_rate + p->bits_target_high_rate < 0) {
 				if (p->qp_out > 34) {
 					sse = mpp_data_avg(p->sse_p, 1, 1, 1) + 1;
@@ -1243,12 +1241,30 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	qp_add = 2;
 	qp_add_p = 3;
 	if (mpp_data_sum_v2(p->motion_level) >= 7 || mpp_data_get_pre_val_v2(p->motion_level, -1) == 2) {
-		qp_add_p = 4;
 		qp_add = 5;
+		qp_add_p = 4;
+		if (mpp_data_sum_v2(p->complex_level) >= 15) {
+			qp_add = 6;
+			qp_add_p = 5;
+		}
 	} else if (mpp_data_sum_v2(p->motion_level) >= 4
 		   || mpp_data_get_pre_val_v2(p->motion_level, -1) == 1) {
-		qp_add_p = 3;
 		qp_add = 4;
+		qp_add_p = 3;
+		if (mpp_data_sum_v2(p->complex_level) >= 15) {
+			qp_add = 5;
+			qp_add_p = 4;
+		}
+	} else if (mpp_data_sum_v2(p->motion_level) >= 1) {
+		qp_add = 3;
+		qp_add_p = 4;
+		if (mpp_data_sum_v2(p->complex_level) >= 15) {
+			qp_add = 4;
+			qp_add_p = 4;
+		}
+	} else if (mpp_data_sum_v2(p->complex_level) >= 15) {
+		qp_add = 3;
+		qp_add_p = 4;
 	}
 
 	if (p->frame_type == INTRA_FRAME) {

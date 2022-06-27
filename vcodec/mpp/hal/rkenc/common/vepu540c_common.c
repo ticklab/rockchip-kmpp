@@ -95,7 +95,7 @@ DONE:
 }
 
 #define THRES_BLK_MOVE_0 72
-#define THRES_BLK_MOVE_1 200
+#define THRES_BLK_MOVE_1 144
 MPP_RET vepu540c_set_qpmap_smart(void *roi_reg_base, MppBuffer mv_info, MppBuffer qpmap,
 				 RK_U8 *mv_flag[3], RK_U8 *mv_index, RK_U32 qp_out,
 				 RK_S32 w, RK_S32 h, RK_S32 is_hevc, RK_S32 is_idr)
@@ -114,7 +114,8 @@ MPP_RET vepu540c_set_qpmap_smart(void *roi_reg_base, MppBuffer mv_info, MppBuffe
 	RK_S32 qp_delta_base;
 	RK_S32 delta_qp_m;
 	RK_S32 mv_blk_cnt = 0;
-	RK_S32 coef_move;
+	RK_S32 mv_blk_cnt1 = 0;
+	RK_S32 coef_move, coef_move1;
 
 	if (!mv_info || !qpmap || !mv_flag[0] || !mv_flag[1] || !mv_flag[2] || !mv_index)
 		return MPP_NOK;
@@ -150,7 +151,10 @@ MPP_RET vepu540c_set_qpmap_smart(void *roi_reg_base, MppBuffer mv_info, MppBuffe
 					mv_flag[index][cnt] = 1;
 				else
 					mv_flag[index][cnt] = 2;
-				if (val <= THRES_BLK_MOVE_0 && (2 == mv_flag[refidx0][cnt] || 2 == mv_flag[refidx1][cnt]))
+				if (val > THRES_BLK_MOVE_0)
+					mv_blk_cnt1 ++;
+
+				else if (2 == mv_flag[refidx0][cnt] || 2 == mv_flag[refidx1][cnt])
 					mv_blk_cnt ++;
 				cnt++;
 			}
@@ -165,9 +169,34 @@ MPP_RET vepu540c_set_qpmap_smart(void *roi_reg_base, MppBuffer mv_info, MppBuffe
 		else
 			qp_delta_base = 3;
 		coef_move = mv_blk_cnt * 100;
-		if (coef_move < 15 * cnt) {
+		coef_move1 = mv_blk_cnt1 * 100;
+		if (coef_move1 < 5 * cnt) {
 			if (qp_out > 40)
-				roi_cfg->bmap_cfg.bmap_qpmin = 28;
+				roi_cfg->bmap_cfg.bmap_qpmin = 26;
+			else if (qp_out > 35)
+				roi_cfg->bmap_cfg.bmap_qpmin = 25;
+			else
+				roi_cfg->bmap_cfg.bmap_qpmin = 23;
+
+			dma_buf_begin_cpu_access(mpp_buffer_get_dma(qpmap), DMA_FROM_DEVICE);
+			for (i = 0; i < cnt; i++) {
+				if (mv_flag[index][i] > 0) {
+					delta_qp_m = qp_delta_base;
+					if (coef_move1 < cnt / 2)
+						delta_qp_m += 5;
+					else if (coef_move1 < cnt)
+						delta_qp_m += 4;
+					else if (coef_move1 < 5 * cnt / 2)
+						delta_qp_m += 3;
+					else
+						delta_qp_m += 2;
+					qpmap_cfg[i].roi_qp_adju = 0x80 - delta_qp_m;
+				}
+			}
+			dma_buf_end_cpu_access(mpp_buffer_get_dma(qpmap), DMA_FROM_DEVICE);
+		} else if (coef_move < 15 * cnt) {
+			if (qp_out > 40)
+				roi_cfg->bmap_cfg.bmap_qpmin = 26;
 			else if (qp_out > 35)
 				roi_cfg->bmap_cfg.bmap_qpmin = 25;
 			else
@@ -212,7 +241,9 @@ MPP_RET vepu540c_set_qpmap_smart(void *roi_reg_base, MppBuffer mv_info, MppBuffe
 					mv_flag[index][cnt] = 1;
 				else
 					mv_flag[index][cnt] = 2;
-				if (val <= THRES_BLK_MOVE_0 && (2 == mv_flag[refidx0][cnt] || 2 == mv_flag[refidx1][cnt]))
+				if (val > THRES_BLK_MOVE_0)
+					mv_blk_cnt1 ++;
+				else if (2 == mv_flag[refidx0][cnt] || 2 == mv_flag[refidx1][cnt])
 					mv_blk_cnt ++;
 				cnt++;
 			}
@@ -227,10 +258,48 @@ MPP_RET vepu540c_set_qpmap_smart(void *roi_reg_base, MppBuffer mv_info, MppBuffe
 		else
 			qp_delta_base = 3;
 		coef_move = mv_blk_cnt * 100;
+		coef_move1 = mv_blk_cnt1 * 100;
 		max_mv_final_flag = 0;
-		if (coef_move < 15 * cnt) {
+		if (coef_move1 < 5 * cnt) {
 			if (qp_out > 40)
-				roi_cfg->bmap_cfg.bmap_qpmin = 28;
+				roi_cfg->bmap_cfg.bmap_qpmin = 26;
+			else if (qp_out > 35)
+				roi_cfg->bmap_cfg.bmap_qpmin = 25;
+			else
+				roi_cfg->bmap_cfg.bmap_qpmin = 23;
+
+			dma_buf_begin_cpu_access(mpp_buffer_get_dma(qpmap), DMA_FROM_DEVICE);
+			for (i = 0; i < cnt; i++) {
+				mv_final_flag = 0;
+				if (mv_flag[index][i] > 0)
+					mv_final_flag = 1;
+				max_mv_final_flag = max(max_mv_final_flag, mv_final_flag);
+
+				if ((i + 1) % 4)
+					continue;
+
+				else {
+					if (max_mv_final_flag > 0) {
+						delta_qp_m = qp_delta_base;
+						if (coef_move1 <  cnt / 2)
+							delta_qp_m += 5;
+						else if (coef_move1 < cnt)
+							delta_qp_m += 4;
+						else if (coef_move1 < 5 * cnt / 2)
+							delta_qp_m += 3;
+						else
+							delta_qp_m += 2;
+						qpmap_cfg[qpmap_index++].roi_qp_adju = 0x80 - delta_qp_m;
+					} else
+						qpmap_index++;
+
+					max_mv_final_flag = 0;
+				}
+			}
+			dma_buf_end_cpu_access(mpp_buffer_get_dma(qpmap), DMA_FROM_DEVICE);
+		} else if (coef_move < 15 * cnt) {
+			if (qp_out > 40)
+				roi_cfg->bmap_cfg.bmap_qpmin = 26;
 			else if (qp_out > 35)
 				roi_cfg->bmap_cfg.bmap_qpmin = 25;
 			else
