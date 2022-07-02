@@ -29,8 +29,8 @@
 #include "rc_model_v2.h"
 
 #define MAD_THDI 20
-#define LIMIT_QP_MORE_MOVE_I 27
-#define LIMIT_QP_MORE_MOVE_P 30
+#define LIMIT_QP_MORE_MOVE_I 26
+#define LIMIT_QP_MORE_MOVE_P 28
 #define LOW_QP 30
 #define LOW_QP_level0 30
 #define LOW_QP_level1 31
@@ -1238,33 +1238,33 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		}
 	}
 
-	qp_add = 2;
-	qp_add_p = 3;
+	qp_add = 4;
+	qp_add_p = 4;
 	if (mpp_data_sum_v2(p->motion_level) >= 7 || mpp_data_get_pre_val_v2(p->motion_level, -1) == 2) {
+		qp_add = 6;
+		qp_add_p = 5;
+		if (mpp_data_sum_v2(p->complex_level) >= 15) {
+			qp_add = 7;
+			qp_add_p = 6;
+		}
+	} else if (mpp_data_sum_v2(p->motion_level) >= 4
+		   || mpp_data_get_pre_val_v2(p->motion_level, -1) == 1) {
 		qp_add = 5;
 		qp_add_p = 4;
 		if (mpp_data_sum_v2(p->complex_level) >= 15) {
 			qp_add = 6;
 			qp_add_p = 5;
 		}
-	} else if (mpp_data_sum_v2(p->motion_level) >= 4
-		   || mpp_data_get_pre_val_v2(p->motion_level, -1) == 1) {
+	} else if (mpp_data_sum_v2(p->motion_level) >= 1) {
 		qp_add = 4;
-		qp_add_p = 3;
+		qp_add_p = 4;
 		if (mpp_data_sum_v2(p->complex_level) >= 15) {
 			qp_add = 5;
-			qp_add_p = 4;
+			qp_add_p = 5;
 		}
-	} else if (mpp_data_sum_v2(p->motion_level) >= 1) {
-		qp_add = 3;
-		qp_add_p = 4;
-		if (mpp_data_sum_v2(p->complex_level) >= 15) {
-			qp_add = 4;
-			qp_add_p = 4;
-		}
-	} else if (mpp_data_sum_v2(p->complex_level) >= 15) {
-		qp_add = 3;
-		qp_add_p = 4;
+	} else if (mpp_data_sum_v2(p->complex_level) >= 12) {
+		qp_add = 5;
+		qp_add_p = 5;
 	}
 
 	if (p->frame_type == INTRA_FRAME) {

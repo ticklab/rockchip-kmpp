@@ -134,6 +134,20 @@ static RK_S32 aq_qp_dealt_default[16] = {
 	4, 5, 6, 8,
 };
 
+static RK_U32 aq_thd_smart[16] = {
+	0, 0, 0, 0,
+	3, 3, 5, 5,
+	8, 8, 8, 15,
+	15, 20, 25, 25
+};
+
+static RK_S32 aq_qp_dealt_smart[16] = {
+	-8, -7, -6, -5,
+	-4, -3, -2, -1,
+	0, 1, 2, 3,
+	4, 5, 6, 8,
+};
+
 static RK_U32 lamd_moda_qp[52] = {
 	0x00000049, 0x0000005c, 0x00000074, 0x00000092, 0x000000b8, 0x000000e8,
 	0x00000124, 0x00000170, 0x000001cf, 0x00000248, 0x000002df, 0x0000039f,
@@ -541,6 +555,11 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 9;
 	reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 8;
 	reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 8;
+	if (ctx->smart_en) {
+		reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 16;
+		reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 16;
+		reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 16;
+	}
 
 	if (smear_cnt[2] + smear_cnt[3] > smear_cnt[4] / 2)
 		delta_qp = 1;
@@ -788,6 +807,8 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 		       sizeof(lamd_modb_qp));
 	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 171;
+	if (ctx->smart_en)
+		reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 85;
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_p = 85;
 	{
 		/* 0x1760 */
@@ -895,12 +916,17 @@ MPP_RET hal_h265e_v540c_init(void *hal, MppEncHalCfg *cfg)
 		hw->qp_delta_row_i = 2;
 		hw->qp_delta_row = 2;
 
-		memcpy(hw->aq_thrd_i, aq_thd_default, sizeof(hw->aq_thrd_i));
-		memcpy(hw->aq_thrd_p, aq_thd_default, sizeof(hw->aq_thrd_p));
-		memcpy(hw->aq_step_i, aq_qp_dealt_default,
-		       sizeof(hw->aq_step_i));
-		memcpy(hw->aq_step_p, aq_qp_dealt_default,
-		       sizeof(hw->aq_step_p));
+		if (ctx->smart_en) {
+			memcpy(hw->aq_step_i, aq_qp_dealt_smart, sizeof(hw->aq_step_i));
+			memcpy(hw->aq_step_p, aq_qp_dealt_smart, sizeof(hw->aq_step_p));
+			memcpy(hw->aq_thrd_i, aq_thd_smart, sizeof(hw->aq_thrd_i));
+			memcpy(hw->aq_thrd_p, aq_thd_smart, sizeof(hw->aq_thrd_p));
+		} else {
+			memcpy(hw->aq_step_i, aq_qp_dealt_default, sizeof(hw->aq_step_i));
+			memcpy(hw->aq_step_p, aq_qp_dealt_default, sizeof(hw->aq_step_p));
+			memcpy(hw->aq_thrd_i, aq_thd_default, sizeof(hw->aq_thrd_i));
+			memcpy(hw->aq_thrd_p, aq_thd_default, sizeof(hw->aq_thrd_p));
+		}
 	}
 
 	hal_h265e_leave();
@@ -1087,6 +1113,8 @@ static MPP_RET vepu540c_h265_set_rc_regs(H265eV540cHalContext *ctx,
 		reg_base->reg213_rc_qp.rc_qp_range =
 			(ctx->frame_type ==
 			 INTRA_FRAME) ? hw->qp_delta_row_i : hw->qp_delta_row;
+		if (ctx->smart_en)
+			reg_base->reg213_rc_qp.rc_qp_range = 0;
 		reg_base->reg213_rc_qp.rc_max_qp = rc_cfg->quality_max;
 		reg_base->reg213_rc_qp.rc_min_qp = rc_cfg->quality_min;
 		reg_base->reg214_rc_tgt.ctu_ebit = ctu_target_bits_mul_16;

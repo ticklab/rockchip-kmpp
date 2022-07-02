@@ -1185,6 +1185,8 @@ static void setup_vepu540c_rdo_cfg(HalH264eVepu540cCtx *ctx)
 
 	reg->rdo_smear_cfg_comb.rdo_smear_en = 1;
 	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 9;
+	if (ctx->smart_en)
+		reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 16;
 
 	if (smear_cnt[2] + smear_cnt[3] > smear_cnt[4] / 2)
 		delta_qp = 1;
@@ -1521,7 +1523,7 @@ static void setup_vepu540c_scl_cfg(vepu540c_scl_cfg *regs)
 	hal_h264e_dbg_func("leave\n");
 }
 
-static void setup_vepu540c_rc_base(HalVepu540cRegSet *regs, H264eSps *sps,
+static void setup_vepu540c_rc_base(HalH264eVepu540cCtx *ctx, H264eSps *sps,
 				   H264eSlice *slice, MppEncHwCfg *hw,
 				   EncRcTask *rc_task)
 {
@@ -1537,6 +1539,7 @@ static void setup_vepu540c_rc_base(HalVepu540cRegSet *regs, H264eSps *sps,
 	RK_S32 mb_target_bits;
 	RK_S32 negative_bits_thd;
 	RK_S32 positive_bits_thd;
+	HalVepu540cRegSet *regs = ctx->regs_set;
 
 	hal_h264e_dbg_rc("bittarget %d qp [%d %d %d]\n", rc_info->bit_target,
 			 qp_min, qp_target, qp_max);
@@ -1559,6 +1562,8 @@ static void setup_vepu540c_rc_base(HalVepu540cRegSet *regs, H264eSps *sps,
 
 	regs->reg_base.rc_qp.rc_qp_range = (slice->slice_type == H264_I_SLICE) ?
 					   hw->qp_delta_row_i : hw->qp_delta_row;
+	if (ctx->smart_en)
+		regs->reg_base.rc_qp.rc_qp_range = 0;
 	regs->reg_base.rc_qp.rc_max_qp = qp_max;
 	regs->reg_base.rc_qp.rc_min_qp = qp_min;
 
@@ -1974,10 +1979,11 @@ static RK_U32 h264e_lambda_default[58] = {
 	0x0016dbcb, 0x001ccccc,
 };
 
-static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
+static void setup_vepu540c_l2(HalH264eVepu540cCtx *ctx, H264eSlice *slice,
 			      MppEncHwCfg *hw)
 {
 	RK_U32 i;
+	HalVepu540cRegSet *regs = ctx->regs_set;
 
 	hal_h264e_dbg_func("enter\n");
 
@@ -1986,6 +1992,8 @@ static void setup_vepu540c_l2(HalVepu540cRegSet *regs, H264eSlice *slice,
 
 	regs->reg_s3.RDO_QUANT.quant_f_bias_I = 683;
 	regs->reg_s3.RDO_QUANT.quant_f_bias_P = 341;
+	if (ctx->smart_en)
+		regs->reg_s3.RDO_QUANT.quant_f_bias_I = 341;
 
 	regs->reg_s3.iprd_tthdy4_0.iprd_tthdy4_0 = 1;
 	regs->reg_s3.iprd_tthdy4_0.iprd_tthdy4_1 = 3;
@@ -2280,7 +2288,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	setup_vepu540c_rdo_pred(regs, sps, pps, slice);
 	setup_vepu540c_rdo_cfg(ctx);
 	setup_vepu540c_scl_cfg(&regs->reg_scl);
-	setup_vepu540c_rc_base(regs, sps, slice, &cfg->hw, task->rc_task);
+	setup_vepu540c_rc_base(ctx, sps, slice, &cfg->hw, task->rc_task);
 	setup_vepu540c_io_buf(ctx, task);
 	if (ctx->online || is_phys) {
 		if (setup_vepu540c_dvbm(regs, ctx, task))
@@ -2346,7 +2354,7 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 		ctx->is_gray = is_gray;
 	}
 
-	setup_vepu540c_l2(ctx->regs_set, slice, &cfg->hw);
+	setup_vepu540c_l2(ctx, slice, &cfg->hw);
 	setup_vepu540c_ext_line_buf(regs, ctx);
 	//  mpp_env_get_u32("dump_l1_reg", &dump_l1_reg, 1);
 
