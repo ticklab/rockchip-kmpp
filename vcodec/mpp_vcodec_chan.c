@@ -41,14 +41,24 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 	RK_U32 num_chan = mpp_vcodec_get_chan_num(type);
 	mpp_log("num_chan = %d", num_chan);
 	mpp_assert(chan_entry->chan_id == chan_id);
+
 	if (chan_entry->handle != NULL) {
+
+		if (attr->chan_dup)
+			return 0;
+
 		chan_id = mpp_vcodec_get_free_chan(type);
 		if (chan_id < 0)
 			return -1;
+
+
 		mpp_log("current chan %d already created get new chan_id %d \n",
 			attr->chan_id, chan_id);
 		attr->chan_id = chan_id;
 		chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
+	} else {
+		if (attr->chan_dup)
+			return -1;
 	}
 	switch (type) {
 	case MPP_CTX_DEC: {

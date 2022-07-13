@@ -123,7 +123,8 @@ struct vcodec_attr {
 	RK_U32      max_height;
 	RK_U32      max_lt_cnt;
 	RK_U32      qpmap_en;
-	RK_U32      res[3];
+	RK_U32      chan_dup;
+	RK_U32      res[2];
 };
 
 struct hal_shared_buf {
