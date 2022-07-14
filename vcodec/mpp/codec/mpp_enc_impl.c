@@ -1625,8 +1625,8 @@ static MPP_RET mpp_enc_check_frm_valid(MppEncImpl *enc)
 		height = mpp_frame_get_height(enc->frame);
 		if (hor_stride != prep->hor_stride ||
 		    ver_stride != prep->ver_stride ||
-		    width != prep->width ||
-		    height != prep->height) {
+		    width < prep->width ||
+		    height < prep->height) {
 			mpp_log("frame info no equal set drop ");
 			return MPP_NOK;
 		}
