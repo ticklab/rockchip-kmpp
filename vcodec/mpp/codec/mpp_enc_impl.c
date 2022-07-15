@@ -648,6 +648,8 @@ static MPP_RET mpp_enc_proc_ref_cfg(MppEncImpl *enc, void *param)
 		if (ref_p->cfg_mode && src)
 			mpp_enc_ref_cfg_deinit(&src);
 	}
+	memcpy(&enc->cfg.ref_param, param, sizeof(MppEncRefParam));
+
 	return ret;
 }
 

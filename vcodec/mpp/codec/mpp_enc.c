@@ -489,6 +489,12 @@ MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param)
 			ret = -EFAULT;
 	}
 	break;
+	case MPP_ENC_GET_REF_CFG: {
+		enc_dbg_ctrl("get ref config\n");
+		if (copy_to_user(param, &enc->cfg.ref_param, sizeof(enc->cfg.ref_param)))
+			ret = -EFAULT;
+	}
+	break;
 	default:
 		down(&enc->enc_sem);
 		mpp_enc_proc_cfg(enc, cmd, param);
