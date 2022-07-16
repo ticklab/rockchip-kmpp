@@ -8,7 +8,11 @@ KERNEL_VERSION=5.10
 CPU_TYPE=$(ARCH)
 OSTYPE=linux
 
+ifeq ($(RK_ENABLE_FASTBOOT), y)
+TOP := $(src)
+else
 TOP := $(PWD)
+endif
 
 VEPU_CORE := RKVEPU540C
 BUILD_ONE_KO=y
@@ -38,10 +42,18 @@ endif
 include $(TOP)/mpp/Makefile
 include $(TOP)/vcodec/Makefile
 include $(TOP)/vproc/Makefile
+
 ifeq ($(BUILD_ONE_KO), y)
-	mpp_vcodec-objs += rk_vcodec.o
-	mpp_vcodec-objs += vepu_pp.o
-	obj-m += mpp_vcodec.o
+
+ifeq ($(RK_ENABLE_FASTBOOT), y)
+obj-y += mpp_vcodec.o
+lib-m += $(mpp_vcodec-objs:%.o=%.s) $(rk_vcodec-objs:%.o=%.s) $(vepu_pp-objs:%.o=%.s) $(rk_vcodec-y:%.o=%.s)
+else
+obj-m += mpp_vcodec.o
+endif
+
+mpp_vcodec-objs += rk_vcodec.o
+mpp_vcodec-objs += vepu_pp.o
 endif
 
 DIRS := $(shell find . -maxdepth 5 -type d)

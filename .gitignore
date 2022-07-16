@@ -49,6 +49,7 @@ _stdint.h
 *.lo
 *.la
 *.o
+*.s
 *.ko
 .*.o.cmd
 *.cmd

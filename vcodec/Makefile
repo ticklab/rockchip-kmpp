@@ -27,7 +27,7 @@ mpp_vcodec-objs += vcodec/osal/mpp_log.o \
 		   vcodec/osal/mpp_mem.o \
 		   vcodec/osal/mpp_maths.o \
 		   vcodec/osal/mpp_device.o \
-		   vcodec/osal/mpp_service.o \
+		   vcodec/osal/osal_mpp_service.o \
 		   vcodec/osal/mpp_time.o
 
 
