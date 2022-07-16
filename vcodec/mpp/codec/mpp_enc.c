@@ -461,38 +461,32 @@ MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param)
 		MppEncCfgImpl *p = (MppEncCfgImpl *) param;
 
 		enc_dbg_ctrl("get all config\n");
-		if (copy_to_user(&p->cfg, &enc->cfg, sizeof(enc->cfg)))
-			ret = -EFAULT;
+		memcpy(&p->cfg, &enc->cfg, sizeof(enc->cfg));
 	}
 	break;
 	case MPP_ENC_GET_PREP_CFG: {
 		enc_dbg_ctrl("get prep config\n");
-		if (copy_to_user(param, &enc->cfg.prep, sizeof(enc->cfg.prep)))
-			ret = -EFAULT;
+		memcpy(param, &enc->cfg.prep, sizeof(enc->cfg.prep));
 	}
 	break;
 	case MPP_ENC_GET_RC_CFG: {
 		enc_dbg_ctrl("get rc config\n");
-		if (copy_to_user(param, &enc->cfg.rc, sizeof(enc->cfg.rc)))
-			ret = -EFAULT;
+		memcpy(param, &enc->cfg.rc, sizeof(enc->cfg.rc));
 	}
 	break;
 	case MPP_ENC_GET_CODEC_CFG: {
 		enc_dbg_ctrl("get codec config\n");
-		if (copy_to_user(param, &enc->cfg.codec, sizeof(enc->cfg.codec)))
-			ret = -EFAULT;
+		memcpy(param, &enc->cfg.codec, sizeof(enc->cfg.codec));
 	}
 	break;
 	case MPP_ENC_GET_HEADER_MODE: {
 		enc_dbg_ctrl("get header mode\n");
-		if (copy_to_user(param, &enc->hdr_mode, sizeof(enc->hdr_mode)))
-			ret = -EFAULT;
+		memcpy(param, &enc->hdr_mode, sizeof(enc->hdr_mode));
 	}
 	break;
 	case MPP_ENC_GET_REF_CFG: {
 		enc_dbg_ctrl("get ref config\n");
-		if (copy_to_user(param, &enc->cfg.ref_param, sizeof(enc->cfg.ref_param)))
-			ret = -EFAULT;
+		memcpy(param, &enc->cfg.ref_param, sizeof(enc->cfg.ref_param));
 	}
 	break;
 	default:
