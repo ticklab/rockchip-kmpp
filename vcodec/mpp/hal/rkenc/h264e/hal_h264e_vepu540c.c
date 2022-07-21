@@ -2516,8 +2516,10 @@ static MPP_RET hal_h264e_vepu540c_status_check(void *hal)
 	if (regs_set->reg_ctl.int_sta.sclr_done_sta)
 		hal_h264e_dbg_detail("safe clear finsh");
 
-	if (regs_set->reg_ctl.int_sta.vbsf_oflw_sta)
+	if (regs_set->reg_ctl.int_sta.vbsf_oflw_sta) {
 		mpp_err_f("bit stream overflow");
+		return MPP_NOK;
+	}
 
 	if (regs_set->reg_ctl.int_sta.vbuf_lens_sta) {
 		mpp_err_f("bus write full");
