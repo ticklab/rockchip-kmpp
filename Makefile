@@ -9,6 +9,7 @@ CPU_TYPE=$(ARCH)
 OSTYPE=linux
 
 ifeq ($(RK_ENABLE_FASTBOOT), y)
+EXTRA_CFLAGS += -fno-verbose-asm
 TOP := $(src)
 else
 TOP := $(PWD)
