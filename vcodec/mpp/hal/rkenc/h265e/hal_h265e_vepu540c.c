@@ -808,7 +808,7 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 171;
 	if (ctx->smart_en)
-		reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 85;
+		reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 128;
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_p = 85;
 	{
 		/* 0x1760 */
@@ -2191,6 +2191,8 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 		elem->st.st_madp_lb_num1.madp_th_lb_cnt3 +
 		elem->st.st_madp_rb_num1.madp_th_rb_cnt3;
 	md_cnt = (24 * madp_th_cnt3 + 22 * madp_th_cnt2 + 17 * madp_th_cnt1) >> 2;
+	if (ctx->smart_en)
+		md_cnt = (12 * madp_th_cnt3 + 11 * madp_th_cnt2 + 8 * madp_th_cnt1) >> 2;
 	madi_cnt = (6 * madi_th_cnt3 + 5 * madi_th_cnt2 + 4 * madi_th_cnt1) >> 2;
 
 	md_lvl = 0;

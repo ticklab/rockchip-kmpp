@@ -686,24 +686,24 @@ static void set_coef(void *ctx, RK_S32 *coef, RK_S32 val)
 		*coef = val + 0;
 
 	else if (mpp_data_sum_v2(p->complex_level) == 1) {
-		if (mpp_data_get_pre_val_v2(p->complex_level, -1) == 0)
+		if (mpp_data_get_pre_val_v2(p->complex_level, 0) == 0)
 			*coef = val + 10;
 		else
 			*coef = val + 25;
 	} else if (mpp_data_sum_v2(p->complex_level) == 2) {
-		if (mpp_data_get_pre_val_v2(p->complex_level, -1) == 0)
+		if (mpp_data_get_pre_val_v2(p->complex_level, 0) == 0)
 			*coef = val + 25;
 		else
 			*coef = val + 35;
 	} else if (mpp_data_sum_v2(p->complex_level) == 3) {
-		if (mpp_data_get_pre_val_v2(p->complex_level, -1) == 0)
+		if (mpp_data_get_pre_val_v2(p->complex_level, 0) == 0)
 			*coef = val + 35;
 		else
 			*coef = val + 51;
 	} else if (mpp_data_sum_v2(p->complex_level) >= 4
 		   && mpp_data_sum_v2(p->complex_level) <= 6) {
-		if (mpp_data_get_pre_val_v2(p->complex_level, -1) == 0) {
-			if (mpp_data_get_pre_val_v2(p->complex_level, -2) == 0)
+		if (mpp_data_get_pre_val_v2(p->complex_level, 0) == 0) {
+			if (mpp_data_get_pre_val_v2(p->complex_level, 1) == 0)
 				*coef = val + 35;
 			else
 				*coef = val + 51;
@@ -711,8 +711,8 @@ static void set_coef(void *ctx, RK_S32 *coef, RK_S32 val)
 			*coef = val + 64;
 	} else if (mpp_data_sum_v2(p->complex_level) >= 7
 		   && mpp_data_sum_v2(p->complex_level) <= 9) {
-		if (mpp_data_get_pre_val_v2(p->complex_level, -1) == 0) {
-			if (mpp_data_get_pre_val_v2(p->complex_level, -2) == 0)
+		if (mpp_data_get_pre_val_v2(p->complex_level, 0) == 0) {
+			if (mpp_data_get_pre_val_v2(p->complex_level, 1) == 0)
 				*coef = val + 64;
 			else
 				*coef = val + 72;
@@ -1001,94 +1001,94 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 			RK_S32 coef = 1024;
 			RK_S32 coef2 = 512;
 
-			rc_dbg_rc("motion_level %u, sum %u, complex_level %u, sum %u\n",
-				  mpp_data_get_pre_val_v2(p->motion_level, -1),
+			rc_dbg_rc("pre motion_level %u, sum %u, complex_level %u, sum %u\n",
+				  mpp_data_get_pre_val_v2(p->motion_level, 0),
 				  mpp_data_sum_v2(p->motion_level),
-				  mpp_data_get_pre_val_v2(p->complex_level, -1),
+				  mpp_data_get_pre_val_v2(p->complex_level, 0),
 				  mpp_data_sum_v2(p->complex_level));
 			if (mpp_data_sum_v2(p->motion_level) == 0)
 				set_coef(ctx, &coef, 0);
 
 			else if (mpp_data_sum_v2(p->motion_level) == 1) {
-				if (mpp_data_get_pre_val_v2(p->motion_level, -1) == 0)
+				if (mpp_data_get_pre_val_v2(p->motion_level, 0) == 0)
 					set_coef(ctx, &coef, 102);
 
 				else
 					set_coef(ctx, &coef, 154);
 			} else if (mpp_data_sum_v2(p->motion_level) == 2) {
-				if (mpp_data_get_pre_val_v2(p->motion_level, -1)
+				if (mpp_data_get_pre_val_v2(p->motion_level, 0)
 				    == 0)
 					set_coef(ctx, &coef, 154);
 
 				else if (mpp_data_get_pre_val_v2
-					 (p->motion_level, -1) == 1) {
+					 (p->motion_level, 0) == 1) {
 					if (mpp_data_get_pre_val_v2
-					    (p->motion_level, -2) == 0)
+					    (p->motion_level, 1) == 0)
 						set_coef(ctx, &coef, 205);
 
 					else if (mpp_data_get_pre_val_v2
-						 (p->motion_level, -2) == 1)
+						 (p->motion_level, 1) == 1)
 						set_coef(ctx, &coef, 256);
 
 					else
 						set_coef(ctx, &coef, 307);
 				} else
 					set_coef(ctx, &coef, 307);
-			} else if (mpp_data_sum_v2(p->motion_level) == 3) {
-				if (mpp_data_get_pre_val_v2(p->motion_level, -1) == 0) {
-					if (mpp_data_get_pre_val_v2 (p->motion_level, -2) == 0)
+			} else if (mpp_data_sum_v2(p->motion_level) <= 5) {
+				if (mpp_data_get_pre_val_v2(p->motion_level, 0) == 0) {
+					if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 0)
 						set_coef(ctx, &coef, 307);
 
-					else if (mpp_data_get_pre_val_v2 (p->motion_level, -2) == 1)
+					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 1)
 						set_coef(ctx, &coef, 358);
 
 					else
 						set_coef(ctx, &coef, 410);
-				} else if (mpp_data_get_pre_val_v2 (p->motion_level, -1) == 1) {
-					if (mpp_data_get_pre_val_v2 (p->motion_level, -2) == 0)
+				} else if (mpp_data_get_pre_val_v2 (p->motion_level, 0) == 1) {
+					if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 0)
 						set_coef(ctx, &coef, 358);
 
-					else if (mpp_data_get_pre_val_v2 (p->motion_level, -2) == 1)
+					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 1)
 						set_coef(ctx, &coef, 410);
 
 					else
 						set_coef(ctx, &coef, 461);
 				} else
 					set_coef(ctx, &coef, 461);
-			} else if (mpp_data_sum_v2(p->motion_level) >= 4  && mpp_data_sum_v2(p->motion_level) <= 6) {
-				if (mpp_data_get_pre_val_v2(p->motion_level, -1) == 0) {
-					if (mpp_data_get_pre_val_v2(p->motion_level, -2) == 0)
+			} else if (mpp_data_sum_v2(p->motion_level) >= 6  && mpp_data_sum_v2(p->motion_level) <= 8) {
+				if (mpp_data_get_pre_val_v2(p->motion_level, 0) == 0) {
+					if (mpp_data_get_pre_val_v2(p->motion_level, 1) == 0)
 						set_coef(ctx, &coef, 410);
 
-					else if (mpp_data_get_pre_val_v2 (p->motion_level, -2) == 1)
+					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 1)
 						set_coef(ctx, &coef, 461);
 
 					else
 						set_coef(ctx, &coef, 512);
-				} else if (mpp_data_get_pre_val_v2 (p->motion_level, -1) == 1) {
-					if (mpp_data_get_pre_val_v2(p->motion_level, -2) == 0)
+				} else if (mpp_data_get_pre_val_v2 (p->motion_level, 0) == 1) {
+					if (mpp_data_get_pre_val_v2(p->motion_level, 1) == 0)
 						set_coef(ctx, &coef, 512);
 
-					else if (mpp_data_get_pre_val_v2 (p->motion_level, -2) == 1)
+					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 1)
 						set_coef(ctx, &coef, 563);
 
 					else
 						set_coef(ctx, &coef, 614);
 				} else
 					set_coef(ctx, &coef, 614);
-			} else if (mpp_data_sum_v2(p->motion_level) >= 7  && mpp_data_sum_v2(p->motion_level) <= 9)
+			} else if (mpp_data_sum_v2(p->motion_level) >= 9  && mpp_data_sum_v2(p->motion_level) <= 14)
 				set_coef(ctx, &coef, 666);
 
-			else if (mpp_data_sum_v2(p->motion_level) >= 10 && mpp_data_sum_v2(p->motion_level) <= 12)
-				set_coef(ctx, &coef, 717);
+			else if (mpp_data_sum_v2(p->motion_level) >= 15 && mpp_data_sum_v2(p->motion_level) <= 18)
+				set_coef(ctx, &coef, 768);
 
 			else
-				set_coef(ctx, &coef, 768);
+				set_coef(ctx, &coef, 900);
 
 			if (coef > 1024)
 				coef = 1024;
 
-			if (coef >= 717)
+			if (coef >= 900)
 				coef2 = 1024;
 			else if (coef >= 307)	// 0.7~0.3 --> 1.0~0.5
 				coef2 = 512 + (coef - 307) * (1024 - 512) / (717 - 307);
@@ -1240,7 +1240,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 
 	qp_add = 4;
 	qp_add_p = 4;
-	if (mpp_data_sum_v2(p->motion_level) >= 7 || mpp_data_get_pre_val_v2(p->motion_level, -1) == 2) {
+	if (mpp_data_sum_v2(p->motion_level) >= 7 || mpp_data_get_pre_val_v2(p->motion_level, 0) == 2) {
 		qp_add = 6;
 		qp_add_p = 5;
 		if (mpp_data_sum_v2(p->complex_level) >= 15) {
@@ -1248,7 +1248,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 			qp_add_p = 6;
 		}
 	} else if (mpp_data_sum_v2(p->motion_level) >= 4
-		   || mpp_data_get_pre_val_v2(p->motion_level, -1) == 1) {
+		   || mpp_data_get_pre_val_v2(p->motion_level, 0) == 1) {
 		qp_add = 5;
 		qp_add_p = 4;
 		if (mpp_data_sum_v2(p->complex_level) >= 15) {

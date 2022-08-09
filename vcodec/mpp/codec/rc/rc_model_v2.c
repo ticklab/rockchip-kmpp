@@ -1507,10 +1507,12 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 		RK_S32 start_qp = 0;
 		RK_S32 cplx = mpp_data_sum_v2(p->complex_level);
 		RK_S32 md = mpp_data_sum_v2(p->motion_level);
+		RK_S32 md3 = mpp_data_get_pre_val_v2(p->motion_level, 0) + mpp_data_get_pre_val_v2(p->motion_level,
+												   1) + mpp_data_get_pre_val_v2(p->motion_level, 2);
 		if (RC_AVBR == usr_cfg->mode || RC_VBR == usr_cfg->mode || RC_CBR == usr_cfg->mode) {
 			if (md >= 7) {
 				if (md >= 14)
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 1;
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 3 ? 2 : 1);
 				else
 					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 0;
 

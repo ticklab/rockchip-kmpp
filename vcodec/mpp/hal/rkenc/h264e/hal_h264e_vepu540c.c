@@ -1517,8 +1517,7 @@ static void setup_vepu540c_scl_cfg(vepu540c_scl_cfg *regs)
 
 	hal_h264e_dbg_func("enter\n");
 
-	memcpy(&regs->q_intra_y8, vepu540c_h264_scl_tab,
-	       sizeof(vepu540c_h264_scl_tab));
+	memcpy(&regs->q_intra_y8, vepu540c_h264_scl_tab, sizeof(vepu540c_h264_scl_tab));
 
 	hal_h264e_dbg_func("leave\n");
 }
@@ -1993,7 +1992,7 @@ static void setup_vepu540c_l2(HalH264eVepu540cCtx *ctx, H264eSlice *slice,
 	regs->reg_s3.RDO_QUANT.quant_f_bias_I = 683;
 	regs->reg_s3.RDO_QUANT.quant_f_bias_P = 341;
 	if (ctx->smart_en)
-		regs->reg_s3.RDO_QUANT.quant_f_bias_I = 341;
+		regs->reg_s3.RDO_QUANT.quant_f_bias_I = 512;
 
 	regs->reg_s3.iprd_tthdy4_0.iprd_tthdy4_0 = 1;
 	regs->reg_s3.iprd_tthdy4_0.iprd_tthdy4_1 = 3;
@@ -2619,6 +2618,8 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 		reg_st->st_madp_lb_num1.madp_th_lb_cnt3 +
 		reg_st->st_madp_rb_num1.madp_th_rb_cnt3;
 	RK_U32 md_cnt = (24 * madp_th_cnt3 + 22 * madp_th_cnt2 + 17 * madp_th_cnt1) >> 2;
+	if (ctx->smart_en)
+		md_cnt = (12 * madp_th_cnt3 + 11 * madp_th_cnt2 + 8 * madp_th_cnt1) >> 2;
 	madi_cnt = (6 * madi_th_cnt3 + 5 * madi_th_cnt2 + 4 * madi_th_cnt1) >> 2;
 
 	hal_h264e_dbg_func("enter %p\n", hal);

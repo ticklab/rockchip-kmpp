@@ -145,8 +145,8 @@ static MPP_RET h265e_init(void *ctx, EncImplCfg * ctrlCfg)
 	rc_cfg->qp_min_i = 15;
 	rc_cfg->qp_delta_ip = 4;
 	rc_cfg->qp_delta_vi = 2;
-	rc_cfg->fm_lvl_qp_min_i = 27;
-	rc_cfg->fm_lvl_qp_min_p = 29;
+	rc_cfg->fm_lvl_qp_min_i = 28;
+	rc_cfg->fm_lvl_qp_min_p = 30;
 
 	h265e_dbg_func("leave ctx %p\n", ctx);
 	return ret;
