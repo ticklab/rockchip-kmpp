@@ -489,6 +489,10 @@ MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param)
 		memcpy(param, &enc->cfg.ref_param, sizeof(enc->cfg.ref_param));
 	}
 	break;
+	case MPP_ENC_GET_ROI_CFG: {
+		enc_dbg_ctrl("get roi config\n");
+		memcpy(param, &enc->cfg.roi, sizeof(enc->cfg.roi));
+	} break;
 	default:
 		down(&enc->enc_sem);
 		mpp_enc_proc_cfg(enc, cmd, param);
