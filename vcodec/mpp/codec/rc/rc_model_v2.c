@@ -785,12 +785,36 @@ MPP_RET calc_vbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 	rc_dbg_func("enter %p\n", p);
 
 	bits_model_alloc(p, cfg, p->gop_total_bits);
-	if (pre_target_bits > pre_real_bits)
-		bit_diff_ratio =
-			32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
-	else
-		bit_diff_ratio =
-			64 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+	if (pre_target_bits > pre_real_bits) {
+		if (p->start_qp >= 37)
+			bit_diff_ratio =
+				128 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+		else if (p->start_qp >= 35)
+			bit_diff_ratio =
+				80 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+		else if (p->start_qp >= 33)
+			bit_diff_ratio =
+				32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+		else
+			bit_diff_ratio =
+				16 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+	} else {
+		if (p->start_qp <= 29)
+			bit_diff_ratio =
+				192 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+		else if (p->start_qp <= 31)
+			bit_diff_ratio =
+				144 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+		else if (p->start_qp <= 33)
+			bit_diff_ratio =
+				96 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+		else if (p->start_qp <= 36)
+			bit_diff_ratio =
+				64 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+		else
+			bit_diff_ratio =
+				32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+	}
 
 	idx1 = ins_bps / (max_bps_target >> 5);
 	idx2 = pre_ins_bps / (max_bps_target >> 5);
@@ -815,9 +839,9 @@ MPP_RET calc_vbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 		ins_ratio = 0;
 
 	bit_diff_ratio = mpp_clip(bit_diff_ratio, -128, 256);
-	ins_ratio = mpp_clip(ins_ratio, -128, 256);
-	bps_ratio = 3 * (ins_bps - bps_change) / (max_bps_target >> 4);
-	bps_ratio = mpp_clip(bps_ratio, -16, 32);
+	ins_ratio = mpp_clip(ins_ratio, -64, 96);
+	bps_ratio = 6 * (ins_bps - bps_change) / (max_bps_target >> 4);
+	bps_ratio = mpp_clip(bps_ratio, -48, 96);
 	if (p->i_scale > 640) {
 		bit_diff_ratio = mpp_clip(bit_diff_ratio, -16, 32);
 		ins_ratio = mpp_clip(ins_ratio, -16, 32);
@@ -1512,9 +1536,9 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 		if (RC_AVBR == usr_cfg->mode || RC_VBR == usr_cfg->mode || RC_CBR == usr_cfg->mode) {
 			if (md >= 7) {
 				if (md >= 14)
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 3 ? 2 : 1);
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 3 ? 3 : 2);
 				else
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 0;
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 3 ? 2 : 1);
 
 				if (cplx >= 15)
 					qpmin ++;
@@ -1542,13 +1566,14 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 
 		if (frm->is_intra) {
 			RK_S32 i_quality_delta = usr_cfg->i_quality_delta;
+			RK_S32 qp_scale_t = qp_scale =
+						    mpp_clip(qp_scale, (info->quality_min << 6), (info->quality_max << 6));
 
-			qp_scale =
-				mpp_clip(qp_scale, (info->quality_min << 6),
-					 (info->quality_max << 6));
-			start_qp =
-				((p->pre_i_qp +
-				  ((qp_scale + p->next_i_ratio) >> 6)) >> 1);
+			qp_scale_t = (qp_scale + p->next_i_ratio) >> 6;
+			if (qp_scale_t >= 35 && p->pre_i_qp <= 33)
+				start_qp = (p->pre_i_qp * 307 + qp_scale_t * 717) >> 10;
+			else
+				start_qp = (p->pre_i_qp + qp_scale_t) >> 1;
 
 			if (i_quality_delta) {
 				RK_U32 index =

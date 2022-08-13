@@ -905,7 +905,10 @@ static void set_rc_cfg(RcCfg *cfg, MppEncCfgSet *cfg_set)
 	MppEncCodecCfg *codec = &cfg_set->codec;
 	MppEncRefCfgImpl *ref = (MppEncRefCfgImpl *)cfg_set->ref_cfg;
 	MppEncCpbInfo *info = &ref->cpb_info;
-
+	RK_S32 fps = (!!rc->fps_in_denorm) ? (rc->fps_in_num / rc->fps_in_denorm) : 1;
+	RK_S32 status_time = 4 * ((!!fps) ? (rc->gop / fps) : 8);
+	if (status_time > 8)
+		status_time = 8;
 	cfg->width = prep->width;
 	cfg->height = prep->height;
 
@@ -950,7 +953,7 @@ static void set_rc_cfg(RcCfg *cfg, MppEncCfgSet *cfg_set)
 	       sizeof(rc->hier_qp_delta));
 
 	mpp_assert(rc->fps_out_num);
-	cfg->stats_time = rc->stats_time ? rc->stats_time : 3;
+	cfg->stats_time = rc->stats_time ? rc->stats_time : status_time;
 	cfg->stats_time = mpp_clip(cfg->stats_time, 1, 60);
 
 	/* quality configure */

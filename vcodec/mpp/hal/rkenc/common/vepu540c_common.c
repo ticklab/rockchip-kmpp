@@ -419,9 +419,9 @@ MPP_RET vepu540c_set_qpmap_normal(void *roi_reg_base, MppBuffer mv_info, MppBuff
 			if (qp_out > 40)
 				roi_cfg->bmap_cfg.bmap_qpmin = 28;
 			else if (qp_out > 35)
-				roi_cfg->bmap_cfg.bmap_qpmin = 25;
+				roi_cfg->bmap_cfg.bmap_qpmin = 27;
 			else
-				roi_cfg->bmap_cfg.bmap_qpmin = 23;
+				roi_cfg->bmap_cfg.bmap_qpmin = 25;
 		}
 
 		if (coef_move < 15 * cnt) {
@@ -430,13 +430,13 @@ MPP_RET vepu540c_set_qpmap_normal(void *roi_reg_base, MppBuffer mv_info, MppBuff
 				if (0 == mv_flag[index][i] && (2 == mv_flag[refidx0][i] || 2 == mv_flag[refidx1][i])) {
 					delta_qp_m = qp_delta_base;
 					if (coef_move < 1 * cnt)
-						delta_qp_m += 5;
+						delta_qp_m += 7;
 					else if (coef_move < 3 * cnt)
-						delta_qp_m += 4;
+						delta_qp_m += 6;
 					else if (coef_move < 7 * cnt)
-						delta_qp_m += 3;
+						delta_qp_m += 5;
 					else
-						delta_qp_m += 2;
+						delta_qp_m += 4;
 					qpmap_cfg[i].roi_qp_adju = 0x80 - delta_qp_m;
 				}
 			}
@@ -484,9 +484,9 @@ MPP_RET vepu540c_set_qpmap_normal(void *roi_reg_base, MppBuffer mv_info, MppBuff
 			if (qp_out > 40)
 				roi_cfg->bmap_cfg.bmap_qpmin = 28;
 			else if (qp_out > 35)
-				roi_cfg->bmap_cfg.bmap_qpmin = 25;
+				roi_cfg->bmap_cfg.bmap_qpmin = 27;
 			else
-				roi_cfg->bmap_cfg.bmap_qpmin = 23;
+				roi_cfg->bmap_cfg.bmap_qpmin = 25;
 		}
 
 		if (coef_move < 15 * cnt) {
@@ -504,13 +504,13 @@ MPP_RET vepu540c_set_qpmap_normal(void *roi_reg_base, MppBuffer mv_info, MppBuff
 					if (max_mv_final_flag > 0) {
 						delta_qp_m = qp_delta_base;
 						if (coef_move < 1 * cnt)
-							delta_qp_m += 5;
+							delta_qp_m += 7;
 						else if (coef_move < 3 * cnt)
-							delta_qp_m += 4;
+							delta_qp_m += 6;
 						else if (coef_move < 7 * cnt)
-							delta_qp_m += 3;
+							delta_qp_m += 5;
 						else
-							delta_qp_m += 2;
+							delta_qp_m += 4;
 						qpmap_cfg[qpmap_index++].roi_qp_adju = 0x80 - delta_qp_m;
 					} else
 						qpmap_index++;
