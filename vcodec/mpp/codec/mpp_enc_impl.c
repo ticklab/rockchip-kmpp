@@ -1454,6 +1454,25 @@ TASK_DONE:
 	return ret;
 }
 
+static void mpp_enc_clr_rc_cb_info(EncRcTask *rc_task)
+{
+	EncRcTaskInfo *hal_rc_ret = (EncRcTaskInfo *) &rc_task->info;
+	RK_S32          bit_target = hal_rc_ret->bit_target;
+	RK_S32          bit_max = hal_rc_ret->bit_max;
+	RK_S32          bit_min = hal_rc_ret->bit_min;
+	RK_S32          quality_target = hal_rc_ret->quality_target;
+	RK_S32          quality_max = hal_rc_ret->quality_max;
+	RK_S32          quality_min = hal_rc_ret->quality_min;
+	memset(hal_rc_ret, 0, sizeof(EncRcTaskInfo));
+	hal_rc_ret->bit_target = bit_target;
+	hal_rc_ret->bit_max = bit_max;
+	hal_rc_ret->bit_min = bit_min;
+	hal_rc_ret->quality_target =  quality_target;
+	hal_rc_ret->quality_max = quality_max;
+	hal_rc_ret->quality_min = quality_min;
+	return;
+}
+
 static MPP_RET mpp_enc_reenc_simple(MppEncImpl *enc, EncTask *task)
 {
 	//    MppEncImpl *enc = (MppEncImpl *)mpp->mEnc;
@@ -1461,10 +1480,11 @@ static MPP_RET mpp_enc_reenc_simple(MppEncImpl *enc, EncTask *task)
 	EncRcTask *rc_task = &enc->rc_task;
 	EncFrmStatus *frm = &rc_task->frm;
 	HalEncTask *hal_task = &task->info.enc;
-	MPP_RET ret = MPP_OK;
 
+	MPP_RET ret = MPP_OK;
 	enc_dbg_func("enter\n");
 
+	mpp_enc_clr_rc_cb_info(rc_task);
 	enc_dbg_detail("task %d enc proc hal\n", frm->seq_idx);
 	ENC_RUN_FUNC2(enc_impl_proc_hal, enc->impl, hal_task, enc, ret);
 
