@@ -1439,8 +1439,10 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 			* When line cnt is set to max value 0x3fff,
 			* the cur frame has overflow.
 			*/
-			if ((mpp_read(mpp, 0x18) & 0x3fff) == 0x3fff)
+			if ((mpp_read(mpp, 0x18) & 0x3fff) == 0x3fff) {
 				enc->dvbm_overflow = 1;
+				dev_err(mpp->dev, "current frame has overflow\n");
+			}
 			if (enc->dvbm_overflow) {
 				mpp->irq_status |= BIT(6);
 				enc->dvbm_overflow = 0;
