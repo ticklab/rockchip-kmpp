@@ -1645,6 +1645,8 @@ static MPP_RET mpp_enc_check_frm_valid(MppEncImpl *enc)
 		ver_stride = mpp_frame_get_ver_stride(enc->frame);
 		width = mpp_frame_get_width(enc->frame);
 		height = mpp_frame_get_height(enc->frame);
+		if (prep->rotation == MPP_ENC_ROT_90 || prep->rotation == MPP_ENC_ROT_270)
+			MPP_SWAP(RK_U32, width, height);
 		if (hor_stride != prep->hor_stride ||
 		    ver_stride != prep->ver_stride ||
 		    width < prep->width ||
