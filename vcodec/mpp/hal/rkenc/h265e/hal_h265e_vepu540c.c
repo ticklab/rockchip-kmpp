@@ -1806,7 +1806,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	reg_ctl->reg0008_int_en.jslc_done_en = 1;
 	reg_ctl->reg0008_int_en.jbsf_oflw_en = 1;
 	reg_ctl->reg0008_int_en.jbuf_lens_en = 1;
-	reg_ctl->reg0008_int_en.dvbm_dcnt_en = 1;
+	reg_ctl->reg0008_int_en.dvbm_dcnt_en = 0;
 
 	reg_ctl->reg0012_dtrns_map.jpeg_bus_edin = 0x0;
 	reg_ctl->reg0012_dtrns_map.src_bus_edin = 0x0;
