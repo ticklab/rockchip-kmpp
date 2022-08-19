@@ -1288,6 +1288,14 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 		return IRQ_HANDLED;
 	if (rkvenc_check_bs_overflow(mpp))
 		return IRQ_HANDLED;
+	{
+		u32 val = 0;
+		mpp_write(mpp, 0x18, 0);
+		mpp_write(mpp, 0x60, 0);
+		val = mpp_read(mpp, 0x18);
+		if (val != 0)
+			pr_err("clear line cnt failed 0x%08x\n", val);
+	}
 	mpp_debug_leave();
 
 	return IRQ_WAKE_THREAD;
