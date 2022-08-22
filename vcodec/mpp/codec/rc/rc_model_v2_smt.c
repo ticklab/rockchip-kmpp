@@ -29,8 +29,6 @@
 #include "rc_model_v2.h"
 
 #define MAD_THDI 20
-#define LIMIT_QP_MORE_MOVE_I 26
-#define LIMIT_QP_MORE_MOVE_P 28
 #define LOW_QP 30
 #define LOW_QP_level0 30
 #define LOW_QP_level1 31
@@ -865,8 +863,8 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				      p->bits_target_low_rate;
 		p->qp_out = cal_first_i_start_qp(p->bits_target_high_rate * 5, mb_w * mb_h);
 
-		if (p->qp_out < LIMIT_QP_MORE_MOVE_I + 3)
-			p->qp_out = LIMIT_QP_MORE_MOVE_I + 3;
+		if (p->qp_out < p->usr_cfg.fm_lv_min_i_quality + 3)
+			p->qp_out = p->usr_cfg.fm_lv_min_i_quality + 3;
 		p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
 		p->qp_preavg = 0;
 	}
@@ -1268,11 +1266,11 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	}
 
 	if (p->frame_type == INTRA_FRAME) {
-		if (p->qp_out < LIMIT_QP_MORE_MOVE_I + qp_add)
-			p->qp_out = LIMIT_QP_MORE_MOVE_I + qp_add;
+		if (p->qp_out < p->usr_cfg.fm_lv_min_i_quality + qp_add)
+			p->qp_out = p->usr_cfg.fm_lv_min_i_quality + qp_add;
 	} else {
-		if (p->qp_out < LIMIT_QP_MORE_MOVE_P + qp_add_p)
-			p->qp_out = LIMIT_QP_MORE_MOVE_P + qp_add_p;
+		if (p->qp_out < p->usr_cfg.fm_lv_min_quality + qp_add_p)
+			p->qp_out = p->usr_cfg.fm_lv_min_quality + qp_add_p;
 	}
 
 	info->bit_target = p->bits_target_use;
