@@ -416,18 +416,11 @@ MPP_RET h265e_set_pps(H265eCtx * ctx, h265_pps * pps, h265_sps * sps)
 		pps->diff_cu_qp_delta_depth = 1;
 	}
 
-	pps->pps_slice_chroma_qp_offsets_present_flag =
-		(! !codec->trans_cfg.cb_qp_offset)
-		|| (! !codec->trans_cfg.cr_qp_offset);
-
 	pps->sps = sps;
-	if (pps->pps_slice_chroma_qp_offsets_present_flag) {
-		pps->pps_cb_qp_offset = codec->trans_cfg.cb_qp_offset;
-		pps->pps_cr_qp_offset = codec->trans_cfg.cr_qp_offset;
-	} else {
-		pps->pps_cb_qp_offset = 0;
-		pps->pps_cr_qp_offset = 0;
-	}
+	pps->pps_slice_chroma_qp_offsets_present_flag = 0;
+	pps->pps_cb_qp_offset = codec->trans_cfg.cb_qp_offset;
+	/* rkvenc hw only support one color qp offset. Set all offset to cb offset*/
+	pps->pps_cr_qp_offset = codec->trans_cfg.cb_qp_offset;
 
 	pps->entropy_coding_sync_enabled_flag = 0;
 	pps->weighted_pred_flag = 0;
