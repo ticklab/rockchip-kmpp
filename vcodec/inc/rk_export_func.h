@@ -70,6 +70,7 @@ struct vcodec_mpidev_fn {
 	int (*get_chnl_id)(void *out_parm);
 	int (*get_chnl_type)(void *out_parm);
 	int (*set_intra_info)(RK_S32 chn_id, RK_U64 dts, RK_U64 pts);
+	int (*notify_drop_frm)(RK_S32 chn_id);
 };
 
 struct vcodec_mppdev_svr_fn {

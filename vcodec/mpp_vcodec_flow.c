@@ -187,10 +187,13 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 						wake_up(&comb_chan->stop_wait);
 					}
 				} else {
+					struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
 					mpp_err("combo cfg fail \n");
 					atomic_dec(&comb_chan->runing);
 					atomic_dec(&chan_entry->cfg.comb_runing);
 					wake_up(&comb_chan->stop_wait);
+					if (mpidev_fn && mpidev_fn->notify_drop_frm && comb_chan)
+						mpidev_fn->notify_drop_frm(comb_chan->chan_id);
 					ret = mpp_enc_hw_start(
 						      (MppEnc)chan_entry->handle,
 						      NULL);
@@ -202,12 +205,18 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		}
 
 		if (MPP_OK != ret) {
+			struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
 			struct venc_module *venc = NULL;
 			venc = mpp_vcodec_get_enc_module_entry();
 			atomic_dec(&chan_entry->runing);
 			wake_up(&chan_entry->stop_wait);
-			if (comb_frame)
+			if (mpidev_fn && mpidev_fn->notify_drop_frm && chan_entry)
+				mpidev_fn->notify_drop_frm(chan_entry->chan_id);
+			if (comb_frame) {
+				if (mpidev_fn && mpidev_fn->notify_drop_frm && comb_chan)
+					mpidev_fn->notify_drop_frm(comb_chan->chan_id);
 				mpp_frame_deinit(&comb_frame);
+			}
 			vcodec_thread_trigger(venc->thd);
 		}
 		cfg_end = mpp_time();
