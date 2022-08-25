@@ -664,30 +664,33 @@ static void *task_init(struct rkvenc_task *task)
 	return 0;
 }
 
-static void rkvenc_dump_dbg(struct mpp_dev *mpp)
+void rkvenc_dump_dbg(struct mpp_dev *mpp)
 {
+	u32 i;
+
 	if (!unlikely(mpp_dev_debug & DEBUG_DUMP_ERR_REG))
 		return;
 	pr_info("=== %s ===\n", __func__);
-	{
-		u32 i, off;
-		u32 start;// = 0x5168;//0x4000;
-		u32 end;// = 0x5170;//0x5350;
-		// struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
+	for (i = 0; i < RKVENC_CLASS_BUTT; i++) {
+		u32 j, s, e;
 
-		off = 0x18;
-		pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
-		off = 0x308;
-		pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
-		start = 0x5004;
-		end = 0x5028;
-		for (i = start; i <= end; i += 4) {
-			off = i;
-			pr_info("reg[0x%0x] = 0x%08x\n", off, mpp_read(mpp, off));
-		}
+		s = rkvenc_rv1106_hw_info.reg_msg[i].base_s;
+		e = rkvenc_rv1106_hw_info.reg_msg[i].base_e;
+		/* if fmt is jpeg, skip unused class */
+#if 0
+		if ((i == RKVENC_CLASS_RC) ||
+		    (i == RKVENC_CLASS_PAR) ||
+		    (i == RKVENC_CLASS_SQI))
+			continue;
+		if (i == RKVENC_CLASS_SCL)
+			s = 0x2c80;
+		if (i == RKVENC_CLASS_OSD)
+			s = 0x3138;
+#endif
+		for (j = s; j <= e; j += 4)
+			pr_info("reg[0x%0x] = 0x%08x\n", j, mpp_read(mpp, j));
 	}
 	pr_info("=== %s ===\n", __func__);
-
 }
 
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
@@ -1152,6 +1155,7 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 		struct mpp_request msg;
 		struct mpp_request *req;
 		u32 dvbm_en = 0;
+		u32 st_ppl = 0;
 
 		for (i = 0; i < task->w_req_cnt; i++) {
 			int ret;
@@ -1182,18 +1186,25 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 		/* init current task */
 		mpp->cur_task = mpp_task;
 
-		/* Flush the register before the start the device */
-		// mpp_err("enc_start_val=%08x\n", enc_start_val);
+		mpp_debug(DEBUG_RUN, "%s session %d task %d enc_pic %d jpeg_cfg %08x dvbm_en %d\n",
+			  __func__, mpp_task->session->index, mpp_task->task_index, task->fmt, mpp_read(mpp, 0x47c), dvbm_en);
+
+		/* check enc status before start */
+		st_ppl = mpp_read(mpp, 0x5004);
+
+		if (st_ppl & BIT(10))
+			mpp_err("enc started status %08x\n", st_ppl);
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 		if (dvbm_en) {
 			enc->dvbm_overflow = 0;
 			rk_dvbm_link(enc->port);
 			update_online_info(mpp);
 			priv->dvbm_link = 1;
-			priv->dvbm_en = dvbm_en;
 			mpp_write_relaxed(mpp, hw->dvbm_cfg, dvbm_en);
 		}
+		priv->dvbm_en = dvbm_en;
 #endif
+		/* Flush the register before the start the device */
 		wmb();
 		if (!dvbm_en)
 			mpp_write(mpp, hw->enc_start_base, enc_start_val);
@@ -1270,6 +1281,19 @@ static int rkvenc_check_bs_overflow(struct mpp_dev *mpp)
 	return ret;
 }
 
+static void rkvenc_clear_dvbm_info(struct mpp_dev *mpp)
+{
+	u32 dvbm_info, dvbm_en;
+
+	mpp_write(mpp, 0x60, 0);
+	mpp_write(mpp, 0x18, 0);
+	dvbm_info = mpp_read(mpp, 0x18);
+	dvbm_en = mpp_read(mpp, 0x60);
+	if (dvbm_info || dvbm_en)
+		pr_err("clear dvbm info failed 0x%08x 0x%08x\n",
+		       dvbm_info, dvbm_en);
+}
+
 static int rkvenc_irq(struct mpp_dev *mpp)
 {
 	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
@@ -1288,14 +1312,8 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 		return IRQ_HANDLED;
 	if (rkvenc_check_bs_overflow(mpp))
 		return IRQ_HANDLED;
-	{
-		u32 val = 0;
-		mpp_write(mpp, 0x18, 0);
-		mpp_write(mpp, 0x60, 0);
-		val = mpp_read(mpp, 0x18);
-		if (val != 0)
-			pr_err("clear line cnt failed 0x%08x\n", val);
-	}
+	enc->line_cnt = mpp_read(mpp, 0x18);
+	rkvenc_clear_dvbm_info(mpp);
 	mpp_debug_leave();
 
 	return IRQ_WAKE_THREAD;
@@ -1447,7 +1465,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 			* When line cnt is set to max value 0x3fff,
 			* the cur frame has overflow.
 			*/
-			if ((mpp_read(mpp, 0x18) & 0x3fff) == 0x3fff) {
+			if (enc->line_cnt == 0x3fff) {
 				enc->dvbm_overflow = 1;
 				dev_err(mpp->dev, "current frame has overflow\n");
 			}
@@ -1458,10 +1476,12 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 		}
 		task->irq_status = (mpp->irq_status | mpp->overflow_status);
 		mpp->overflow_status = 0;
-		mpp_debug(DEBUG_IRQ_STATUS, "irq_status: %08x\n", task->irq_status);
+		mpp_debug(DEBUG_IRQ_STATUS, "task %d fmt %d dvbm_en %d irq_status 0x%08x\n",
+			  mpp_task->task_index, task->fmt, priv->dvbm_en, task->irq_status);
 
 		if (mpp->irq_status & enc->hw_info->err_mask) {
-			dev_err(mpp->dev, "irq_status 0x%08x\n", task->irq_status);
+			dev_err(mpp->dev, "task %d fmt %d dvbm_en %d irq_status 0x%08x\n",
+				mpp_task->task_index, task->fmt, priv->dvbm_en, task->irq_status);
 			atomic_inc(&mpp->reset_request);
 			/* dump register */
 			if (mpp_debug_unlikely(DEBUG_DUMP_ERR_REG)) {
@@ -1967,15 +1987,7 @@ static int rkvenc_reset(struct mpp_dev *mpp)
 		mpp_safe_unreset(enc->rst_core);
 		mpp_pmu_idle_request(mpp, false);
 	}
-	{
-		u32 val = 0;
-
-		mpp_write(mpp, 0x18, 0);
-		mpp_write(mpp, 0x60, 0);
-		val = mpp_read(mpp, 0x18);
-		if (val != 0)
-			pr_err("clear line cnt failed 0x%08x\n", val);
-	}
+	rkvenc_clear_dvbm_info(mpp);
 
 	mpp_debug_leave();
 

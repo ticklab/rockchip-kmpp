@@ -310,6 +310,7 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 	reg_ctl->reg0008_int_en.wbus_err_en = 1;
 	reg_ctl->reg0008_int_en.rbus_err_en = 1;
 	reg_ctl->reg0008_int_en.wdg_en = 1;
+	reg_ctl->reg0008_int_en.jbsf_oflw_en = 1;
 	reg_ctl->reg0008_int_en.lkt_err_int_en = 0;
 
 	reg_ctl->reg0012_dtrns_map.jpeg_bus_edin = 0x7;

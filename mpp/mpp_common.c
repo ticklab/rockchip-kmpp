@@ -516,6 +516,7 @@ void mpp_free_task(struct kref *ref)
 	atomic_dec(&mpp->task_count);
 }
 
+extern void rkvenc_dump_dbg(struct mpp_dev *mpp);
 static void mpp_task_timeout_work(struct work_struct *work_s)
 {
 	struct mpp_dev *mpp;
@@ -531,7 +532,7 @@ static void mpp_task_timeout_work(struct work_struct *work_s)
 		return;
 	}
 
-	mpp_err("task %p processing time out!\n", task);
+	mpp_err("task %d processing time out!\n", task->task_index);
 
 	if (!task->session) {
 		mpp_err("task %p, task->session is null.\n", task);
@@ -545,7 +546,9 @@ static void mpp_task_timeout_work(struct work_struct *work_s)
 	}
 
 	mpp = mpp_get_task_used_device(task, session);
-	pr_err("reg[0x18]=0x%08x reg[0x60]=0x%08x\n", mpp_read(mpp, 0x18), mpp_read(mpp, 0x60));
+	pr_err("reg[0x18]=0x%08x reg[0x60]=0x%08x enc_pic %08x jpg_cfg %08x\n",
+	       mpp_read(mpp, 0x18), mpp_read(mpp, 0x60), mpp_read(mpp, 0x300), mpp_read(mpp, 0x47c));
+	rkvenc_dump_dbg(mpp);
 	/* hardware maybe dead, reset it */
 	mpp_reset_up_read(mpp->reset_group);
 	mpp_dev_reset(mpp);
