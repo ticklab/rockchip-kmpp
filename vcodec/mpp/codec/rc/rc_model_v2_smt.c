@@ -29,9 +29,7 @@
 #include "rc_model_v2.h"
 
 #define MAD_THDI 20
-#define LOW_QP 30
-#define LOW_QP_level0 30
-#define LOW_QP_level1 31
+#define LOW_QP 34
 #define LOW_LOW_QP 35
 #define LOW_PRE_DIFF_BIT_USE   -20000
 
@@ -954,9 +952,9 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 					if (p->qp_prev_out < 25)
 						qp_add = 4;
 					else if (p->qp_prev_out < 28)
+						qp_add = 3;
+					else if (p->qp_prev_out < 33)
 						qp_add = 2;
-					else if (p->qp_prev_out < 32)
-						qp_add = 1;
 
 					if (p->qp_prev_out > 45)
 						qp_minus = 5;
@@ -965,10 +963,8 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 					else if (p->qp_prev_out  > 35)
 						qp_minus = 3;
 					p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
-					//mpp_log("lbr=%d, hbr=%d, qp_prev=%d, qpout=%d\n",p->bits_target_low_rate, p->bits_target_high_rate, p->qp_prev_out, p->qp_out);
 					p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out - 4 - qp_minus, p->qp_prev_out + qp_add);
 					p->qp_out = mpp_clip(p->qp_out, 30, p->qp_prev_out + qp_add);
-					//mpp_log("qpout_clip=%d\n", p->qp_out);
 				}
 			}
 
@@ -994,8 +990,6 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		} else {
 			RK_S32 bits_target_use = 0;
 			RK_S32 pre_diff_bit_use = 0;
-			RK_S32 frame_low_qp;
-			RK_S32 low_pre_diff_bit_use = 0;
 			RK_S32 coef = 1024;
 			RK_S32 coef2 = 512;
 
@@ -1092,14 +1086,13 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				coef2 = 512 + (coef - 307) * (1024 - 512) / (717 - 307);
 			else	// 0.3~0.0 --> 0.5~0.0
 				coef2 = 0 + coef * (512 - 0) / (307 - 0);
-			bits_target_use = p->bits_target_low_rate;	// bits_target_high_rate
-			pre_diff_bit_use = p->pre_diff_bit_low_rate;	// pre_diff_bit_high_rate
+			if (coef2 >= 1024)
+				coef2 = 1024;
 
 			bits_target_use = ((p->bits_target_high_rate - p->bits_target_low_rate) * coef2 +
 					   p->bits_target_low_rate * 1024) >> 10;
 			pre_diff_bit_use = ((p->pre_diff_bit_high_rate - p->pre_diff_bit_low_rate) * coef2 +
 					    p->pre_diff_bit_low_rate * 1024) >> 10;
-			//mpp_log("coef=%d, coef2=%d, md_lvl=%d, cplx_lvl=%d\n", coef, coef2, mpp_data_sum_v2(p->motion_level), mpp_data_sum_v2(p->complex_level));
 			if (bits_target_use < 100)
 				bits_target_use = 100;
 
@@ -1130,62 +1123,32 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 			}
 
 			p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
-
 			pre_diff_bit_use = ((p->pre_diff_bit_high_rate - p->pre_diff_bit_low_rate) * coef2 +
 					    p->pre_diff_bit_low_rate * 1024) >> 10;
-			low_pre_diff_bit_use = LOW_PRE_DIFF_BIT_USE;
-			low_pre_diff_bit_use = (p->bps_target_low_rate + p->bps_target_high_rate) / 2 / fps->fps_out_num;
-			low_pre_diff_bit_use = -low_pre_diff_bit_use / 5;
-
-			if (p->codec_type == 1) {
-				if (madi >= MAD_THDI)
-					frame_low_qp = LOW_QP_level1;
-				else
-					frame_low_qp = LOW_QP_level0;
-			} else
-				frame_low_qp = LOW_QP;
-
-			if (p->qp_out > frame_low_qp) {
-				if (pre_diff_bit_use <= 2 * low_pre_diff_bit_use)
-					coef2 += 512;
-				else if (pre_diff_bit_use <= low_pre_diff_bit_use)
+			bits_target_use = LOW_PRE_DIFF_BIT_USE;
+			bits_target_use = (p->bps_target_low_rate + p->bps_target_high_rate) / 2 / fps->fps_out_num;
+			bits_target_use = -bits_target_use / 5;
+			if (p->qp_out > LOW_QP) {
+				if (pre_diff_bit_use <= 2 * bits_target_use)
 					coef2 += 205;
-				else
+				else if (pre_diff_bit_use <= bits_target_use)
 					coef2 += 102;
+				else
+					coef2 += 51;
 
 				if (coef2 >= 1024)
 					coef2 = 1024;
 
 				if (p->qp_out > LOW_LOW_QP)
 					coef2 = 1024;
-
-				if (coef2 == 1024 && p->qp_prev_out > frame_low_qp) {
-					RK_S32 delta_coef = 0;
-					if (p->bits_one_gop_use_flag == 1 && p->delta_bits_per_frame > 0) {
-						delta_coef = p->delta_bits_per_frame * 1024 / (p->bits_per_inter_high_rate -
-											       p->bits_per_inter_low_rate);
-						if (delta_coef >= 512)
-							delta_coef = 512;
-						else if (delta_coef >= 307)
-							delta_coef = 307;
-						else
-							delta_coef = delta_coef;
-
-						if (p->qp_prev_out > (frame_low_qp + 1))
-							delta_coef += 102;
-
-						coef2 += delta_coef;
-					}
-				}
-				bits_target_use = ((p->bits_target_high_rate - p->bits_target_low_rate) * coef2 +
-						   p->bits_target_low_rate * 1024) >> 10;
 				pre_diff_bit_use = ((p->pre_diff_bit_high_rate - p->pre_diff_bit_low_rate) * coef2 +
 						    p->pre_diff_bit_low_rate * 1024) >> 10;
+				bits_target_use = ((p->bits_target_high_rate - p->bits_target_low_rate) * coef2 +
+						   p->bits_target_low_rate * 1024) >> 10;
 				if (bits_target_use < 100)
 					bits_target_use = 100;
-
 				p->bits_target_use = bits_target_use;
-				if (abs(pre_diff_bit_use) * 100 <= bits_target_use *	 3)
+				if (abs(pre_diff_bit_use) * 100 <= bits_target_use * 3)
 					p->qp_out = p->qp_prev_out;
 				else if (pre_diff_bit_use * 100 > bits_target_use * 3) {
 					if (pre_diff_bit_use >= bits_target_use)
@@ -1230,9 +1193,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				qp_add = 4;
 				qp_minus = 0;
 			}
-			//mpp_log("lbr=%d, hbr=%d, qp_prev=%d, qpout=%d\n",p->bits_target_low_rate, p->bits_target_high_rate, p->qp_prev_out, p->qp_out);
 			p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out - qp_minus, p->qp_prev_out + qp_add);
-			//mpp_log("qpout_clip=%d\n", p->qp_out);
 		}
 	}
 
@@ -1272,7 +1233,6 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		if (p->qp_out < p->usr_cfg.fm_lv_min_quality + qp_add_p)
 			p->qp_out = p->usr_cfg.fm_lv_min_quality + qp_add_p;
 	}
-
 	info->bit_target = p->bits_target_use;
 	info->quality_target = p->qp_out;
 	info->quality_max = p->usr_cfg.max_quality;
