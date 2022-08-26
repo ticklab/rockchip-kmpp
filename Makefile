@@ -69,7 +69,7 @@ all: $(OSTYPE)_build
 clean: $(OSTYPE)_clean
 install: $(OSTYPE)_install
 
-linux_build:
+linux_build: linux_clean
 	@echo -e "\e[0;32;1m--Compiling '$(VMPI)'... Configs as follow:\e[0;36;1m"
 	@echo ---- CROSS=$(CROSS_COMPILE)
 	@echo ---- CPU_TYPE=$(CPU_TYPE)
@@ -91,11 +91,13 @@ endif
 linux_clean:
 	@rm -f *.ko *.mod.c *.o
 	@rm -f *.symvers *.order
-	@rm -rf .*.ko.cmd .*.o.cmd .tmp_versions
+	@find ./ -name "*.cmd" -o -name "*.s" -o -name "*.o" -o -name "*.mod" | xargs rm -rf
+	@rm -rf .tmp_versions
+	@rm -f built-in.a lib.a
 	@rm -rf $(PREB_KO)
 	@rm -rf $(REL_KO)
-	@$(RM) $(OBJS)
-	@$(RM) $(CMDS)
+	@rm -rf $(OBJS)
+	@rm -rf $(CMDS)
 
 linux_release:
 	find $(REL_KO) -name "*.ko" | xargs ${CROSS_COMPILE}strip --strip-debug --remove-section=.comment --remove-section=.note --preserve-dates
