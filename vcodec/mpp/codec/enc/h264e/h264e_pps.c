@@ -16,25 +16,34 @@
 #include "h264e_debug.h"
 #include "h264e_pps.h"
 
-static void write_scaling_list(MppWriteCtx *bit, RK_S32 mode)
-{
-	switch (mode) {
-	case 0 : {
-		// flat scaling matrix
-		/* scaling_list_present_flag */
-		mpp_writer_put_bits(bit, 0, 1);
-	} break;
-	case 1 : {
-		/* scaling_list_present_flag */
-		mpp_writer_put_bits(bit, 1, 1);
-		/* delta_scale */
-		mpp_writer_put_se(bit, -8);
-	} break;
-	default : {
-		mpp_err_f("unsupport scaling list mode %d\n", mode);
-	} break;
-	}
-}
+static const uint8_t zigzag[64] = {
+	0,  8,  1,  2,  9, 16, 24, 17, 10,  3,  4, 11, 18, 25, 32, 40,
+	33, 26, 19, 12,  5,  6, 13, 20, 27, 34, 41, 48, 56, 49, 42, 35,
+	28, 21, 14,  7, 15, 22, 29, 36, 43, 50, 57, 58, 51, 44, 37, 30,
+	23, 31, 38, 45, 52, 59, 60, 53, 46, 39, 47, 54, 61, 62, 55, 63
+};
+
+static const uint8_t intra_scl[64] = {
+	10, 11, 14, 16, 17, 19, 21, 23,
+	11, 12, 16, 17, 19, 21, 23, 25,
+	14, 16, 17, 19, 21, 23, 25, 27,
+	16, 17, 19, 21, 23, 25, 27, 28,
+	17, 19, 21, 23, 25, 27, 28, 29,
+	19, 21, 23, 25, 27, 28, 29, 30,
+	21, 23, 25, 27, 28, 29, 30, 31,
+	23, 25, 27, 28, 29, 30, 31, 32,
+};
+
+static const uint8_t inter_scl[64] = {
+	12, 13, 15, 16, 17, 19, 20, 21,
+	13, 14, 16, 17, 19, 20, 21, 22,
+	15, 16, 17, 19, 20, 21, 22, 23,
+	16, 17, 19, 20, 21, 22, 23, 25,
+	17, 19, 20, 21, 22, 23, 25, 27,
+	19, 20, 21, 22, 23, 25, 27, 28,
+	20, 21, 22, 23, 25, 27, 28, 29,
+	21, 22, 23, 25, 27, 28, 29, 30,
+};
 
 MPP_RET h264e_pps_update(H264ePps *pps, MppEncCfgSet *cfg)
 {
@@ -65,7 +74,7 @@ MPP_RET h264e_pps_update(H264ePps *pps, MppEncCfgSet *cfg)
 	// if (more_rbsp_data())
 	pps->transform_8x8_mode = codec->transform8x8_mode;
 	mpp_assert(codec->scaling_list_mode == 0 || codec->scaling_list_mode == 1);
-	pps->pic_scaling_matrix_present = codec->scaling_list_mode;
+	pps->scaling_list_mode = codec->scaling_list_mode;
 	if (codec->scaling_list_mode) {
 		/* NOTE: H.264 current encoder do NOT split detail matrix case */
 		pps->use_default_scaling_matrix[H264_INTRA_4x4_Y] = 1;
@@ -155,20 +164,52 @@ RK_S32 h264e_pps_to_packet(H264ePps *pps, MppPacket packet, RK_S32 *len)
 
 	if (pps->transform_8x8_mode ||
 	    pps->second_chroma_qp_index_offset_present ||
-	    pps->pic_scaling_matrix_present) {
+	    pps->scaling_list_mode) {
 		/* transform_8x8_mode_flag */
 		mpp_writer_put_bits(bit, pps->transform_8x8_mode, 1);
 
-		/* pic_scaling_matrix_present_flag */
-		mpp_writer_put_bits(bit, pps->pic_scaling_matrix_present, 1);
-		if (pps->pic_scaling_matrix_present) {
-			/* Only support default scaling list */
-			/* pic_scaling_list_present_flag[i] */
-			RK_S32 count = pps->transform_8x8_mode ? 8 : 6;
-			RK_S32 i;
+		/* scaling_list_mode */
+		mpp_writer_put_bits(bit, pps->scaling_list_mode != 0, 1);
+		if (pps->scaling_list_mode != 0) {
+			mpp_writer_put_bits(bit, 0, 1);
+			mpp_writer_put_bits(bit, 0, 1);
+			mpp_writer_put_bits(bit, 0, 1);
+			mpp_writer_put_bits(bit, 0, 1);
+			mpp_writer_put_bits(bit, 0, 1);
+			mpp_writer_put_bits(bit, 0, 1);
+		}
+		if (1 == pps->scaling_list_mode) {
+			/* default scaling list */
+			mpp_writer_put_bits(bit, 0, 1);
+			mpp_writer_put_bits(bit, 0, 1);
+		} else if (2 == pps->scaling_list_mode) {
+			/* user defined scaling list */
+			if (pps->transform_8x8_mode) {
+				RK_S32 run = 0;
+				RK_S32 len = 64;
+				RK_S32 j = 0;
+				mpp_writer_put_bits(bit, 1, 1);
+				for (run = len; run > 1; run --)
+					if (intra_scl[zigzag[run - 1]] != intra_scl[zigzag[run - 2]])
+						break;
+				for (j = 0; j < run; j ++)
+					mpp_writer_put_se(bit, (int8_t)(intra_scl[zigzag[j]] - (j > 0 ? intra_scl[zigzag[j - 1]] : 8)));
+				if (run < len)
+					mpp_writer_put_se(bit, (int8_t) - intra_scl[zigzag[run]]);
 
-			for (i = 0; i < count; i++)
-				write_scaling_list(bit, pps->use_default_scaling_matrix[i]);
+				mpp_writer_put_bits(bit, 1, 1);
+				for (run = len; run > 1; run --)
+					if (inter_scl[zigzag[run - 1]] != inter_scl[zigzag[run - 2]])
+						break;
+				for (j = 0; j < run; j ++)
+					mpp_writer_put_se(bit, (int8_t)(inter_scl[zigzag[j]] - (j > 0 ? inter_scl[zigzag[j - 1]] : 8)));
+				if (run < len)
+					mpp_writer_put_se(bit, (int8_t) - inter_scl[zigzag[run]]);
+
+			} else {
+				mpp_writer_put_bits(bit, 0, 1);
+				mpp_writer_put_bits(bit, 0, 1);
+			}
 		}
 
 		/* second_chroma_qp_index_offset */

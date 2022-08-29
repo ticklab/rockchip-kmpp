@@ -15,4 +15,5 @@
 
 extern const MppEncHalApi hal_h264e_vepu540c;
 
+
 #endif /* __HAL_H264E_VEPU540C_H__ */

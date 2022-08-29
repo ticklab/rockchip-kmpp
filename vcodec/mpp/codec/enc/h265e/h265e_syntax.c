@@ -66,42 +66,42 @@ static void fill_picture_parameters(const H265eCtx * h, H265ePicParams * pp)
 		pps->num_ref_idx_l1_default_active_minus1 - 1;
 	pp->init_qp_minus26 = pps->init_qp_minus26;
 
-	pp->CodingParamToolFlags = (sps->scaling_list_enabled_flag << 0) |
-				   (sps->amp_enabled_flag << 1) |
-				   (sps->sample_adaptive_offset_enabled_flag << 2) |
-				   (sps->pcm_enabled_flag << 3) |
-				   ((sps->pcm_enabled_flag ? (sps->pcm_bit_depth_luma - 1) : 0) << 4) |
+	pp->CodingParamToolFlags = (sps->scaling_list_mode << 0) |
+				   (sps->amp_enabled_flag << 2) |
+				   (sps->sample_adaptive_offset_enabled_flag << 3) |
+				   (sps->pcm_enabled_flag << 4) |
+				   ((sps->pcm_enabled_flag ? (sps->pcm_bit_depth_luma - 1) : 0) << 5) |
 				   ((sps->
 				     pcm_enabled_flag ? (sps->pcm_bit_depth_chroma -
-							 1) : 0) << 8) | ((sps->
+							 1) : 0) << 9) | ((sps->
 									   pcm_enabled_flag ? (sps->
 											       pcm_log2_min_size
 											       -
 											       3) : 0)
-									  << 12) | ((sps->
+									  << 13) | ((sps->
 										     pcm_enabled_flag
 										     ? (sps->
 											pcm_log2_max_size
 											-
 											sps->
 											pcm_log2_min_size)
-										     : 0) << 14) |
-				   (sps->pcm_loop_filter_disable_flag << 16) | (sps->
+										     : 0) << 15) |
+				   (sps->pcm_loop_filter_disable_flag << 17) | (sps->
 										long_term_ref_pics_present_flag
-										<< 17) | (sps->
+										<< 18) | (sps->
 											  sps_temporal_mvp_enable_flag
-											  << 18) |
+											  << 19) |
 				   (sps->
-				    sps_strong_intra_smoothing_enable_flag << 19) | (0 << 20) | (pps->
+				    sps_strong_intra_smoothing_enable_flag << 20) | (0 << 21) | (pps->
 												 output_flag_present_flag
-												 << 21)
-				   | (pps->num_extra_slice_header_bits << 22) | (pps->
+												 << 22)
+				   | (pps->num_extra_slice_header_bits << 23) | (pps->
 										 sign_data_hiding_flag
-										 << 25) | (pps->
+										 << 26) | (pps->
 											   cabac_init_present_flag
-											   << 26) | (0
+											   << 27) | (0
 												     <<
-												     27);
+												     28);
 
 	pp->CodingSettingPicturePropertyFlags =
 		(pps->constrained_intra_pred_flag << 0) | (pps->

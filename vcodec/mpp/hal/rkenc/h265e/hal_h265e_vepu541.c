@@ -1564,7 +1564,7 @@ MPP_RET hal_h265e_v541_gen_regs(void *hal, HalEncTask * task)
 
 	regs->rdo_cfg.chrm_klut_en = 1;
 	regs->rdo_cfg.seq_scaling_matrix_present_flg =
-		syn->pp.scaling_list_enabled_flag;
+		!!syn->pp.scaling_list_mode;
 	{
 		RK_U32 i_nal_type = 0;
 

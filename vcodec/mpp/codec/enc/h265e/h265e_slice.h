@@ -214,7 +214,7 @@ typedef struct H265eSps_e {
 	RK_U8 sps_strong_intra_smoothing_enable_flag;
 	RK_U8 vui_parameters_present_flag;
 	RK_U8 sample_adaptive_offset_enabled_flag;
-	RK_U8 scaling_list_enabled_flag;
+	RK_U8 scaling_list_mode;
 	RK_U8 sps_scaling_list_data_present_flag;
 	RK_U8 used_by_curr_pic_lt_sps_flag[MAX_LSB_NUM];
 

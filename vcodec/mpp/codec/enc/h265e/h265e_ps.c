@@ -321,8 +321,8 @@ MPP_RET h265e_set_sps(H265eCtx * ctx, h265_sps * sps, h265_vps * vps)
 	sps->pcm_bit_depth_chroma = 8;
 
 	sps->pcm_loop_filter_disable_flag = 0;
-	sps->scaling_list_enabled_flag =
-		codec->trans_cfg.defalut_ScalingList_enable == 0 ? 0 : 1;
+	sps->scaling_list_mode =
+		codec->trans_cfg.scaling_list_mode;
 
 	sps->bits_for_poc = 16;
 	sps->num_long_term_ref_pic_sps = 0;

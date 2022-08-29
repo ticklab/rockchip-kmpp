@@ -1879,7 +1879,7 @@ MPP_RET hal_h265e_v580_gen_regs(void *hal, HalEncTask * task)
 
 	reg_base->reg0232_rdo_cfg.ccwa_e = 1;
 	reg_base->reg0232_rdo_cfg.scl_lst_sel =
-		syn->pp.scaling_list_enabled_flag;
+		!!syn->pp.scaling_list_mode;
 	{
 		RK_U32 i_nal_type = 0;
 

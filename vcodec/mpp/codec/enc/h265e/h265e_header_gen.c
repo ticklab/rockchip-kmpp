@@ -17,6 +17,87 @@
 #include "h265e_header_gen.h"
 #include "mpp_packet.h"
 
+static RK_S32 scan4[16] = {0, 4, 1, 8, 5, 2, 12, 9, 6, 3, 13, 10, 7, 14, 11, 15};
+static RK_S32 scan8[64] = {
+	0,  8,  1, 16,  9,  2, 24, 17,
+	10,  3, 32, 25, 18, 11,  4, 40,
+	33, 26, 19, 12,  5, 48, 41, 34,
+	27, 20, 13,  6, 56, 49, 42, 35,
+	28, 21, 14,  7, 57, 50, 43, 36,
+	29, 22, 15, 58, 51, 44, 37, 30,
+	23, 59, 52, 45, 38, 31, 60, 53,
+	46, 39, 61, 54, 47, 62, 55, 63
+};
+
+static RK_S32 sclCoef4[16] = {16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16};
+static RK_S32 sclCoefIntra8[64] = {
+	16, 16, 16, 16, 17, 18, 21, 23,
+	16, 16, 16, 16, 17, 19, 21, 24,
+	16, 16, 17, 18, 20, 21, 24, 28,
+	16, 16, 18, 21, 23, 26, 30, 34,
+	17, 17, 20, 23, 29, 33, 35, 35,
+	18, 19, 21, 26, 33, 36, 36, 36,
+	21, 21, 24, 30, 35, 36, 37, 38,
+	23, 24, 28, 34, 35, 36, 38, 39
+};
+static RK_S32 sclCoefInter8[64] = {
+	16, 16, 16, 16, 17, 18, 21, 23,
+	16, 16, 16, 16, 17, 19, 21, 24,
+	16, 16, 17, 18, 20, 21, 24, 27,
+	16, 16, 18, 21, 23, 26, 29, 30,
+	17, 17, 20, 23, 29, 31, 31, 32,
+	18, 19, 21, 26, 31, 31, 33, 33,
+	21, 21, 24, 29, 31, 33, 34, 34,
+	23, 24, 27, 30, 32, 33, 34, 35
+};
+
+static void h265e_code_scaling_list(h265_sps * sps, H265eStream * s)
+{
+	RK_S32 listId = 0;
+	RK_S32 sizeId = 0;
+	RK_S32 coefNum = 16;
+	RK_S32* scan = scan4;
+	RK_S32 nextCoef = 8;
+	RK_S32 j = 0;
+	RK_S32 data = 0;
+	RK_S32* src = NULL;
+
+	for (sizeId = 0; sizeId < 4; sizeId++) {
+		if (sizeId > 0) {
+			coefNum = 64;
+			scan = scan8;
+		}
+		for (listId = 0; listId < 6; listId++) {
+			if (0 == sizeId)
+				src = sclCoef4;
+			else if (sizeId < 3)
+				src = listId < 3 ? sclCoefIntra8 : sclCoefInter8;
+			else
+				src = listId < 1 ? sclCoefIntra8 : sclCoefInter8;
+			if (3 == sizeId && listId > 1)
+				continue;
+
+			h265e_stream_write1_with_log(s, 1, NULL);
+			nextCoef = 8;
+			if (sizeId > 1) {
+				h265e_stream_write_se_with_log(s, 8, NULL);
+				nextCoef = 16;
+			}
+
+			for (j = 0; j < coefNum; j ++) {
+				data = src[scan[j]] - nextCoef;
+				nextCoef = src[scan[j]];
+				if (data > 127)
+					data = data - 256;
+				if (data < -128)
+					data = data + 256;
+
+				h265e_stream_write_se_with_log(s, data,  NULL);
+			}
+		}
+	}
+}
+
 static void h265e_nals_init(H265eExtraInfo * out)
 {
 	out->nal_buf = mpp_calloc(RK_U8, H265E_EXTRA_INFO_BUF_SIZE);
@@ -556,18 +637,14 @@ static MPP_RET h265e_sps_write(h265_sps * sps, H265eStream * s)
 				       sps->
 				       max_transform_hierarchy_depth_intra - 1,
 				       NULL);
-	h265e_stream_write1_with_log(s, sps->scaling_list_enabled_flag ? 1 : 0,
+	h265e_stream_write1_with_log(s, sps->scaling_list_mode ? 1 : 0,
 				     NULL);
-	if (sps->scaling_list_enabled_flag) {
-		h265e_stream_write1_with_log(s,
-					     sps->
-					     sps_scaling_list_data_present_flag
-					     ? 1 : 0,
-					     NULL);
-		if (sps->sps_scaling_list_data_present_flag) {
-			mpp_log("to do sps_scaling_list_data_present_flag");
-			;	//codeScalingList(m_slice->getScalingList()); //todo only support default
-		}
+	if (1 == sps->scaling_list_mode)
+		h265e_stream_write1_with_log(s, 0, NULL);
+
+	else if (2 == sps->scaling_list_mode) {
+		h265e_stream_write1_with_log(s, 1, NULL);
+		h265e_code_scaling_list(sps, s);
 	}
 	h265e_stream_write1_with_log(s, sps->amp_enabled_flag ? 1 : 0, NULL);
 	h265e_stream_write1_with_log(s,
