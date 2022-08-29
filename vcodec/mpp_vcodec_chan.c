@@ -22,6 +22,8 @@
 #include "rk_export_func.h"
 #include "mpp_packet_impl.h"
 #include "mpp_time.h"
+#include "mpp_enc_cfg_impl.h"
+#include "mpp_mem.h"
 
 int mpp_vcodec_schedule(void)
 {
@@ -91,6 +93,8 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 		mpp_vcodec_chan_setup_hal_bufs(chan_entry, attr);
 #endif
 		mpp_vcodec_inc_chan_num(type);
+
+		mpp_log("chan_entry->handle %p, enc %p ", chan_entry->handle, enc);
 
 		chan_entry->last_yuv_time = mpp_time();
 		chan_entry->last_jeg_combo_start = mpp_time();
@@ -341,9 +345,16 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 
 static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 {
-	struct vcodec_attr *attr = (struct vcodec_attr *)arg;
+	struct vcodec_attr *attr = (struct vcodec_attr*)arg;
 	struct mpp_chan *entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
 	int ret;
+	MppEncCfgImpl *cfg = mpp_malloc(MppEncCfgImpl, 1);
+	if (!cfg) {
+		mpp_err("change_coding_type malloc fail");
+		return MPP_NOK;
+	}
+
+	mpp_enc_control(entry->handle, MPP_ENC_GET_CFG, cfg);
 	mpp_assert(entry->handle != NULL);
 	mpp_assert(chan_id == attr->chan_id);
 
@@ -362,7 +373,19 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 	entry->reenc = 0;
 	entry->binder_chan_id = -1;
 	mpp_vcodec_chan_create(attr);
+	entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
+
+	mpp_enc_control(entry->handle, MPP_ENC_SET_PREP_CFG, &cfg->cfg.prep);
+	mpp_enc_control(entry->handle, MPP_ENC_SET_RC_CFG, &cfg->cfg.rc);
+	mpp_enc_control(entry->handle, MPP_ENC_SET_REF_CFG, &cfg->cfg.ref_param);
+
+	mpp_enc_control(entry->handle, MPP_ENC_GET_CFG, cfg);
+	cfg->cfg.rc.change = MPP_ENC_RC_CFG_CHANGE_ALL;
+	cfg->cfg.prep.change = MPP_ENC_PREP_CFG_CHANGE_ALL;
+	mpp_enc_control(entry->handle, MPP_ENC_SET_CFG, cfg);
+
 	mpp_vcodec_chan_start(chan_id, MPP_CTX_ENC);
+	mpp_free(cfg);
 	return 0;
 }
 

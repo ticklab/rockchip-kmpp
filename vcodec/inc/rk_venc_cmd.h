@@ -1296,5 +1296,4 @@ typedef struct VepuPpInfo_t {
 	RK_S32 wp_out_pic_mean;
 	RK_S32 reserved[8];
 } VepuPpInfo;
-
 #endif /*__RK_VENC_CMD_H__*/

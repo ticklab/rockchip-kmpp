@@ -468,6 +468,16 @@ MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param)
 			MPP_SWAP(RK_S32, cfg->prep.width, cfg->prep.height);
 	}
 	break;
+	case MPP_ENC_SET_PREP_CFG: {
+		enc_dbg_ctrl("set prep config\n");
+		memcpy(&enc->cfg.prep, param, sizeof(enc->cfg.prep));
+	}
+	break;
+	case MPP_ENC_SET_CODEC_CFG: {
+		enc_dbg_ctrl("set codec config\n");
+		memcpy(&enc->cfg.codec, param, sizeof(enc->cfg.codec));
+	} break;
+
 	case MPP_ENC_GET_PREP_CFG: {
 		enc_dbg_ctrl("get prep config\n");
 		memcpy(param, &enc->cfg.prep, sizeof(enc->cfg.prep));

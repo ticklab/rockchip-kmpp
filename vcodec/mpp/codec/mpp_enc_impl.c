@@ -1734,6 +1734,7 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 	// 12. generate header before hardware stream
 	if (!hdr_status->ready) {
 		/* config cpb before generating header */
+
 		enc_impl_gen_hdr(enc->impl, enc->hdr_pkt);
 		enc->hdr_len = mpp_packet_get_length(enc->hdr_pkt);
 		hdr_status->ready = 1;
