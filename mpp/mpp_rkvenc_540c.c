@@ -1312,7 +1312,7 @@ static int rkvenc_irq(struct mpp_dev *mpp)
 		return IRQ_HANDLED;
 	if (rkvenc_check_bs_overflow(mpp))
 		return IRQ_HANDLED;
-	enc->line_cnt = mpp_read(mpp, 0x18);
+	enc->line_cnt = mpp_read(mpp, 0x18) & 0x3fff;
 	rkvenc_clear_dvbm_info(mpp);
 	mpp_debug_leave();
 
