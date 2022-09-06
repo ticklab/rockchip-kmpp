@@ -175,6 +175,18 @@ static RK_U32 lamd_modb_qp[52] = {
 	0x00700000, 0x00890000, 0x00b00000, 0x00e00000
 };
 
+static RK_U32 lamd_modb_qp_cvr[52] = {
+	0x00000070, 0x00000088, 0x000000B0, 0x000000D8, 0x00000110, 0x00000158,
+	0x000001B0, 0x00000228, 0x000002B0, 0x00000368, 0x00000448, 0x00000568,
+	0x000006D0, 0x00000890, 0x00000AC8, 0x00000D98,	0x00001120, 0x00001598,
+	0x00001B30, 0x00002248, 0x00002B30, 0x00003668, 0x00004488, 0x00005658,
+	0x00006CD0, 0x00009E08, 0x0000C720, 0x0000FAE0, 0x00013C18, 0x00018E40,
+	0x0001F5C0, 0x00027830, 0x00031C80, 0x000470A0, 0x00059810, 0x00070C50,
+	0x0008E148, 0x000B3028, 0x000E1898, 0x0013D708, 0x0018FF30, 0x001F7E78,
+	0x0027AE18, 0x00373C28, 0x00459778, 0x0057AE18, 0x0078F3D0, 0x009863F8,
+	0x00C00000, 0x00F1E7A0, 0x0130C7F0, 0x01800000
+};
+
 static void get_wrap_buf(H265eV540cHalContext *ctx, RK_S32 max_lt_cnt)
 {
 	MppEncPrepCfg *prep = &ctx->cfg->prep;
@@ -566,13 +578,22 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	RK_U32 mb_cnt = ctx->mb_num;
 	VepuPpInfo *ppinfo = (VepuPpInfo *)mpp_frame_get_ppinfo(task->frame);
 
-	reg->rdo_segment_cfg.rdo_segment_multi = 28;
-	reg->rdo_segment_cfg.rdo_segment_en = 1;
-	reg->rdo_smear_cfg_comb.rdo_smear_en = 1;
-	reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 9;
-	reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 8;
-	reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 8;
-	if (ctx->smart_en) {
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		reg->rdo_segment_cfg.rdo_segment_multi = 28;
+		reg->rdo_segment_cfg.rdo_segment_en = 1;
+		reg->rdo_smear_cfg_comb.rdo_smear_en = 1;
+		reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 9;
+		reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 8;
+		reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 8;
+		if (ctx->smart_en) {
+			reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 16;
+			reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 16;
+			reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 16;
+		}
+	} else {
+		reg->rdo_segment_cfg.rdo_segment_multi = 16;
+		reg->rdo_segment_cfg.rdo_segment_en = 0;
+		reg->rdo_smear_cfg_comb.rdo_smear_en = 0;
 		reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 16;
 		reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 16;
 		reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 16;
@@ -688,67 +709,111 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_rdo_skip->atf_thd0.madp_thd1 = 10;
 	p_rdo_skip->atf_thd1.madp_thd2 = 15;
 	p_rdo_skip->atf_thd1.madp_thd3 = 72;
-	p_rdo_skip->atf_wgt0.wgt0 = 20;
-	p_rdo_skip->atf_wgt0.wgt1 = 16;
-	p_rdo_skip->atf_wgt0.wgt2 = 16;
-	p_rdo_skip->atf_wgt0.wgt3 = 16;
-	p_rdo_skip->atf_wgt1.wgt4 = 24;
-	if (ctx->smart_en) {
-		p_rdo_skip->atf_thd0.madp_thd0 = 1;
-		p_rdo_skip->atf_thd0.madp_thd1 = 7;
-		p_rdo_skip->atf_wgt0.wgt1 = 14;
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		p_rdo_skip->atf_wgt0.wgt0 = 20;
+		p_rdo_skip->atf_wgt0.wgt1 = 16;
+		p_rdo_skip->atf_wgt0.wgt2 = 16;
+		p_rdo_skip->atf_wgt0.wgt3 = 16;
+		p_rdo_skip->atf_wgt1.wgt4 = 24;
+		if (ctx->smart_en) {
+			p_rdo_skip->atf_thd0.madp_thd0 = 1;
+			p_rdo_skip->atf_thd0.madp_thd1 = 7;
+			p_rdo_skip->atf_wgt0.wgt1 = 10;
+		}
+	} else {
+		p_rdo_skip->atf_wgt0.wgt0 = 16;
+		p_rdo_skip->atf_wgt0.wgt1 = 16;
+		p_rdo_skip->atf_wgt0.wgt2 = 16;
+		p_rdo_skip->atf_wgt0.wgt3 = 16;
+		p_rdo_skip->atf_wgt1.wgt4 = 16;
 	}
 
 	p_rdo_noskip = &reg->rdo_b32_inter;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;
 	p_rdo_noskip->ratf_thd0.madp_thd1 = 40;
 	p_rdo_noskip->ratf_thd1.madp_thd2 = 72;
-	p_rdo_noskip->atf_wgt.wgt0 = 16;
-	p_rdo_noskip->atf_wgt.wgt1 = 16;
-	p_rdo_noskip->atf_wgt.wgt2 = 16;
-	p_rdo_noskip->atf_wgt.wgt3 = 24;
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		p_rdo_noskip->atf_wgt.wgt0 = 16;
+		p_rdo_noskip->atf_wgt.wgt1 = 16;
+		p_rdo_noskip->atf_wgt.wgt2 = 16;
+		p_rdo_noskip->atf_wgt.wgt3 = 24;
+	} else {
+		p_rdo_noskip->atf_wgt.wgt0 = 16;
+		p_rdo_noskip->atf_wgt.wgt1 = 16;
+		p_rdo_noskip->atf_wgt.wgt2 = 16;
+		p_rdo_noskip->atf_wgt.wgt3 = 16;
+	}
 
 	p_rdo_noskip = &reg->rdo_b32_intra;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;
 	p_rdo_noskip->ratf_thd0.madp_thd1 = 40;
 	p_rdo_noskip->ratf_thd1.madp_thd2 = 72;
-	p_rdo_noskip->atf_wgt.wgt0 = 27;
-	p_rdo_noskip->atf_wgt.wgt1 = 25;
-	p_rdo_noskip->atf_wgt.wgt2 = 20;
-	p_rdo_noskip->atf_wgt.wgt3 = 24;
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		p_rdo_noskip->atf_wgt.wgt0 = 27;
+		p_rdo_noskip->atf_wgt.wgt1 = 25;
+		p_rdo_noskip->atf_wgt.wgt2 = 20;
+		p_rdo_noskip->atf_wgt.wgt3 = 24;
+	} else {
+		p_rdo_noskip->atf_wgt.wgt0 = 16;
+		p_rdo_noskip->atf_wgt.wgt1 = 16;
+		p_rdo_noskip->atf_wgt.wgt2 = 16;
+		p_rdo_noskip->atf_wgt.wgt3 = 16;
+	}
 
 	p_rdo_skip = &reg->rdo_b16_skip;
 	p_rdo_skip->atf_thd0.madp_thd0 = 1;
 	p_rdo_skip->atf_thd0.madp_thd1 = 10;
 	p_rdo_skip->atf_thd1.madp_thd2 = 15;
 	p_rdo_skip->atf_thd1.madp_thd3 = 25;
-	p_rdo_skip->atf_wgt0.wgt0 = 20;
-	p_rdo_skip->atf_wgt0.wgt1 = 16;
-	p_rdo_skip->atf_wgt0.wgt2 = 16;
-	p_rdo_skip->atf_wgt0.wgt3 = 16;
-	p_rdo_skip->atf_wgt1.wgt4 = 16;
-	if (ctx->smart_en) {
-		p_rdo_skip->atf_thd0.madp_thd1 = 7;
-		p_rdo_skip->atf_wgt0.wgt1 = 14;
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		p_rdo_skip->atf_wgt0.wgt0 = 20;
+		p_rdo_skip->atf_wgt0.wgt1 = 16;
+		p_rdo_skip->atf_wgt0.wgt2 = 16;
+		p_rdo_skip->atf_wgt0.wgt3 = 16;
+		p_rdo_skip->atf_wgt1.wgt4 = 16;
+		if (ctx->smart_en) {
+			p_rdo_skip->atf_thd0.madp_thd1 = 7;
+			p_rdo_skip->atf_wgt0.wgt1 = 10;
+		}
+	} else {
+		p_rdo_skip->atf_wgt0.wgt0 = 16;
+		p_rdo_skip->atf_wgt0.wgt1 = 16;
+		p_rdo_skip->atf_wgt0.wgt2 = 16;
+		p_rdo_skip->atf_wgt0.wgt3 = 16;
+		p_rdo_skip->atf_wgt1.wgt4 = 16;
 	}
 
 	p_rdo_noskip = &reg->rdo_b16_inter;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;
 	p_rdo_noskip->ratf_thd0.madp_thd1 = 40;
 	p_rdo_noskip->ratf_thd1.madp_thd2 = 72;
-	p_rdo_noskip->atf_wgt.wgt0 = 16;
-	p_rdo_noskip->atf_wgt.wgt1 = 16;
-	p_rdo_noskip->atf_wgt.wgt2 = 16;
-	p_rdo_noskip->atf_wgt.wgt3 = 16;
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		p_rdo_noskip->atf_wgt.wgt0 = 16;
+		p_rdo_noskip->atf_wgt.wgt1 = 16;
+		p_rdo_noskip->atf_wgt.wgt2 = 16;
+		p_rdo_noskip->atf_wgt.wgt3 = 16;
+	} else {
+		p_rdo_noskip->atf_wgt.wgt0 = 16;
+		p_rdo_noskip->atf_wgt.wgt1 = 16;
+		p_rdo_noskip->atf_wgt.wgt2 = 16;
+		p_rdo_noskip->atf_wgt.wgt3 = 16;
+	}
 
 	p_rdo_noskip = &reg->rdo_b16_intra;
 	p_rdo_noskip->ratf_thd0.madp_thd0 = 20;
 	p_rdo_noskip->ratf_thd0.madp_thd1 = 40;
 	p_rdo_noskip->ratf_thd1.madp_thd2 = 72;
-	p_rdo_noskip->atf_wgt.wgt0 = 27;
-	p_rdo_noskip->atf_wgt.wgt1 = 25;
-	p_rdo_noskip->atf_wgt.wgt2 = 20;
-	p_rdo_noskip->atf_wgt.wgt3 = 16;
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		p_rdo_noskip->atf_wgt.wgt0 = 27;
+		p_rdo_noskip->atf_wgt.wgt1 = 25;
+		p_rdo_noskip->atf_wgt.wgt2 = 20;
+		p_rdo_noskip->atf_wgt.wgt3 = 16;
+	} else {
+		p_rdo_noskip->atf_wgt.wgt0 = 16;
+		p_rdo_noskip->atf_wgt.wgt1 = 16;
+		p_rdo_noskip->atf_wgt.wgt2 = 16;
+		p_rdo_noskip->atf_wgt.wgt3 = 16;
+	}
 
 	reg->rdo_b32_intra_atf_cnt_thd.thd0 = 1;
 	reg->rdo_b32_intra_atf_cnt_thd.thd1 = 4;
@@ -771,17 +836,31 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_pre_cst->cst_madi_thd0.madi_thd3 = 6;
 	p_pre_cst->cst_madi_thd1.madi_thd4 = 7;
 	p_pre_cst->cst_madi_thd1.madi_thd5 = 10;
-	p_pre_cst->cst_wgt0.wgt0 = 20;
-	p_pre_cst->cst_wgt0.wgt1 = 18;
-	p_pre_cst->cst_wgt0.wgt2 = 19;
-	p_pre_cst->cst_wgt0.wgt3 = 18;
-	p_pre_cst->cst_wgt1.wgt4 = 6;
-	p_pre_cst->cst_wgt1.wgt5 = 9;
-	p_pre_cst->cst_wgt1.wgt6 = 14;
-	p_pre_cst->cst_wgt1.wgt7 = 18;
-	p_pre_cst->cst_wgt2.wgt8 = 17;
-	p_pre_cst->cst_wgt2.wgt9 = 17;
-	p_pre_cst->cst_wgt2.mode_th = 5;
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		p_pre_cst->cst_wgt0.wgt0 = 20;
+		p_pre_cst->cst_wgt0.wgt1 = 18;
+		p_pre_cst->cst_wgt0.wgt2 = 19;
+		p_pre_cst->cst_wgt0.wgt3 = 18;
+		p_pre_cst->cst_wgt1.wgt4 = 6;
+		p_pre_cst->cst_wgt1.wgt5 = 9;
+		p_pre_cst->cst_wgt1.wgt6 = 14;
+		p_pre_cst->cst_wgt1.wgt7 = 18;
+		p_pre_cst->cst_wgt2.wgt8 = 17;
+		p_pre_cst->cst_wgt2.wgt9 = 17;
+		p_pre_cst->cst_wgt2.mode_th = 5;
+	} else {
+		p_pre_cst->cst_wgt0.wgt0 = 17;
+		p_pre_cst->cst_wgt0.wgt1 = 17;
+		p_pre_cst->cst_wgt0.wgt2 = 17;
+		p_pre_cst->cst_wgt0.wgt3 = 17;
+		p_pre_cst->cst_wgt1.wgt4 = 13;
+		p_pre_cst->cst_wgt1.wgt5 = 14;
+		p_pre_cst->cst_wgt1.wgt6 = 15;
+		p_pre_cst->cst_wgt1.wgt7 = 17;
+		p_pre_cst->cst_wgt2.wgt8 = 17;
+		p_pre_cst->cst_wgt2.wgt9 = 17;
+		p_pre_cst->cst_wgt2.mode_th = 5;
+	}
 
 	p_pre_cst = &reg->preintra16_cst;
 	p_pre_cst->cst_madi_thd0.madi_thd0 = 5;
@@ -790,17 +869,31 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_pre_cst->cst_madi_thd0.madi_thd3 = 6;
 	p_pre_cst->cst_madi_thd1.madi_thd4 = 5;
 	p_pre_cst->cst_madi_thd1.madi_thd5 = 7;
-	p_pre_cst->cst_wgt0.wgt0 = 20;
-	p_pre_cst->cst_wgt0.wgt1 = 18;
-	p_pre_cst->cst_wgt0.wgt2 = 19;
-	p_pre_cst->cst_wgt0.wgt3 = 18;
-	p_pre_cst->cst_wgt1.wgt4 = 6;
-	p_pre_cst->cst_wgt1.wgt5 = 9;
-	p_pre_cst->cst_wgt1.wgt6 = 14;
-	p_pre_cst->cst_wgt1.wgt7 = 18;
-	p_pre_cst->cst_wgt2.wgt8 = 17;
-	p_pre_cst->cst_wgt2.wgt9 = 17;
-	p_pre_cst->cst_wgt2.mode_th = 5;
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+		p_pre_cst->cst_wgt0.wgt0 = 20;
+		p_pre_cst->cst_wgt0.wgt1 = 18;
+		p_pre_cst->cst_wgt0.wgt2 = 19;
+		p_pre_cst->cst_wgt0.wgt3 = 18;
+		p_pre_cst->cst_wgt1.wgt4 = 6;
+		p_pre_cst->cst_wgt1.wgt5 = 9;
+		p_pre_cst->cst_wgt1.wgt6 = 14;
+		p_pre_cst->cst_wgt1.wgt7 = 18;
+		p_pre_cst->cst_wgt2.wgt8 = 17;
+		p_pre_cst->cst_wgt2.wgt9 = 17;
+		p_pre_cst->cst_wgt2.mode_th = 5;
+	} else {
+		p_pre_cst->cst_wgt0.wgt0 = 17;
+		p_pre_cst->cst_wgt0.wgt1 = 17;
+		p_pre_cst->cst_wgt0.wgt2 = 17;
+		p_pre_cst->cst_wgt0.wgt3 = 17;
+		p_pre_cst->cst_wgt1.wgt4 = 13;
+		p_pre_cst->cst_wgt1.wgt5 = 14;
+		p_pre_cst->cst_wgt1.wgt6 = 15;
+		p_pre_cst->cst_wgt1.wgt7 = 17;
+		p_pre_cst->cst_wgt2.wgt8 = 17;
+		p_pre_cst->cst_wgt2.wgt9 = 17;
+		p_pre_cst->cst_wgt2.mode_th = 5;
+	}
 
 	reg->preintra_sqi_cfg.pre_intra_qp_thd = 28;
 	reg->preintra_sqi_cfg.pre_intra4_lambda_mv_bit = 3;
@@ -816,7 +909,6 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	reg->rdo_atr_i_cu16_madi_cfg0.i_cu16_madi_thd0 = 4;
 	reg->rdo_atr_i_cu16_madi_cfg0.i_cu16_madi_thd1 = 6;
 	reg->rdo_atr_i_cu16_madi_cfg0.i_cu16_madi_cost_multi = 24;
-
 }
 
 static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
@@ -854,8 +946,12 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 			step[i] = hw->aq_step_p[i] & 0x3f;
 		}
 		reg_wgt->iprd_lamb_satd_ofst.lambda_satd_offset = 11;
-		memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp,
-		       sizeof(lamd_modb_qp));
+		if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC)
+			memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp,
+			       sizeof(lamd_modb_qp));
+		else
+			memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp_cvr,
+			       sizeof(lamd_modb_qp_cvr));
 	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 171;
 	if (ctx->smart_en)
@@ -918,6 +1014,18 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 		regs->reg_rc_roi.madp_st_thd0.madp_th1 = 9 << 4;
 		/* 0x106C */
 		regs->reg_rc_roi.madp_st_thd1.madp_th2 = 15 << 4;
+	}
+	if (ctx->cfg->tune.scene_mode != MPP_ENC_SCENE_MODE_IPC) {
+		regs->reg_wgt.cime_madp_th.cime_madp_th = 0;
+		regs->reg_wgt.rime_madp_th.rime_madp_th0 = 0;
+		regs->reg_wgt.rime_madp_th.rime_madp_th1 = 0;
+		regs->reg_wgt.cime_multi.cime_multi0 = 4;
+		regs->reg_wgt.cime_multi.cime_multi1 = 4;
+		regs->reg_wgt.cime_multi.cime_multi2 = 4;
+		regs->reg_wgt.cime_multi.cime_multi3 = 4;
+		regs->reg_wgt.rime_multi.rime_multi0 = 4;
+		regs->reg_wgt.rime_multi.rime_multi1 = 4;
+		regs->reg_wgt.rime_multi.rime_multi2 = 4;
 	}
 }
 
@@ -1907,7 +2015,8 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	reg_base->reg0203_src_proc.src_rot = 0;
 
 	reg_rc_roi->klut_ofst.chrm_klut_ofst =
-		(ctx->frame_type == INTRA_FRAME) ? 6 : 9;
+		(ctx->frame_type == INTRA_FRAME) ? 6 : (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC ? 9 :
+							6);
 	reg_rc_roi->klut_ofst.inter_chrm_dist_multi = 4;
 
 	reg_base->reg0216_sli_splt.sli_splt_mode = syn->sp.sli_splt_mode;
@@ -1927,7 +2036,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	reg_base->reg0232_rdo_cfg.cu_intra_e = 0xf;
 	reg_base->reg0232_rdo_cfg.lambda_qp_use_avg_cu16_flag = 1;
 	reg_base->reg0232_rdo_cfg.yuvskip_calc_en = 1;
-	reg_base->reg0232_rdo_cfg.atf_e = 1;
+	reg_base->reg0232_rdo_cfg.atf_e = ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC ? 1 : 0;
 	reg_base->reg0232_rdo_cfg.atr_e = 1;
 
 	if (syn->pp.num_long_term_ref_pics_sps) {
@@ -1971,7 +2080,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	if (ctx->osd_cfg.osd_data3)
 		vepu540c_set_osd(&ctx->osd_cfg);
 
-	if (ctx->qpmap_en) {
+	if (ctx->qpmap_en && ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
 		MPP_RET ret;
 		if (ctx->smart_en)
 			ret = vepu540c_set_qpmap_smart(&reg_rc_roi->roi_cfg,

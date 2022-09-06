@@ -91,6 +91,7 @@ static void init_h264e_cfg_set(MppEncCfgSet *cfg, MppClientType type)
 	h264->profile = H264_PROFILE_BASELINE;
 	h264->level = H264_LEVEL_3_1;
 	h264->scaling_list_mode = 0;
+	cfg->tune.scene_mode = MPP_ENC_SCENE_MODE_IPC;
 
 	switch (type) {
 	case VPU_CLIENT_VEPU1 :
@@ -156,8 +157,8 @@ static void init_h264e_cfg_set(MppEncCfgSet *cfg, MppClientType type)
 	rc_cfg->min_i_prop = 10;
 	rc_cfg->init_ip_ratio = 160;
 	rc_cfg->qp_init = 26;
-	rc_cfg->qp_max = 48;
-	rc_cfg->qp_min = 8;
+	rc_cfg->qp_max = 51;
+	rc_cfg->qp_min = 10;
 	/* default max/min intra qp is not set */
 	rc_cfg->qp_max_i = 0;
 	rc_cfg->qp_min_i = 0;
