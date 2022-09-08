@@ -367,20 +367,22 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 	mpp_vcodec_stream_clear(entry);
 	mpp_enc_deinit(entry->handle);
 	mpp_vcodec_dec_chan_num(MPP_CTX_ENC);
-
 	entry->handle = NULL;
 	entry->state = CHAN_STATE_NULL;
 	entry->reenc = 0;
 	entry->binder_chan_id = -1;
+
 	mpp_vcodec_chan_create(attr);
 	entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
 
 	mpp_enc_control(entry->handle, MPP_ENC_SET_PREP_CFG, &cfg->cfg.prep);
+
+	cfg->cfg.rc.change = MPP_ENC_RC_CFG_CHANGE_ALL;
 	mpp_enc_control(entry->handle, MPP_ENC_SET_RC_CFG, &cfg->cfg.rc);
+
 	mpp_enc_control(entry->handle, MPP_ENC_SET_REF_CFG, &cfg->cfg.ref_param);
 
 	mpp_enc_control(entry->handle, MPP_ENC_GET_CFG, cfg);
-	cfg->cfg.rc.change = MPP_ENC_RC_CFG_CHANGE_ALL;
 	cfg->cfg.prep.change = MPP_ENC_PREP_CFG_CHANGE_ALL;
 	mpp_enc_control(entry->handle, MPP_ENC_SET_CFG, cfg);
 

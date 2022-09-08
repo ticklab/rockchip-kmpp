@@ -422,7 +422,7 @@ int mpp_vcodec_chan_entry_init(struct mpp_chan *entry, MppCtxType type,
 	init_waitqueue_head(&entry->wait);
 	init_waitqueue_head(&entry->stop_wait);
 
-	if (mpibuf_fn->buf_queue_create) {
+	if (mpibuf_fn->buf_queue_create && !entry->yuv_queue) {
 		entry->yuv_queue =
 			mpibuf_fn->buf_queue_create(CHAN_MAX_YUV_POOL_SIZE);
 	}
@@ -449,8 +449,10 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 	entry->binder_chan_id = -1;
 	spin_unlock_irqrestore(&entry->chan_lock, lock_flag);
 	atomic_set(&entry->runing, 0);
-	if (mpibuf_fn->buf_queue_destroy)
+	if (mpibuf_fn->buf_queue_destroy) {
 		mpibuf_fn->buf_queue_destroy(entry->yuv_queue);
+		entry->yuv_queue = NULL;
+	}
 
 #ifdef CHAN_RELEASE_BUF
 	{
@@ -470,6 +472,7 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 		}
 		entry->max_width = 0;
 		entry->max_height = 0;
+		entry->max_lt_cnt = 0;
 		entry->ring_buf_size = 0;
 	}
 #endif
@@ -495,6 +498,7 @@ void mpp_vcodec_stream_clear(struct mpp_chan *entry)
 	list_for_each_entry_safe(packet, n, &entry->stream_done, list) {
 		list_del_init(&packet->list);
 		kref_put(&packet->ref, stream_packet_free);
+		atomic_dec(&entry->stream_count);
 	}
 	mutex_unlock(&entry->stream_done_lock);
 
@@ -502,6 +506,7 @@ void mpp_vcodec_stream_clear(struct mpp_chan *entry)
 	list_for_each_entry_safe(packet, n, &entry->stream_remove, list) {
 		list_del_init(&packet->list);
 		kref_put(&packet->ref, stream_packet_free);
+		atomic_dec(&entry->str_out_cnt);
 	}
 	mutex_unlock(&entry->stream_remove_lock);
 
@@ -650,6 +655,10 @@ int mpp_vcodec_deinit(void)
 			mpp_buffer_put(ctx->stream_buf);
 			ctx->stream_buf = NULL;
 		}
+		entry->max_width = 0;
+		entry->max_height = 0;
+		entry->max_lt_cnt = 0;
+		entry->ring_buf_size = 0;
 	}
 
 	if (venc->thd) {
@@ -685,6 +694,7 @@ int mpp_vcodec_clear_buf_resource(void)
 		entry->max_width = 0;
 		entry->max_height = 0;
 		entry->max_lt_cnt = 0;
+		entry->ring_buf_size = 0;
 	}
 	return 0;
 }
