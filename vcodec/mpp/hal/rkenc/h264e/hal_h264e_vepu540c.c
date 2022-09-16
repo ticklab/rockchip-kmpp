@@ -1974,7 +1974,7 @@ static void setup_vepu540c_l2(HalH264eVepu540cCtx *ctx, H264eSlice *slice,
 	regs->reg_s3.RDO_QUANT.quant_f_bias_I = 683;
 	regs->reg_s3.RDO_QUANT.quant_f_bias_P = 341;
 	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
-		if (ctx->smart_en) {
+		if (!ctx->cfg->rc.debreath_en && ctx->smart_en) {
 			regs->reg_s3.RDO_QUANT.quant_f_bias_I = 341;
 			memcpy(regs->reg_s3.rdo_wgta_qp_grpa_0_51, &h264e_lambda_default[7],
 			       H264E_LAMBDA_TAB_SIZE);

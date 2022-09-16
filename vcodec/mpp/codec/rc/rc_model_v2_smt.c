@@ -42,6 +42,7 @@ typedef struct RcModelV2SmtCtx_t {
 	RK_U32 last_frame_type;
 	//RK_S64 gop_total_bits;
 	RK_U32 bit_per_frame;
+	RK_U32 first_frm_flg;
 	MppDataV2 *i_bit;
 	RK_U32 i_sumbits;
 	RK_U32 i_scale;
@@ -127,6 +128,9 @@ typedef struct RcModelV2SmtCtx_t {
 	RK_S32 intra_presse;
 	RK_S32 intra_premadi;
 	RK_U32 st_madi;
+	RK_S32 gop_qp_sum;
+	RK_S32 gop_frm_cnt;
+	RK_S32 pre_iblk4_prop;
 } RcModelV2SmtCtx;
 
 typedef struct InfoList_t {
@@ -230,6 +234,9 @@ MPP_RET bits_model_smt_init(RcModelV2SmtCtx * ctx)
 
 	rc_dbg_func("enter %p\n", ctx);
 	ctx->frm_num = 0;
+	ctx->first_frm_flg = 1;
+	ctx->gop_frm_cnt = 0;
+	ctx->gop_qp_sum = 0;
 
 	// smt
 	ctx->frame_cnt_in_gop = 0;
@@ -330,6 +337,9 @@ MPP_RET bits_model_smt_init(RcModelV2SmtCtx * ctx)
 		ctx->bits_per_inter_high_rate = 0;
 		ctx->bits_per_intra_high_rate = avg_high_rate;
 		ctx->intra_to_inter_rate = 0;
+		/* disable debreath on all intra case */
+		if (ctx->usr_cfg.debreath_cfg.enable)
+			ctx->usr_cfg.debreath_cfg.enable = 0;
 	} else if (gop_len < ctx->window_len) {
 		ctx->gop_mode = MPP_GOP_SMALL;
 		ctx->intra_to_inter_rate = gop_len + 1;
@@ -591,6 +601,7 @@ MPP_RET reenc_calc_vbr_ratio_smt(RcModelV2SmtCtx * ctx, EncRcTaskInfo * cfg)
 
 MPP_RET check_re_enc_smt(RcModelV2SmtCtx * ctx, EncRcTaskInfo * cfg)
 {
+	RcCfg *usr_cfg = &ctx->usr_cfg;
 	RK_S32 frame_type = ctx->frame_type;
 	RK_S32 i_flag = 0;
 	RK_S32 big_flag = 0;
@@ -612,6 +623,9 @@ MPP_RET check_re_enc_smt(RcModelV2SmtCtx * ctx, EncRcTaskInfo * cfg)
 		target_bps = ctx->usr_cfg.bps_max;
 
 	if (ctx->reenc_cnt >= ctx->usr_cfg.max_reencode_times)
+		return MPP_OK;
+
+	if (usr_cfg->debreath_cfg.enable && !ctx->first_frm_flg)
 		return MPP_OK;
 
 	i_flag = (frame_type == INTRA_FRAME);
@@ -742,7 +756,7 @@ static RK_U8 qscale2qp[96] = {
 	44,  44,  44,  44,  45,  45, 45, 45,
 };
 
-static RK_S32 cal_first_i_start_qp(RK_S32 target_bit, RK_U32 total_mb)
+static RK_S32 cal_smt_first_i_start_qp(RK_S32 target_bit, RK_U32 total_mb)
 {
 	RK_S32 cnt = 0;
 	RK_S32 index;
@@ -758,6 +772,43 @@ static RK_S32 cal_first_i_start_qp(RK_S32 target_bit, RK_U32 total_mb)
 	index = mpp_clip(index, 4, 95);
 
 	return qscale2qp[index];
+}
+
+static MPP_RET calc_smt_debreath_qp(RcModelV2SmtCtx * ctx)
+{
+	RK_S32 qp_start_sum = 0;
+	RK_S32 new_start_qp = 0;
+	RcDebreathCfg *debreath_cfg = &ctx->usr_cfg.debreath_cfg;
+	RK_S32 dealt_qp = 0;
+	static RK_S8 intra_qp_map[8] = {
+		0, 0, 1, 1, 2, 2, 2, 2,
+	};
+	RK_U8 idx2 = MPP_MIN(ctx->pre_iblk4_prop >> 5, (RK_S32)sizeof(intra_qp_map) - 1);
+
+	static RK_S8 strength_map[36] = {
+		0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
+		5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8,
+		9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12
+	};
+
+	rc_dbg_func("enter %p\n", ctx);
+
+	qp_start_sum = MPP_MIN(ctx->gop_qp_sum / ctx->gop_frm_cnt, (RK_S32)sizeof(strength_map) - 1);
+
+	rc_dbg_qp("i qp_out %d, qp_start_sum = %d, intra_lv4_prop %d",
+		  ctx->qp_out, qp_start_sum, ctx->pre_iblk4_prop);
+
+	dealt_qp = strength_map[debreath_cfg->strength] - intra_qp_map[idx2];
+	if (qp_start_sum > dealt_qp)
+		new_start_qp = qp_start_sum - dealt_qp;
+	else
+		new_start_qp = qp_start_sum;
+
+	ctx->qp_out = mpp_clip(new_start_qp, ctx->usr_cfg.min_i_quality, ctx->usr_cfg.max_i_quality);
+	ctx->gop_frm_cnt = 0;
+	ctx->gop_qp_sum = 0;
+	rc_dbg_func("leave %p\n", ctx);
+	return MPP_OK;
 }
 
 MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
@@ -874,7 +925,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 			ratio = 3;
 		p->bits_target_use =  (p->bits_target_high_rate - p->bits_target_low_rate) / 2 +
 				      p->bits_target_low_rate;
-		p->qp_out = cal_first_i_start_qp(p->bits_target_high_rate * ratio, mb_w * mb_h);
+		p->qp_out = cal_smt_first_i_start_qp(p->bits_target_high_rate * ratio, mb_w * mb_h);
 		if (fm_lv_min_i_quality > 34)
 			p->qp_out = mpp_clip(p->qp_out, fm_lv_min_i_quality, p->qp_max);
 		else
@@ -916,6 +967,8 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				qp_minus = 3;
 			else
 				qp_minus = 2;
+			if (!p->reenc_cnt && p->usr_cfg.debreath_cfg.enable)
+				calc_smt_debreath_qp(p);
 			p->qp_out = mpp_clip(p->qp_out, avg_qp - 6, avg_qp - 1);
 			p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out - 4 - qp_minus, p->qp_prev_out + qp_add);
 		}
@@ -924,11 +977,11 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		p->qp_out = p->qp_preavg;
 
 		if (p->last_frame_type == INTRA_FRAME) {
-			RK_S32 qp_add = 0;
-			if (p->qp_prev_out < 25)
+			RK_S32 qp_add = 1;
+			if (p->qp_prev_out < 33)
+				qp_add = 3;
+			else if (p->qp_prev_out < 35)
 				qp_add = 2;
-			else if (p->qp_prev_out < 29)
-				qp_add = 1;
 			p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out + qp_add, p->qp_prev_out + 4 + qp_add);
 			p->bits_target_use = (p->bits_target_low_rate + p->bits_target_high_rate) / 2;
 			if (p->bits_target_use < 100)
@@ -1205,6 +1258,7 @@ MPP_RET rc_model_v2_smt_end(void *ctx, EncRcTask * task)
 	rc_dbg_rc("motion_level %u, complex_level %u\n", cfg->motion_level, cfg->complex_level);
 	mpp_data_update_v2(p->motion_level, cfg->motion_level);
 	mpp_data_update_v2(p->complex_level, cfg->complex_level);
+	p->first_frm_flg = 0;
 	p->qp_preavg = p->qp_out;
 
 	if (p->frame_type == INTER_P_FRAME || p->gop_mode == MPP_GOP_ALL_INTRA) {
@@ -1225,6 +1279,9 @@ MPP_RET rc_model_v2_smt_end(void *ctx, EncRcTask * task)
 	p->qp_prev_out = p->qp_out;
 	p->last_inst_bps = p->ins_bps;
 	p->last_frame_type = p->frame_type;
+	p->pre_iblk4_prop = cfg->iblk4_prop;
+	p->gop_frm_cnt++;
+	p->gop_qp_sum += p->qp_out;
 	task->qp_out = p->qp_out;
 
 	rc_dbg_func("leave %p\n", ctx);

@@ -955,7 +955,7 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 			       sizeof(lamd_modb_qp_cvr));
 	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 171;
-	if (ctx->smart_en)
+	if (!ctx->cfg->rc.debreath_en && ctx->smart_en)
 		reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 85;
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_p = 85;
 	{
