@@ -781,6 +781,9 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	} else
 		p->frame_type = INTER_P_FRAME;
 
+	if (frm->ref_mode == REF_TO_PREV_INTRA)
+		p->frame_type = INTER_VI_FRAME;
+
 	switch (p->gop_mode) {
 	case MPP_GOP_ALL_INTER: {
 		if (p->frame_type == INTRA_FRAME) {
@@ -1232,6 +1235,10 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	} else {
 		if (p->qp_out < p->usr_cfg.fm_lv_min_quality + qp_add_p)
 			p->qp_out = p->usr_cfg.fm_lv_min_quality + qp_add_p;
+	}
+	if (p->frame_type == INTER_VI_FRAME) {
+		p->qp_out -= 1;
+		p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
 	}
 	info->bit_target = p->bits_target_use;
 	info->quality_target = p->qp_out;
