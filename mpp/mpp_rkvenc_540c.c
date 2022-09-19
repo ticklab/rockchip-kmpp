@@ -864,6 +864,10 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 		task = (struct rkvenc_task *)session->task[i];
 		if (!task->mpp_task.state)
 			break;
+		if (i == MAX_TASK_CNT) {
+			mpp_err("can't found idel task");
+			task = NULL;
+		}
 	}
 
 	if (!task)
