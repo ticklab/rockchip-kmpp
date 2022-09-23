@@ -50,8 +50,11 @@ static MPP_RET h265e_init(void *ctx, EncImplCfg * ctrlCfg)
 	p->extra_info = mpp_calloc(H265eExtraInfo, 1);
 
 	p->param_buf = mpp_calloc_size(void, H265E_EXTRA_INFO_BUF_SIZE);
-	mpp_packet_init(&p->packeted_param, p->param_buf,
-			H265E_EXTRA_INFO_BUF_SIZE);
+
+	ret = mpp_packet_init(&p->packeted_param, p->param_buf,
+			      H265E_EXTRA_INFO_BUF_SIZE);
+	if (ret)
+		return ret;
 
 	h265e_init_extra_info(p->extra_info);
 	/* set defualt value of codec */

@@ -117,7 +117,9 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 		size_t size = SZ_1K;
 		p->hdr_buf = mpp_calloc_size(void, size);
 
-		mpp_packet_init(&p->hdr_pkt, p->hdr_buf, size);
+		ret = mpp_packet_init(&p->hdr_pkt, p->hdr_buf, size);
+		if (ret)
+			goto ERR_RET;
 		mpp_packet_set_length(p->hdr_pkt, 0);
 	}
 

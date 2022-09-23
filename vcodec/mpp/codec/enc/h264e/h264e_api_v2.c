@@ -187,7 +187,9 @@ static MPP_RET h264e_init(void *ctx, EncImplCfg *ctrl_cfg)
 	p->hdr_size = SZ_1K;
 	p->hdr_buf = mpp_malloc_size(void, p->hdr_size);
 	mpp_assert(p->hdr_buf);
-	mpp_packet_init(&p->hdr_pkt, p->hdr_buf, p->hdr_size);
+	ret = mpp_packet_init(&p->hdr_pkt, p->hdr_buf, p->hdr_size);
+	if (ret)
+		return ret;
 	mpp_assert(p->hdr_pkt);
 
 	p->cfg = ctrl_cfg->cfg;

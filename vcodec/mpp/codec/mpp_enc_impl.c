@@ -1123,9 +1123,14 @@ MPP_RET mpp_enc_proc_rc_update(MppEncImpl *enc)
 
 static MPP_RET mpp_enc_check_frm_pkt(MppEncImpl *enc)
 {
+	MPP_RET ret = MPP_OK;
 	enc->frm_buf = NULL;
-	if (NULL == enc->packet)
-		mpp_packet_new(&enc->packet);
+	if (NULL == enc->packet) {
+		ret = mpp_packet_new(&enc->packet);
+		if (ret)
+			return ret;
+
+	}
 
 	if (enc->frame) {
 		RK_U32 hor_stride = 0, ver_stride = 0;
@@ -1155,7 +1160,9 @@ static MPP_RET mpp_enc_check_frm_pkt(MppEncImpl *enc)
 
 MPP_RET mpp_enc_alloc_output_from_bufpool(MppEncImpl *enc)
 {
-	mpp_enc_check_frm_pkt(enc);
+	MPP_RET ret = mpp_enc_check_frm_pkt(enc);
+	if (ret)
+		return ret;
 	mpp_packet_set_length(enc->packet, 0);
 	if (NULL == enc->pkt_buf) {
 		/* NOTE: set buffer w * h * 1.5 to avoid buffer overflow */
@@ -1270,7 +1277,7 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 		MppPacketImpl *pkt = (MppPacketImpl *)enc->packet;
 		enc->pkt_buf = &pkt->buf;
 	}
-	mpp_enc_check_frm_pkt(enc);
+	ret = mpp_enc_check_frm_pkt(enc);
 	return ret;
 }
 
