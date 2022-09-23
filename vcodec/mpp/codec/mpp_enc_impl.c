@@ -1077,6 +1077,8 @@ MPP_RET mpp_enc_proc_rc_update(MppEncImpl *enc)
 
 		if (enc->online || enc->ref_buf_shared)
 			usr_cfg.shared_buf_en = 1;
+		if (enc->motion_static_switch_en)
+			usr_cfg.motion_static_switch_en = 1;
 
 		ret = rc_update_usr_cfg(enc->rc_ctx, &usr_cfg);
 		rc_cfg->change = 0;

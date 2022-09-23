@@ -176,6 +176,7 @@ typedef struct RcCfg_s {
 	RcDebreathCfg   debreath_cfg;
 	RcHierQPCfg     hier_qp_cfg;
 	RK_U32          shared_buf_en;
+	RK_U32          motion_static_switch_en;
 } RcCfg;
 
 /*

@@ -70,6 +70,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	enc_hal_cfg.smart_en = cfg->smart_en;
 	p->ring_buf_size = cfg->buf_size;
 	p->max_strm_cnt = cfg->max_strm_cnt;
+	p->motion_static_switch_en = cfg->motion_static_switch_en;
 	ctrl_cfg.coding = coding;
 	ctrl_cfg.type = VPU_CLIENT_BUTT;
 	ctrl_cfg.cfg = &p->cfg;
