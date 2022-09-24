@@ -770,6 +770,12 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	RK_S32 qp_add = 0;
 	RK_S32 qp_add_p = 0;
 	RK_S32 qp_minus = 0;
+	RK_S32 fm_lv_min_i_quality = p->usr_cfg.fm_lv_min_i_quality;
+	RK_S32 fm_lv_min_quality = p->usr_cfg.fm_lv_min_quality;
+	if (0 == mpp_data_sum_v2(p->motion_level) && p->usr_cfg.motion_static_switch_en) {
+		fm_lv_min_i_quality = 31;
+		fm_lv_min_quality = 31;
+	}
 
 	if (frm->reencode)
 		return MPP_OK;
@@ -864,8 +870,8 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				      p->bits_target_low_rate;
 		p->qp_out = cal_first_i_start_qp(p->bits_target_high_rate * 5, mb_w * mb_h);
 
-		if (p->qp_out < p->usr_cfg.fm_lv_min_i_quality + 3)
-			p->qp_out = p->usr_cfg.fm_lv_min_i_quality + 3;
+		if (p->qp_out < fm_lv_min_i_quality + 3)
+			p->qp_out = fm_lv_min_i_quality + 3;
 		p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
 		p->qp_preavg = 0;
 	}
@@ -1001,82 +1007,63 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				  mpp_data_sum_v2(p->motion_level),
 				  mpp_data_get_pre_val_v2(p->complex_level, 0),
 				  mpp_data_sum_v2(p->complex_level));
-			if (mpp_data_sum_v2(p->motion_level) == 0)
+			if (mpp_data_sum_v2(p->motion_level) < 100)
 				set_coef(ctx, &coef, 0);
-
-			else if (mpp_data_sum_v2(p->motion_level) == 1) {
-				if (mpp_data_get_pre_val_v2(p->motion_level, 0) == 0)
+			else if (mpp_data_sum_v2(p->motion_level) < 200) {
+				if (mpp_data_get_pre_val_v2(p->motion_level, 0) < 100)
 					set_coef(ctx, &coef, 102);
-
 				else
 					set_coef(ctx, &coef, 154);
-			} else if (mpp_data_sum_v2(p->motion_level) == 2) {
-				if (mpp_data_get_pre_val_v2(p->motion_level, 0)
-				    == 0)
+			} else if (mpp_data_sum_v2(p->motion_level) < 300) {
+				if (mpp_data_get_pre_val_v2(p->motion_level, 0) < 100)
 					set_coef(ctx, &coef, 154);
-
-				else if (mpp_data_get_pre_val_v2
-					 (p->motion_level, 0) == 1) {
-					if (mpp_data_get_pre_val_v2
-					    (p->motion_level, 1) == 0)
+				else if (mpp_data_get_pre_val_v2(p->motion_level, 0) == 100) {
+					if (mpp_data_get_pre_val_v2(p->motion_level, 1) < 100)
 						set_coef(ctx, &coef, 205);
-
-					else if (mpp_data_get_pre_val_v2
-						 (p->motion_level, 1) == 1)
+					else if (mpp_data_get_pre_val_v2(p->motion_level, 1) == 100)
 						set_coef(ctx, &coef, 256);
-
 					else
 						set_coef(ctx, &coef, 307);
 				} else
 					set_coef(ctx, &coef, 307);
-			} else if (mpp_data_sum_v2(p->motion_level) <= 5) {
-				if (mpp_data_get_pre_val_v2(p->motion_level, 0) == 0) {
-					if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 0)
+			} else if (mpp_data_sum_v2(p->motion_level) < 600) {
+				if (mpp_data_get_pre_val_v2(p->motion_level, 0) < 100) {
+					if (mpp_data_get_pre_val_v2 (p->motion_level, 1) < 100)
 						set_coef(ctx, &coef, 307);
-
-					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 1)
+					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 100)
 						set_coef(ctx, &coef, 358);
-
 					else
 						set_coef(ctx, &coef, 410);
-				} else if (mpp_data_get_pre_val_v2 (p->motion_level, 0) == 1) {
-					if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 0)
+				} else if (mpp_data_get_pre_val_v2 (p->motion_level, 0) == 100) {
+					if (mpp_data_get_pre_val_v2 (p->motion_level, 1) < 100)
 						set_coef(ctx, &coef, 358);
-
-					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 1)
+					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 100)
 						set_coef(ctx, &coef, 410);
-
 					else
 						set_coef(ctx, &coef, 461);
 				} else
 					set_coef(ctx, &coef, 461);
-			} else if (mpp_data_sum_v2(p->motion_level) >= 6  && mpp_data_sum_v2(p->motion_level) <= 8) {
-				if (mpp_data_get_pre_val_v2(p->motion_level, 0) == 0) {
-					if (mpp_data_get_pre_val_v2(p->motion_level, 1) == 0)
+			} else if (mpp_data_sum_v2(p->motion_level) < 900) {
+				if (mpp_data_get_pre_val_v2(p->motion_level, 0) < 100) {
+					if (mpp_data_get_pre_val_v2(p->motion_level, 1) < 100)
 						set_coef(ctx, &coef, 410);
-
-					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 1)
+					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 100)
 						set_coef(ctx, &coef, 461);
-
 					else
 						set_coef(ctx, &coef, 512);
-				} else if (mpp_data_get_pre_val_v2 (p->motion_level, 0) == 1) {
-					if (mpp_data_get_pre_val_v2(p->motion_level, 1) == 0)
+				} else if (mpp_data_get_pre_val_v2 (p->motion_level, 0) == 100) {
+					if (mpp_data_get_pre_val_v2(p->motion_level, 1) < 100)
 						set_coef(ctx, &coef, 512);
-
-					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 1)
+					else if (mpp_data_get_pre_val_v2 (p->motion_level, 1) == 100)
 						set_coef(ctx, &coef, 563);
-
 					else
 						set_coef(ctx, &coef, 614);
 				} else
 					set_coef(ctx, &coef, 614);
-			} else if (mpp_data_sum_v2(p->motion_level) >= 9  && mpp_data_sum_v2(p->motion_level) <= 14)
+			} else if (mpp_data_sum_v2(p->motion_level) < 1500)
 				set_coef(ctx, &coef, 666);
-
-			else if (mpp_data_sum_v2(p->motion_level) >= 15 && mpp_data_sum_v2(p->motion_level) <= 18)
+			else if (mpp_data_sum_v2(p->motion_level) < 1900)
 				set_coef(ctx, &coef, 768);
-
 			else
 				set_coef(ctx, &coef, 900);
 
@@ -1177,11 +1164,8 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				}
 			}
 			p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
-			if (p->qp_out > 45) {
+			if (p->qp_out > 40) {
 				qp_add = 0;
-				qp_minus = 5;
-			} else if (p->qp_out > 40) {
-				qp_add = 1;
 				qp_minus = 4;
 			} else if (p->qp_out > 36) {
 				qp_add = 1;
@@ -1202,22 +1186,22 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 
 	qp_add = 4;
 	qp_add_p = 4;
-	if (mpp_data_sum_v2(p->motion_level) >= 7 || mpp_data_get_pre_val_v2(p->motion_level, 0) == 2) {
+	if (mpp_data_sum_v2(p->motion_level) >= 700 || mpp_data_get_pre_val_v2(p->motion_level, 0) == 200) {
 		qp_add = 6;
 		qp_add_p = 5;
 		if (mpp_data_sum_v2(p->complex_level) >= 15) {
 			qp_add = 7;
 			qp_add_p = 6;
 		}
-	} else if (mpp_data_sum_v2(p->motion_level) >= 4
-		   || mpp_data_get_pre_val_v2(p->motion_level, 0) == 1) {
+	} else if (mpp_data_sum_v2(p->motion_level) >= 400
+		   || mpp_data_get_pre_val_v2(p->motion_level, 0) == 100) {
 		qp_add = 5;
 		qp_add_p = 4;
 		if (mpp_data_sum_v2(p->complex_level) >= 15) {
 			qp_add = 6;
 			qp_add_p = 5;
 		}
-	} else if (mpp_data_sum_v2(p->motion_level) >= 1) {
+	} else if (mpp_data_sum_v2(p->motion_level) >= 100) {
 		qp_add = 4;
 		qp_add_p = 4;
 		if (mpp_data_sum_v2(p->complex_level) >= 15) {
@@ -1230,11 +1214,11 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	}
 
 	if (p->frame_type == INTRA_FRAME) {
-		if (p->qp_out < p->usr_cfg.fm_lv_min_i_quality + qp_add)
-			p->qp_out = p->usr_cfg.fm_lv_min_i_quality + qp_add;
+		if (p->qp_out < fm_lv_min_i_quality + qp_add)
+			p->qp_out = fm_lv_min_i_quality + qp_add;
 	} else {
-		if (p->qp_out < p->usr_cfg.fm_lv_min_quality + qp_add_p)
-			p->qp_out = p->usr_cfg.fm_lv_min_quality + qp_add_p;
+		if (p->qp_out < fm_lv_min_quality + qp_add_p)
+			p->qp_out = fm_lv_min_quality + qp_add_p;
 	}
 	if (p->frame_type == INTER_VI_FRAME) {
 		p->qp_out -= 1;

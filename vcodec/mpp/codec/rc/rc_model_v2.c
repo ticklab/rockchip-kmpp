@@ -1534,16 +1534,16 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 		RK_S32 md3 = mpp_data_get_pre_val_v2(p->motion_level, 0) + mpp_data_get_pre_val_v2(p->motion_level,
 												   1) + mpp_data_get_pre_val_v2(p->motion_level, 2);
 		if (RC_AVBR == usr_cfg->mode || RC_VBR == usr_cfg->mode || RC_CBR == usr_cfg->mode) {
-			if (md >= 7) {
-				if (md >= 14)
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 3 ? 3 : 2);
+			if (md >= 700) {
+				if (md >= 1400)
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 300 ? 3 : 2);
 				else
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 3 ? 2 : 1);
+					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 300 ? 2 : 1);
 
 				if (cplx >= 15)
 					qpmin ++;
 			} else if (RC_CBR != usr_cfg->mode) {
-				if (md >= 1) {
+				if (md > 100) {
 					if (cplx >= 16)
 						qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 1;
 					else if (cplx >= 10)

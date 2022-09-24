@@ -2315,7 +2315,7 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	RK_S32 mb4_num = (mb8_num << 2);
 	H265eV540cStatusElem *elem = (H265eV540cStatusElem *) ctx->reg_out[0];
 	RK_U32 hw_status = elem->hw_status;
-	RK_U32 madi_cnt = 0, madp_cnt = 0, md_cnt = 0, md_lvl = 0, madi_lvl = 0;
+	RK_U32 madi_cnt = 0, madp_cnt = 0, md_cnt = 0, madi_lvl = 0;
 
 	RK_U32 madi_th_cnt0 =
 		elem->st.st_madi_lt_num0.madi_th_lt_cnt0 +
@@ -2362,14 +2362,15 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 		md_cnt = (12 * madp_th_cnt3 + 11 * madp_th_cnt2 + 8 * madp_th_cnt1) >> 2;
 	madi_cnt = (6 * madi_th_cnt3 + 5 * madi_th_cnt2 + 4 * madi_th_cnt1) >> 2;
 
-	md_lvl = 0;
+	hal_rc_ret->motion_level = 0;
 	if (md_cnt * 100 > 15 * mbs)
-		md_lvl = 2;
+		hal_rc_ret->motion_level = 200;
 	else if (md_cnt * 100 > 5 * mbs)
-		md_lvl = 1;
+		hal_rc_ret->motion_level = 100;
+	else if (md_cnt * 100 > (mbs >> 2))
+		hal_rc_ret->motion_level = 1;
 	else
-		md_lvl = 0;
-	hal_rc_ret->motion_level = md_lvl;
+		hal_rc_ret->motion_level = 0;
 
 	madi_lvl = 0;
 	if (madi_cnt * 100 > 30 * mbs)
