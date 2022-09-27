@@ -546,8 +546,7 @@ static void mpp_task_timeout_work(struct work_struct *work_s)
 	}
 
 	mpp = mpp_get_task_used_device(task, session);
-	pr_err("reg[0x18]=0x%08x reg[0x60]=0x%08x enc_pic %08x jpg_cfg %08x\n",
-	       mpp_read(mpp, 0x18), mpp_read(mpp, 0x60), mpp_read(mpp, 0x300), mpp_read(mpp, 0x47c));
+
 	rkvenc_dump_dbg(mpp);
 	/* hardware maybe dead, reset it */
 	mpp_reset_up_read(mpp->reset_group);

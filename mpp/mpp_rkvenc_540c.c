@@ -664,9 +664,24 @@ static void *task_init(struct rkvenc_task *task)
 	return 0;
 }
 
+static void rkvenc_dump_simple_dbg(struct mpp_dev *mpp)
+{
+	pr_err("dvbm_en     -   %d\n", mpp_read(mpp, 0x60) & 0x1);
+	pr_err("fmt         -   %d\n", mpp_read(mpp, 0x300) & 0x3);
+	pr_err("jpg_en      -   %d\n", mpp_read(mpp, 0x47c) >> 31);
+	pr_err("vsldy       -   0x%08x\n", mpp_read(mpp, 0x18));
+	pr_err("st_wdg 	    -   0x%08x\n", mpp_read(mpp, 0x5000));
+	pr_err("st_ppl 	    -   0x%08x\n", mpp_read(mpp, 0x5004));
+	pr_err("st_vsp0     -   0x%08x\n", mpp_read(mpp, 0x5008));
+	pr_err("st_vsp1     -   0x%08x\n", mpp_read(mpp, 0x500c));
+	pr_err("vepu_cycle  -   0x%08x\n", mpp_read(mpp, 0x5200));
+}
+
 void rkvenc_dump_dbg(struct mpp_dev *mpp)
 {
 	u32 i;
+
+	rkvenc_dump_simple_dbg(mpp);
 
 	if (!unlikely(mpp_dev_debug & DEBUG_DUMP_ERR_REG))
 		return;
@@ -676,16 +691,13 @@ void rkvenc_dump_dbg(struct mpp_dev *mpp)
 
 		s = rkvenc_rv1106_hw_info.reg_msg[i].base_s;
 		e = rkvenc_rv1106_hw_info.reg_msg[i].base_e;
-		/* if fmt is jpeg, skip unused class */
-#if 0
+#if 1
 		if ((i == RKVENC_CLASS_RC) ||
 		    (i == RKVENC_CLASS_PAR) ||
-		    (i == RKVENC_CLASS_SQI))
+		    (i == RKVENC_CLASS_SQI) ||
+		    (i == RKVENC_CLASS_SCL) ||
+		    (i == RKVENC_CLASS_OSD))
 			continue;
-		if (i == RKVENC_CLASS_SCL)
-			s = 0x2c80;
-		if (i == RKVENC_CLASS_OSD)
-			s = 0x3138;
 #endif
 		for (j = s; j <= e; j += 4)
 			pr_info("reg[0x%0x] = 0x%08x\n", j, mpp_read(mpp, j));
@@ -1491,7 +1503,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 			if (mpp_debug_unlikely(DEBUG_DUMP_ERR_REG)) {
 				mpp_debug(DEBUG_DUMP_ERR_REG, "irq_status: %08x\n",
 					  task->irq_status);
-				mpp_task_dump_hw_reg(mpp);
+				rkvenc_dump_dbg(mpp);
 			}
 		}
 		mpp_task_finish(mpp_task->session, mpp_task);
