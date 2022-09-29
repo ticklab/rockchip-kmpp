@@ -165,6 +165,8 @@ static void init_h264e_cfg_set(MppEncCfgSet *cfg, MppClientType type)
 	rc_cfg->qp_delta_ip = 2;
 	rc_cfg->fm_lvl_qp_min_i = 26;
 	rc_cfg->fm_lvl_qp_min_p = 28;
+	rc_cfg->fm_lvl_qp_max_i = 51;
+	rc_cfg->fm_lvl_qp_max_p = 51;
 }
 
 static void h264e_add_syntax(H264eCtx *ctx, H264eSyntaxType type, void *p)

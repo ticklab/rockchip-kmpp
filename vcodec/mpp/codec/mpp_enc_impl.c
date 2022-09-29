@@ -430,6 +430,8 @@ MPP_RET mpp_enc_proc_rc_cfg(MppEncRcCfg *dst, MppEncRcCfg *src)
 		if (change & MPP_ENC_RC_CFG_CHANGE_FM_LV_QP) {
 			dst->fm_lvl_qp_min_i = src->fm_lvl_qp_min_i;
 			dst->fm_lvl_qp_min_p = src->fm_lvl_qp_min_p;
+			dst->fm_lvl_qp_max_i = src->fm_lvl_qp_max_i;
+			dst->fm_lvl_qp_max_p = src->fm_lvl_qp_max_p;
 		}
 
 		if (change & MPP_ENC_RC_CFG_CHANGE_HIER_QP) {
@@ -978,6 +980,8 @@ static void set_rc_cfg(RcCfg *cfg, MppEncCfgSet *cfg_set)
 	cfg->init_ip_ratio = rc->init_ip_ratio;
 	cfg->fm_lv_min_quality = rc->fm_lvl_qp_min_p;
 	cfg->fm_lv_min_i_quality = rc->fm_lvl_qp_min_i;
+	cfg->fm_lv_max_quality = rc->fm_lvl_qp_max_p;
+	cfg->fm_lv_max_i_quality = rc->fm_lvl_qp_max_i;
 	cfg->bps_target = rc->bps_target;
 	cfg->bps_max = rc->bps_max;
 	cfg->bps_min = rc->bps_min;

@@ -772,9 +772,11 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	RK_S32 qp_minus = 0;
 	RK_S32 fm_lv_min_i_quality = p->usr_cfg.fm_lv_min_i_quality;
 	RK_S32 fm_lv_min_quality = p->usr_cfg.fm_lv_min_quality;
+	RK_S32 fm_lv_max_i_quality = p->usr_cfg.fm_lv_max_i_quality;
+	RK_S32 fm_lv_max_quality = p->usr_cfg.fm_lv_max_quality;
 	if (0 == mpp_data_sum_v2(p->motion_level) && p->usr_cfg.motion_static_switch_en) {
-		fm_lv_min_i_quality = 31;
-		fm_lv_min_quality = 31;
+		fm_lv_min_i_quality = 32;
+		fm_lv_min_quality = 32;
 	}
 
 	if (frm->reencode)
@@ -958,16 +960,12 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 						else
 							p->qp_out = mpp_clip(p->qp_out, p->intra_preqp - 2, p->intra_preqp + 2);
 					}
-					if (p->qp_prev_out < 25)
-						qp_add = 4;
-					else if (p->qp_prev_out < 28)
+					if (p->qp_prev_out < 28)
 						qp_add = 3;
 					else if (p->qp_prev_out < 33)
 						qp_add = 2;
 
-					if (p->qp_prev_out > 45)
-						qp_minus = 5;
-					else if (p->qp_prev_out > 40)
+					if (p->qp_prev_out > 40)
 						qp_minus = 4;
 					else if (p->qp_prev_out  > 35)
 						qp_minus = 3;
@@ -989,7 +987,6 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 			RK_S32 qp_add = 0;
 			if (p->qp_prev_out < 25)
 				qp_add = 2;
-
 			else if (p->qp_prev_out < 29)
 				qp_add = 1;
 			p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out + qp_add, p->qp_prev_out + 4 + qp_add);
@@ -1165,7 +1162,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 			}
 			p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
 			if (p->qp_out > 40) {
-				qp_add = 0;
+				qp_add = 1;
 				qp_minus = 4;
 			} else if (p->qp_out > 36) {
 				qp_add = 1;
@@ -1178,7 +1175,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				qp_minus = 1;
 			} else {
 				qp_add = 4;
-				qp_minus = 0;
+				qp_minus = 1;
 			}
 			p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out - qp_minus, p->qp_prev_out + qp_add);
 		}
@@ -1213,17 +1210,15 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		qp_add_p = 5;
 	}
 
-	if (p->frame_type == INTRA_FRAME) {
-		if (p->qp_out < fm_lv_min_i_quality + qp_add)
-			p->qp_out = fm_lv_min_i_quality + qp_add;
-	} else {
-		if (p->qp_out < fm_lv_min_quality + qp_add_p)
-			p->qp_out = fm_lv_min_quality + qp_add_p;
-	}
+	if (p->frame_type == INTRA_FRAME)
+		p->qp_out = mpp_clip(p->qp_out, fm_lv_min_i_quality + qp_add, fm_lv_max_i_quality);
+	else
+		p->qp_out = mpp_clip(p->qp_out, fm_lv_min_quality + qp_add, fm_lv_max_quality);
 	if (p->frame_type == INTER_VI_FRAME) {
 		p->qp_out -= 1;
-		p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
+		p->qp_out = mpp_clip(p->qp_out, fm_lv_min_quality + qp_add - 1, fm_lv_max_quality);
 	}
+	p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
 	info->bit_target = p->bits_target_use;
 	info->quality_target = p->qp_out;
 	info->quality_max = p->usr_cfg.max_quality;

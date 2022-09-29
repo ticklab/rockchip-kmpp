@@ -1475,8 +1475,10 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 	RK_S32 quality_max = info->quality_max;
 	RK_S32 quality_target = info->quality_target;
 	RK_S32 qpmin = info->quality_min;
-	RK_S32 max_i_frame_qp = usr_cfg->fm_lv_min_i_quality;
-	RK_S32 max_p_frame_qp = usr_cfg->fm_lv_min_quality;
+	RK_S32 min_i_frame_qp = usr_cfg->fm_lv_min_i_quality;
+	RK_S32 min_p_frame_qp = usr_cfg->fm_lv_min_quality;
+	RK_S32 max_i_frame_qp = usr_cfg->fm_lv_max_i_quality;
+	RK_S32 max_p_frame_qp = usr_cfg->fm_lv_max_quality;
 
 	rc_dbg_func("enter p %p task %p\n", p, task);
 
@@ -1536,20 +1538,20 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 		if (RC_AVBR == usr_cfg->mode || RC_VBR == usr_cfg->mode || RC_CBR == usr_cfg->mode) {
 			if (md >= 700) {
 				if (md >= 1400)
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 300 ? 3 : 2);
+					qpmin = (frm->is_intra ? min_i_frame_qp : min_p_frame_qp) + (md3 > 300 ? 3 : 2);
 				else
-					qpmin = (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + (md3 > 300 ? 2 : 1);
+					qpmin = (frm->is_intra ? min_i_frame_qp : min_p_frame_qp) + (md3 > 300 ? 2 : 1);
 
 				if (cplx >= 15)
 					qpmin ++;
 			} else if (RC_CBR != usr_cfg->mode) {
 				if (md > 100) {
 					if (cplx >= 16)
-						qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 1;
+						qpmin =  (frm->is_intra ? min_i_frame_qp : min_p_frame_qp) + 1;
 					else if (cplx >= 10)
-						qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp) + 0;
+						qpmin =  (frm->is_intra ? min_i_frame_qp : min_p_frame_qp) + 0;
 				} else {
-					qpmin =  (frm->is_intra ? max_i_frame_qp : max_p_frame_qp);
+					qpmin =  (frm->is_intra ? min_i_frame_qp : min_p_frame_qp);
 					if (cplx >= 15)
 						qpmin += 3;
 					else if (cplx >= 10)
@@ -1592,9 +1594,8 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 
 				start_qp -= i_quality_delta;
 			}
-			start_qp =
-				mpp_clip(start_qp, qpmin,
-					 info->quality_max);
+			start_qp = mpp_clip(start_qp, qpmin, info->quality_max);
+			start_qp = mpp_clip(start_qp, qpmin, max_i_frame_qp);
 			p->start_qp = start_qp;
 
 			if (!p->reenc_cnt) {
@@ -1618,6 +1619,7 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 					  usr_cfg->vi_quality_delta);
 				p->start_qp -= usr_cfg->vi_quality_delta;
 			}
+			p->start_qp =	mpp_clip(p->start_qp, qpmin, max_p_frame_qp);
 		}
 	}
 
