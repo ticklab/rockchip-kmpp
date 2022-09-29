@@ -670,8 +670,8 @@ static void rkvenc_dump_simple_dbg(struct mpp_dev *mpp)
 	pr_err("fmt         -   %d\n", mpp_read(mpp, 0x300) & 0x3);
 	pr_err("jpg_en      -   %d\n", mpp_read(mpp, 0x47c) >> 31);
 	pr_err("vsldy       -   0x%08x\n", mpp_read(mpp, 0x18));
-	pr_err("st_wdg 	    -   0x%08x\n", mpp_read(mpp, 0x5000));
-	pr_err("st_ppl 	    -   0x%08x\n", mpp_read(mpp, 0x5004));
+	pr_err("st_wdg      -   0x%08x\n", mpp_read(mpp, 0x5000));
+	pr_err("st_ppl      -   0x%08x\n", mpp_read(mpp, 0x5004));
 	pr_err("st_vsp0     -   0x%08x\n", mpp_read(mpp, 0x5008));
 	pr_err("st_vsp1     -   0x%08x\n", mpp_read(mpp, 0x500c));
 	pr_err("vepu_cycle  -   0x%08x\n", mpp_read(mpp, 0x5200));
