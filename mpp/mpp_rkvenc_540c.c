@@ -1991,6 +1991,7 @@ static int rkvenc_reset(struct mpp_dev *mpp)
 	mpp_write(mpp, hw->int_sta_base, 0);
 	mpp_write(mpp, hw->enc_clr_base, 0);
 
+#if 0
 	/* cru reset */
 	if (enc->rst_a && enc->rst_h && enc->rst_core) {
 		mpp_pmu_idle_request(mpp, true);
@@ -2003,6 +2004,7 @@ static int rkvenc_reset(struct mpp_dev *mpp)
 		mpp_safe_unreset(enc->rst_core);
 		mpp_pmu_idle_request(mpp, false);
 	}
+#endif
 	rkvenc_clear_dvbm_info(mpp);
 
 	mpp_debug_leave();
