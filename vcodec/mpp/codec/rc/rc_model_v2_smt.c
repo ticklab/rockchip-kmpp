@@ -1344,17 +1344,8 @@ void rc_model_v2_smt_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 		seq_printf(seq, "%7d%7u%8u%6u%6u%8s%13u%13u%5s%5s \n", chl_id, usr_cfg->igop, usr_cfg->stats_time,
 			   usr_cfg->fps.fps_in_num / usr_cfg->fps.fps_in_denorm,
 			   usr_cfg->fps.fps_out_num / usr_cfg->fps.fps_out_denorm,
-			   strof_rc_mode(usr_cfg->mode), usr_cfg->bps_min / 1000, usr_cfg->bps_max / 1000, "N/A", "N/A");
+			   "smart", usr_cfg->bps_min / 1000, usr_cfg->bps_max / 1000, "N/A", "N/A");
 	}
-
-	seq_puts(seq,
-		 "\n---------RC base param 2--------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%8s%8s%8s%8s%10s%10s%12s \n", "ChnId", "MinQp", "MaxQp", "MinIQp", "MaxIQp",
-		   "FrmMinQp", "FrmMinIQp", "EnableIdr");
-	seq_printf(seq, "%7d%8d%8d%8d%8d%10d%10d%12s \n", chl_id, usr_cfg->min_quality,
-		   usr_cfg->max_quality,
-		   usr_cfg->min_i_quality, usr_cfg->max_i_quality, usr_cfg->fm_lv_min_quality,
-		   usr_cfg->fm_lv_min_i_quality, "Y");
 
 	seq_puts(seq,
 		 "\n---------RC gop mode attr-------------------------------------------------------------------------\n");
@@ -1376,12 +1367,14 @@ void rc_model_v2_smt_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 	case RC_VBR: {
 		seq_puts(seq,
 			 "\n---------RC run smart common param------------------------------------------------------------------\n");
-		seq_printf(seq, "%7s%8s%8s%8s%8s%10s%10s%15s \n", "ChnId",
-			   "MaxQp", "MinQp", "MaxIQp", "MinIQp", "FrmMinQp", "FrmMinIQp", "MaxReEncTimes");
+		seq_printf(seq, "%7s%8s%8s%8s%8s%10s%10s%10s%10s%15s \n", "ChnId",
+			   "MaxQp", "MinQp", "MaxIQp", "MinIQp", "FrmMaxQp", "FrmMinQp", "FrmMaxIQp", "FrmMinIQp",
+			   "MaxReEncTimes");
 
-		seq_printf(seq, "%7d%8u%8u%8u%8u%10d%10d%15d\n", chl_id,
+		seq_printf(seq, "%7d%8u%8u%8u%8u%10d%10d%10d%10d%15d\n", chl_id,
 			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
-			   usr_cfg->fm_lv_min_quality, usr_cfg->fm_lv_min_i_quality,
+			   usr_cfg->fm_lv_max_quality, usr_cfg->fm_lv_min_quality,
+			   usr_cfg->fm_lv_max_i_quality, usr_cfg->fm_lv_min_i_quality,
 			   usr_cfg->max_reencode_times);
 
 

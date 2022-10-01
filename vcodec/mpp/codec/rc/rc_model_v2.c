@@ -1847,26 +1847,31 @@ void rc_model_v2_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 	case RC_CBR: {
 		seq_puts(seq,
 			 "\n---------RC run cbr param-------------------------------------------------------------------------\n");
-		seq_printf(seq, "%7s%10s%10s%8s%8s%8s%8s%15s \n", "ChnId", "MinIprop", "MaxIprop", "MaxQp", "MinQp",
-			   "MaxIQp", "MinIQp", "MaxReEncTimes");
+		seq_printf(seq, "%7s%10s%10s%8s%8s%8s%8s%10s%10s%10s%10s%15s \n", "ChnId", "MinIprop", "MaxIprop",
+			   "MaxQp", "MinQp", "MaxIQp", "MinIQp",  "FrmMaxQp", "FrmMinQp", "FrmMaxIQp", "FrmMinIQp",
+			   "MaxReEncTimes");
 
-		seq_printf(seq, "%7d%10u%10u%8u%8u%8u%8u%15d\n", chl_id, usr_cfg->min_i_bit_prop,
+		seq_printf(seq, "%7d%10u%10u%8u%8u%8u%8u%10d%10d%10d%10d%15d\n", chl_id, usr_cfg->min_i_bit_prop,
 			   usr_cfg->max_i_bit_prop,
 			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
-			   usr_cfg->max_reencode_times);
+			   usr_cfg->fm_lv_max_quality, usr_cfg->fm_lv_min_quality, usr_cfg->fm_lv_max_i_quality,
+			   usr_cfg->fm_lv_min_i_quality, usr_cfg->max_reencode_times);
 
 	} break;
 	case RC_VBR: {
 		RK_U32 ChgPs = usr_cfg->bps_target * 100 / usr_cfg->bps_max;
 		seq_puts(seq,
 			 "\n---------RC run vbr common param------------------------------------------------------------------\n");
-		seq_printf(seq, "%7s%8s%10s%10s%8s%8s%8s%8s%15s \n", "ChnId", "ChgPs", "MinIprop", "MaxIprop",
-			   "MaxQp", "MinQp", "MaxIQp", "MinIQp", "MaxReEncTimes");
+		seq_printf(seq, "%7s%8s%10s%10s%8s%8s%8s%8s%10s%10s%10s%10s%15s \n", "ChnId", "ChgPs", "MinIprop",
+			   "MaxIprop", "MaxQp", "MinQp", "MaxIQp", "MinIQp", "FrmMaxQp", "FrmMinQp", "FrmMaxIQp", "FrmMinIQp",
+			   "MaxReEncTimes");
 
-		seq_printf(seq, "%7d%8d%10u%10u%8u%8u%8u%8u%15d\n", chl_id, ChgPs, usr_cfg->min_i_bit_prop,
+		seq_printf(seq, "%7d%8d%10u%10u%8u%8u%8u%8u%10d%10d%10d%10d%15d\n", chl_id, ChgPs,
+			   usr_cfg->min_i_bit_prop,
 			   usr_cfg->max_i_bit_prop,
 			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
-			   usr_cfg->max_reencode_times);
+			   usr_cfg->fm_lv_max_quality, usr_cfg->fm_lv_min_quality, usr_cfg->fm_lv_max_i_quality,
+			   usr_cfg->fm_lv_min_i_quality, usr_cfg->max_reencode_times);
 
 
 	} break;
