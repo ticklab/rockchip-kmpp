@@ -2683,6 +2683,7 @@ static MPP_RET hal_h265e_v540c_ret_comb_task(void *hal, HalEncTask *task, HalEnc
 	H265eV540cStatusElem *elem = (H265eV540cStatusElem *) ctx->reg_out[0];
 	vepu540c_h265_fbk *fb = &ctx->feedback;
 	EncRcTaskInfo *hal_rc_ret = (EncRcTaskInfo *) &jpeg_enc_task->rc_task->info;
+
 	MPP_RET ret = MPP_OK;
 
 	hal_h265e_enter();
@@ -2692,6 +2693,9 @@ static MPP_RET hal_h265e_v540c_ret_comb_task(void *hal, HalEncTask *task, HalEnc
 		return ret;
 	enc_task->hw_length = fb->out_strm_size;
 	enc_task->length += fb->out_strm_size;
+
+	if (elem->hw_status & RKV_ENC_INT_JPEG_OVERFLOW)
+		jpeg_enc_task->jpeg_overflow = 1;
 
 	jpeg_enc_task->hw_length = elem->st.jpeg_head_bits_l32;
 	jpeg_enc_task->length += jpeg_enc_task->hw_length;

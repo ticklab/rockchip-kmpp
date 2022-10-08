@@ -1894,14 +1894,23 @@ static MPP_RET mpp_enc_comb_end_jpeg(MppEnc ctx, MppPacket *packet)
 	frm->reencode_times = 0;
 TASK_DONE:
 
-	*packet = enc->packet;
 	/* setup output packet and meta data */
-	mpp_packet_set_length(enc->packet, hal_task->length);
-	if (frm->is_intra)
-		mpp_packet_set_flag(enc->packet, MPP_PACKET_FLAG_INTRA); //set as key frame
-	mpp_packet_set_temporal_id(enc->packet, frm->temporal_id);
-	if (mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev))
-		mpp_err_f("ring_buf_put_used fail \n");
+	if (ret) {
+		enc->frame_force_drop++;
+		mpp_packet_set_length(enc->packet, 0);
+		mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev);
+		mpp_packet_deinit(&enc->packet);
+	} else {
+		mpp_packet_set_length(enc->packet, hal_task->length);
+		if (frm->is_intra)
+			mpp_packet_set_flag(enc->packet, MPP_PACKET_FLAG_INTRA); //set as key frame
+		mpp_packet_set_temporal_id(enc->packet, frm->temporal_id);
+		if (mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev))
+			mpp_err_f("ring_buf_put_used fail \n");
+	}
+
+	*packet = enc->packet;
+
 	/*
 	 * First return output packet.
 	 * Then enqueue task back to input port.

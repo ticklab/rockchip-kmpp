@@ -82,6 +82,7 @@ typedef struct HalEncTask_t {
 	RK_U32 online;
 	void *jpeg_osd_reg;
 	void *jpeg_tlb_reg;
+	RK_U32 jpeg_overflow;
 } HalEncTask;
 
 #endif /* __HAL_ENC_TASK__ */

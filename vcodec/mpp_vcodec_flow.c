@@ -268,6 +268,7 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 		comb_entry = mpp_vcodec_get_chan_entry(
 				     chan_entry->binder_chan_id, MPP_CTX_ENC);
 		if (comb_entry && comb_entry->handle) {
+			struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
 			chan_entry->last_jeg_combo_end = mpp_time();
 			ret = mpp_enc_int_process((MppEnc)chan_entry->handle,
 						  comb_entry->handle, &packet,
@@ -275,7 +276,8 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 			if (jpeg_packet) {
 				mpp_vcodec_enc_add_packet_list(comb_entry,
 							       jpeg_packet);
-			}
+			} else if (mpidev_fn && mpidev_fn->notify_drop_frm)
+				mpidev_fn->notify_drop_frm(comb_entry->chan_id);
 		}
 		atomic_dec(&chan_entry->cfg.comb_runing);
 		atomic_dec(&comb_entry->runing);

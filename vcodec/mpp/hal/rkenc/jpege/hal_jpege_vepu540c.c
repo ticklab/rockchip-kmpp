@@ -476,6 +476,11 @@ static MPP_RET hal_jpege_vepu540c_status_check(void *hal)
 	if (hw_status & RKV_ENC_INT_TIMEOUT_ERROR)
 		mpp_err_f("RKV_ENC_INT_TIMEOUT_ERROR");
 
+	if (hw_status & RKV_ENC_INT_JPEG_OVERFLOW) {
+		mpp_err_f("JPEG BIT_STREAM_OVERFLOW");
+		return MPP_NOK;
+	}
+
 	return MPP_OK;
 }
 
@@ -498,7 +503,9 @@ MPP_RET hal_jpege_v540c_wait(void *hal, HalEncTask * task)
 		mpp_err_f("poll cmd failed %d\n", ret);
 		ret = MPP_ERR_VPUHW;
 	} else {
-		hal_jpege_vepu540c_status_check(hal);
+		ret = hal_jpege_vepu540c_status_check(hal);
+		if (ret)
+			return ret;
 		task->hw_length += elem->st.jpeg_head_bits_l32;
 	}
 
@@ -558,6 +565,12 @@ MPP_RET hal_jpege_v540c_ret_task(void *hal, HalEncTask * task)
 	if (!ctx->session_run) {
 		vepu540c_osd_put_dma_buf(&ctx->osd_cfg); //combo case session no run must release agin
 	}
+
+	if (task->jpeg_overflow) {
+		mpp_err("jpege bit stream overflow");
+		return MPP_NOK;
+	}
+
 	ctx->session_run = 0;
 	hal_jpege_leave();
 	return MPP_OK;

@@ -2775,6 +2775,10 @@ static MPP_RET hal_h264e_vepu540c_ret_comb_task(void *hal, HalEncTask *task, Hal
 	ret = hal_h264e_vepu540c_ret_task(hal, task);
 	if (ret)
 		return ret;
+
+	if (regs->reg_ctl.int_sta.jbsf_oflw_sta)
+		jpeg_task->jpeg_overflow = 1;
+
 	jpeg_task->hw_length += regs->reg_st.jpeg_head_bits_l32;
 	// update total hardware length
 	jpeg_task->length += jpeg_task->hw_length;
