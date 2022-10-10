@@ -535,7 +535,7 @@ EXPORT_SYMBOL(vmpi_register_fn2vcocdec);
 
 void vmpi_unregister_fn2vcocdec (void)
 {
-	mpp_vcodec_unregister_mipdev();
+	mpp_vcodec_unregister_mpidev();
 	mpidev_ops = NULL;
 	mpibuf_ops = NULL;
 	return;

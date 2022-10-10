@@ -91,7 +91,11 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 		mpp_vcodec_chan_entry_init(chan_entry, type, coding,
 					   (void *)enc);
 #ifdef CHAN_BUF_SHARED
-		mpp_vcodec_chan_setup_hal_bufs(chan_entry, attr);
+		if (mpp_vcodec_chan_setup_hal_bufs(chan_entry, attr)) {
+			mpp_enc_deinit(chan_entry->handle);
+			mpp_vcodec_chan_entry_deinit(chan_entry);
+			return -1;
+		}
 #endif
 		mpp_vcodec_inc_chan_num(type);
 

@@ -216,6 +216,7 @@ HalBuf *hal_bufs_get_buf(HalBufs bufs, RK_S32 buf_idx)
 	HalBufsImpl *impl = (HalBufsImpl *) bufs;
 	HalBuf *hal_buf = NULL;
 	RK_U32 mask = 0;
+	MPP_RET ret = MPP_OK;
 
 	if (NULL == impl || buf_idx < 0 || buf_idx >= impl->max_cnt) {
 		mpp_err_f("invalid input impl %p buf_idx %d\n", impl, buf_idx);
@@ -236,7 +237,9 @@ HalBuf *hal_bufs_get_buf(HalBufs bufs, RK_S32 buf_idx)
 			MppBuffer buf = hal_buf->buf[i];
 
 			if (size && NULL == buf) {
-				mpp_buffer_get(NULL, &buf, size);
+				ret = mpp_buffer_get(NULL, &buf, size);
+				if (ret)
+					return NULL;
 				mpp_assert(buf);
 				hal_buf->buf[i] = buf;
 			}

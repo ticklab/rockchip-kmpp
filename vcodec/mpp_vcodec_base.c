@@ -279,7 +279,7 @@ void mpp_vcodec_dec_chan_num(MppCtxType type)
 #define REF_HEADER_SIZE(w, h)			MPP_ALIGN((((w) * (h) / 64) + (w) / 2), SZ_4K)
 #define REF_WRAP_HEADER_EXT_SIZE(w)		MPP_ALIGN((3 * (w)), SZ_4K)
 
-static void get_wrap_buf(struct hal_shared_buf *ctx, struct vcodec_attr *attr, RK_S32 max_lt_cnt)
+static MPP_RET get_wrap_buf(struct hal_shared_buf *ctx, struct vcodec_attr *attr, RK_S32 max_lt_cnt)
 {
 	RK_S32 alignment = 64;
 	RK_S32 aligned_w = MPP_ALIGN(attr->max_width, alignment);
@@ -304,10 +304,33 @@ static void get_wrap_buf(struct hal_shared_buf *ctx, struct vcodec_attr *attr, R
 
 	if (ctx->recn_ref_buf)
 		mpp_buffer_put(ctx->recn_ref_buf);
-	mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
+	return mpp_buffer_get(NULL, &ctx->recn_ref_buf, total_wrap_size);
 }
 
-int mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_attr *attr)
+static void mpp_chan_clear_buf_resource(struct mpp_chan *entry)
+{
+	struct hal_shared_buf *ctx = &entry->shared_buf;
+	if (ctx->dpb_bufs) {
+		hal_bufs_deinit(ctx->dpb_bufs);
+		ctx->dpb_bufs = NULL;
+	}
+	if (ctx->recn_ref_buf) {
+		mpp_buffer_put(ctx->recn_ref_buf);
+		ctx->recn_ref_buf = NULL;
+	}
+
+	if (ctx->stream_buf) {
+		mpp_buffer_put(ctx->stream_buf);
+		ctx->stream_buf = NULL;
+	}
+	entry->max_width = 0;
+	entry->max_height = 0;
+	entry->max_lt_cnt = 0;
+	entry->ring_buf_size = 0;
+	return;
+}
+
+MPP_RET mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_attr *attr)
 {
 
 	if (((attr->max_width * attr->max_height > entry->max_width * entry->max_height) ||
@@ -368,14 +391,17 @@ int mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_attr *a
 		if (attr->shared_buf_en) {
 			size_t sizes[4] = {thumb_buf_size, cmv_size, smera_size, 0};
 			hal_bufs_setup(ctx->dpb_bufs, max_buf_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
-			get_wrap_buf(ctx, attr, max_lt_cnt);
+			if (get_wrap_buf(ctx, attr, max_lt_cnt))
+				goto fail;
 		} else {
 			size_t sizes[4] = {thumb_buf_size, cmv_size, smera_size, pixel_buf_size};
 			hal_bufs_setup(ctx->dpb_bufs, max_buf_cnt, MPP_ARRAY_ELEMS(sizes), sizes);
 		}
 
-		for (i = 0; i < max_buf_cnt; i++)
-			hal_bufs_get_buf(ctx->dpb_bufs, i);
+		for (i = 0; i < max_buf_cnt; i++) {
+			if (hal_bufs_get_buf(ctx->dpb_bufs, i) == NULL)
+				goto fail;
+		}
 
 		entry->max_width = attr->max_width;
 		entry->max_height = attr->max_height;
@@ -390,10 +416,14 @@ int mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_attr *a
 				mpp_buffer_put(ctx->stream_buf);
 				ctx->stream_buf = NULL;
 			}
-			mpp_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(attr->buf_size, 1024));
+			if (mpp_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(attr->buf_size, 1024)))
+				goto fail;
 		}
 	}
 	return 0;
+fail:
+	mpp_chan_clear_buf_resource(entry);
+	return MPP_NOK;
 }
 
 
@@ -456,24 +486,7 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 
 #ifdef CHAN_RELEASE_BUF
 	{
-		struct hal_shared_buf *ctx = &entry->shared_buf;
-		if (ctx->dpb_bufs) {
-			hal_bufs_deinit(ctx->dpb_bufs);
-			ctx->dpb_bufs = NULL;
-		}
-		if (ctx->recn_ref_buf) {
-			mpp_buffer_put(ctx->recn_ref_buf);
-			ctx->recn_ref_buf = NULL;
-		}
-
-		if (ctx->stream_buf) {
-			mpp_buffer_put(ctx->stream_buf);
-			ctx->stream_buf = NULL;
-		}
-		entry->max_width = 0;
-		entry->max_height = 0;
-		entry->max_lt_cnt = 0;
-		entry->ring_buf_size = 0;
+		mpp_chan_clear_buf_resource(entry);
 	}
 #endif
 	return 0;
@@ -620,7 +633,7 @@ int mpp_vcodec_init(void)
 	return 0;
 }
 
-int mpp_vcodec_unregister_mipdev(void)
+int mpp_vcodec_unregister_mpidev(void)
 {
 	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
 
@@ -641,24 +654,7 @@ int mpp_vcodec_deinit(void)
 
 	for (i = 0; i < MAX_ENC_NUM; i++) {
 		struct mpp_chan *entry = &venc->mpp_enc_chan_entry[i];
-		struct hal_shared_buf *ctx = &entry->shared_buf;
-		if (ctx->dpb_bufs) {
-			hal_bufs_deinit(ctx->dpb_bufs);
-			ctx->dpb_bufs = NULL;
-		}
-		if (ctx->recn_ref_buf) {
-			mpp_buffer_put(ctx->recn_ref_buf);
-			ctx->recn_ref_buf = NULL;
-		}
-
-		if (ctx->stream_buf) {
-			mpp_buffer_put(ctx->stream_buf);
-			ctx->stream_buf = NULL;
-		}
-		entry->max_width = 0;
-		entry->max_height = 0;
-		entry->max_lt_cnt = 0;
-		entry->ring_buf_size = 0;
+		mpp_chan_clear_buf_resource(entry);
 	}
 
 	if (venc->thd) {
@@ -677,24 +673,7 @@ int mpp_vcodec_clear_buf_resource(void)
 
 	for (i = 0; i < MAX_ENC_NUM; i++) {
 		struct mpp_chan *entry = &venc->mpp_enc_chan_entry[i];
-		struct hal_shared_buf *ctx = &entry->shared_buf;
-		if (ctx->dpb_bufs) {
-			hal_bufs_deinit(ctx->dpb_bufs);
-			ctx->dpb_bufs = NULL;
-		}
-		if (ctx->recn_ref_buf) {
-			mpp_buffer_put(ctx->recn_ref_buf);
-			ctx->recn_ref_buf = NULL;
-		}
-
-		if (ctx->stream_buf) {
-			mpp_buffer_put(ctx->stream_buf);
-			ctx->stream_buf = NULL;
-		}
-		entry->max_width = 0;
-		entry->max_height = 0;
-		entry->max_lt_cnt = 0;
-		entry->ring_buf_size = 0;
+		mpp_chan_clear_buf_resource(entry);
 	}
 	return 0;
 }
