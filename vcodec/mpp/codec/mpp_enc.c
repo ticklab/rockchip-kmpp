@@ -126,9 +126,18 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	/* NOTE: setup configure coding for check */
 	p->cfg.codec.coding = coding;
 	//	p->cfg.plt_cfg.plt = &p->cfg.plt_data;
-	mpp_enc_ref_cfg_init(&p->cfg.ref_cfg);
-	ret = mpp_enc_ref_cfg_copy(p->cfg.ref_cfg, mpp_enc_ref_default());
-	ret = mpp_enc_refs_set_cfg(p->refs, mpp_enc_ref_default());
+	if (mpp_enc_ref_cfg_init(&p->cfg.ref_cfg))
+		goto  ERR_RET;
+
+	if (mpp_enc_ref_cfg_copy(p->cfg.ref_cfg, mpp_enc_ref_default()))
+		goto ERR_RET;
+
+	if (mpp_enc_refs_set_cfg(p->refs, mpp_enc_ref_default()))
+		goto ERR_RET;
+
+	if (mpp_enc_refs_set_rc_igop(p->refs, p->cfg.rc.gop))
+		goto ERR_RET;
+
 	sema_init(&p->enc_sem, 1);
 	p->stop_flag = 1;
 	p->rb_userdata.free_cnt = MAX_USRDATA_CNT;
