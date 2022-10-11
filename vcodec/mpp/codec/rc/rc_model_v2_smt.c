@@ -226,7 +226,7 @@ MPP_RET bits_model_smt_init(RcModelV2SmtCtx * ctx)
 	RK_S32 target_bps = ctx->target_bps;
 	RK_U32 stat_len =
 		fps->fps_out_num * ctx->usr_cfg.stats_time / fps->fps_out_denorm;
-	stat_len = stat_len ? stat_len : 1;
+	stat_len = stat_len ? stat_len : 8;
 
 	rc_dbg_func("enter %p\n", ctx);
 	ctx->frm_num = 0;
@@ -766,7 +766,6 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	EncFrmStatus *frm = &task->frm;
 	EncRcTaskInfo *info = &task->info;
 	RcFpsCfg *fps = &p->usr_cfg.fps;
-	RK_S32 madi = 0;
 	RK_S32 qp_add = 0;
 	RK_S32 qp_add_p = 0;
 	RK_S32 qp_minus = 0;
@@ -863,121 +862,62 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	if (NULL == p->sse_p)
 		mpp_data_init(&p->sse_p, MPP_MIN(p->gop_min, 15));
 
-	madi = p->hal_cfg.madi;
-
 	if (p->frm_num == 0) {
 		RK_S32 mb_w = MPP_ALIGN(p->usr_cfg.width, 16) / 16;
 		RK_S32 mb_h = MPP_ALIGN(p->usr_cfg.height, 16) / 16;
+		RK_S32 ratio = 2;
+		if (fps->fps_out_num < 10)
+			ratio = 1;
+		else if (fps->fps_out_num < 20)
+			ratio = 2;
+		else
+			ratio = 3;
 		p->bits_target_use =  (p->bits_target_high_rate - p->bits_target_low_rate) / 2 +
 				      p->bits_target_low_rate;
-		p->qp_out = cal_first_i_start_qp(p->bits_target_high_rate * 5, mb_w * mb_h);
-
-		if (p->qp_out < fm_lv_min_i_quality + 3)
-			p->qp_out = fm_lv_min_i_quality + 3;
-		p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
+		p->qp_out = cal_first_i_start_qp(p->bits_target_high_rate * ratio, mb_w * mb_h);
+		if (fm_lv_min_i_quality > 34)
+			p->qp_out = mpp_clip(p->qp_out, fm_lv_min_i_quality, p->qp_max);
+		else
+			p->qp_out = mpp_clip(p->qp_out, 34, p->qp_max);
 		p->qp_preavg = 0;
 	}
 
 	if (p->frame_type == INTRA_FRAME) {
 		if (p->frm_num > 0) {
-			RK_S32 sse = mpp_data_avg(p->sse_p, 1, 1, 1) + 1;
-			RK_S32 bit_target_use =
-				(p->bits_target_low_rate +
-				 p->bits_target_high_rate) / 2;
-			p->qp_out = mpp_data_avg(p->qp_p, -1, 1, 1) - 3;
+			RK_S32 bit_target_use = (p->bits_target_low_rate + p->bits_target_high_rate) / 2;
+			RK_S32 avg_qp = mpp_clip(mpp_data_avg(p->qp_p, -1, 1, 1), fm_lv_min_i_quality, fm_lv_max_i_quality);
 
 			if (bit_target_use < 100)
 				bit_target_use = 100;
-
-			if (sse < p->intra_presse) {
-				if (bit_target_use <= p->intra_prerealbit)
-					p->qp_out = p->intra_preqp;
-
-				else {
-					if (madi >= MAD_THDI)
-						p->qp_out = p->intra_preqp - 1;
-					else {
-						if (p->intra_preqp -  p->qp_out >= 4)
-							p->qp_out = p->intra_preqp - (madi <= 12 ? 4 : 3);
-					}
-				}
-			} else if (sse > p->intra_presse && p->qp_out < p->intra_preqp) {
-				if (p->intra_preqp - p->qp_out >= 3)
-					p->qp_out = p->intra_preqp - 2;
+			p->bits_target_use = bit_target_use;
+			p->qp_out = p->intra_preqp;
+			if (bit_target_use <= p->intra_prerealbit) {
+				if (bit_target_use * 5 < p->intra_prerealbit)
+					p->qp_out = p->intra_preqp + 3;
+				else if (bit_target_use * 2 < p->intra_prerealbit)
+					p->qp_out = p->intra_preqp + 2;
+				else if (bit_target_use * 3 < p->intra_prerealbit * 2)
+					p->qp_out = p->intra_preqp + 1;
 			} else {
-				if (sse <= 2 * p->intra_presse)
-					p->qp_out = p->intra_preqp;
-				else if (sse <= 4 * p->intra_presse)
-					p->qp_out = mpp_clip(p->qp_out, p->intra_preqp - 1, p->intra_preqp + 1);
-				else
-					p->qp_out = mpp_clip(p->qp_out, p->intra_preqp - 2, p->intra_preqp + 2);
+				if (p->intra_prerealbit * 3 < bit_target_use)
+					p->qp_out = p->intra_preqp - 3;
+				else if (p->intra_prerealbit * 2 < bit_target_use)
+					p->qp_out = p->intra_preqp - 2;
+				else if (p->intra_prerealbit * 3 < bit_target_use * 2)
+					p->qp_out = p->intra_preqp - 1;
 			}
-			if (p->qp_prev_out < 25)
-				qp_add = 4;
-			else if (p->qp_prev_out < 28)
+			qp_add = 1;
+			if (p->qp_prev_out < 32)
 				qp_add = 2;
-			else if (p->qp_prev_out < 32)
-				qp_add = 1;
 
 			if (p->qp_prev_out > 45)
-				qp_minus = 5;
-			else if (p->qp_prev_out > 40)
 				qp_minus = 4;
-			else if (p->qp_prev_out  > 35)
+			else if (p->qp_prev_out > 40)
 				qp_minus = 3;
-			p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
+			else
+				qp_minus = 2;
+			p->qp_out = mpp_clip(p->qp_out, avg_qp - 6, avg_qp - 1);
 			p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out - 4 - qp_minus, p->qp_prev_out + qp_add);
-			if (p->bits_target_low_rate + p->bits_target_high_rate < 0) {
-				if (p->qp_out > 34) {
-					sse = mpp_data_avg(p->sse_p, 1, 1, 1) + 1;
-					bit_target_use = (p->bits_target_low_rate + p->bits_target_high_rate) / 2;
-					qp_add = 0;
-					qp_minus = 0;
-					p->qp_out = mpp_data_avg(p->qp_p, -1, 1, 1) - 3;
-
-					if (bit_target_use < 100)
-						bit_target_use = 100;
-
-					if (sse < p->intra_presse) {
-						if (bit_target_use <= p->intra_prerealbit)
-							p->qp_out = p->intra_preqp;
-						else {
-							if (madi >= MAD_THDI)
-								p->qp_out = p->intra_preqp - 1;
-							else {
-								if (p->intra_preqp -  p->qp_out >= 4)
-									p->qp_out = p->intra_preqp - (madi <= 12 ? 4 : 3);
-							}
-						}
-					} else if (sse > p->intra_presse && p->qp_out < p->intra_preqp) {
-						if (p->intra_preqp - p->qp_out >= 3)
-							p->qp_out = p->intra_preqp - 2;
-					} else {
-						if (sse <= 2 * p->intra_presse)
-							p->qp_out = p->intra_preqp;
-						else if (sse <= 4 * p->intra_presse)
-							p->qp_out = mpp_clip(p->qp_out, p->intra_preqp - 1, p->intra_preqp + 1);
-						else
-							p->qp_out = mpp_clip(p->qp_out, p->intra_preqp - 2, p->intra_preqp + 2);
-					}
-					if (p->qp_prev_out < 28)
-						qp_add = 3;
-					else if (p->qp_prev_out < 33)
-						qp_add = 2;
-
-					if (p->qp_prev_out > 40)
-						qp_minus = 4;
-					else if (p->qp_prev_out  > 35)
-						qp_minus = 3;
-					p->qp_out = mpp_clip(p->qp_out, p->qp_min, p->qp_max);
-					p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out - 4 - qp_minus, p->qp_prev_out + qp_add);
-					p->qp_out = mpp_clip(p->qp_out, 30, p->qp_prev_out + qp_add);
-				}
-			}
-
-			p->bits_target_use =  (p->bits_target_low_rate + p->bits_target_high_rate) / 2;
-			if (p->bits_target_use < 100)
-				p->bits_target_use = 100;
 		}
 	} else {
 		p->bits_target_use = (p->bits_target_low_rate + p->bits_target_high_rate) / 2;
@@ -1088,22 +1028,23 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				p->qp_out = p->qp_prev_out - 1;
 			else if (pre_diff_bit_use * 100 > bits_target_use * 3) {
 				if (pre_diff_bit_use >= bits_target_use)
-					p->qp_out = (p->qp_out >= 30 && madi < MAD_THDI) ? p->qp_prev_out - 4 : p->qp_prev_out - 3;
+					p->qp_out = p->qp_out >= 30 ? p->qp_prev_out - 4 : p->qp_prev_out - 3;
 				else if (pre_diff_bit_use * 4 >= bits_target_use * 1)
-					p->qp_out = (p->qp_out >= 30 && madi < MAD_THDI) ? p->qp_prev_out - 3 : p->qp_prev_out - 2;
+					p->qp_out = p->qp_out >= 30 ? p->qp_prev_out - 3 : p->qp_prev_out - 2;
 				else if (pre_diff_bit_use * 10 > bits_target_use * 1)
-					p->qp_out = (madi < MAD_THDI) ? p->qp_prev_out - 2 : p->qp_prev_out - 1;
+					p->qp_out = p->qp_prev_out - 2;
 				else
 					p->qp_out = p->qp_prev_out - 1;
 			} else {
-				RK_S32 weight = 1;
+				RK_S32 qp_add_tmp = 1;
+				if (p->qp_prev_out >= 36)
+					qp_add_tmp = 0;
 				pre_diff_bit_use = abs(pre_diff_bit_use);
-				weight = (madi < MAD_THDI ? 1 : 3);
-				if (pre_diff_bit_use >= 2 * weight * bits_target_use)
-					p->qp_out = p->qp_prev_out + 3;
-				else if (pre_diff_bit_use * 3 >= bits_target_use * 2 * weight)
-					p->qp_out = p->qp_prev_out + 2;
-				else if (pre_diff_bit_use * 5 >  bits_target_use * weight)
+				if (pre_diff_bit_use >= 2 * bits_target_use)
+					p->qp_out = p->qp_prev_out + 2 + qp_add_tmp;
+				else if (pre_diff_bit_use * 3 >= bits_target_use * 2)
+					p->qp_out = p->qp_prev_out + 1 + qp_add_tmp;
+				else if (pre_diff_bit_use * 5 >  bits_target_use)
 					p->qp_out = p->qp_prev_out + 1;
 				else
 					p->qp_out = p->qp_prev_out;
@@ -1139,23 +1080,17 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 					p->qp_out = p->qp_prev_out;
 				else if (pre_diff_bit_use * 100 > bits_target_use * 3) {
 					if (pre_diff_bit_use >= bits_target_use)
-						p->qp_out = (p->qp_out >= 30 && madi < MAD_THDI) ?  p->qp_prev_out - 3 : p->qp_prev_out - 2;
+						p->qp_out = p->qp_out >= 30 ?  p->qp_prev_out - 3 : p->qp_prev_out - 2;
 					else if (pre_diff_bit_use * 4 >= bits_target_use * 1)
-						p->qp_out = (p->qp_out >= 30 && madi < MAD_THDI) ? p->qp_prev_out - 2 : p->qp_prev_out - 1;
+						p->qp_out = p->qp_out >= 30 ? p->qp_prev_out - 2 : p->qp_prev_out - 1;
 					else if (pre_diff_bit_use * 10 > bits_target_use * 1)
-						p->qp_out = (madi <  MAD_THDI) ? p->qp_prev_out - 1 : p->qp_prev_out;
+						p->qp_out = p->qp_prev_out - 1;
 					else
 						p->qp_out = p->qp_prev_out;
 				} else {
-					RK_S32 weight = 1;
 					pre_diff_bit_use = abs(pre_diff_bit_use);
-					weight = (madi < MAD_THDI ? 1 : 2);
-					if (pre_diff_bit_use >= 2 * weight * bits_target_use)
+					if (pre_diff_bit_use * 3 >= bits_target_use * 2)
 						p->qp_out = p->qp_prev_out + 1;
-					else if (pre_diff_bit_use * 3 >= bits_target_use * 2 * weight)
-						p->qp_out = p->qp_prev_out + 1;
-					else if (pre_diff_bit_use * 5 > bits_target_use * weight)
-						p->qp_out = p->qp_prev_out;
 					else
 						p->qp_out = p->qp_prev_out;
 				}
@@ -1265,27 +1200,15 @@ MPP_RET rc_model_v2_smt_end(void *ctx, EncRcTask * task)
 	EncRcTaskInfo *cfg = (EncRcTaskInfo *) & task->info;
 	RK_S32 bit_real = cfg->bit_real;
 	RK_S32 madi = cfg->madi;
-	RK_U32 qp_sum;
-	RK_U32 avg_qp = 0;
 
 	rc_dbg_func("enter ctx %p cfg %p\n", ctx, cfg);
 	rc_dbg_rc("motion_level %u, complex_level %u\n", cfg->motion_level, cfg->complex_level);
 	mpp_data_update_v2(p->motion_level, cfg->motion_level);
 	mpp_data_update_v2(p->complex_level, cfg->complex_level);
-	if (p->codec_type == 1)
-		qp_sum = cfg->quality_real >> 5;	// 265
-	else
-		qp_sum = cfg->quality_real >> 4;	// 264
-
-	avg_qp = qp_sum;
-	p->qp_preavg = avg_qp;
-	if (p->frame_type == INTER_P_FRAME) {
-		if (madi >= MAD_THDI)
-			avg_qp = p->qp_out;
-	}
+	p->qp_preavg = p->qp_out;
 
 	if (p->frame_type == INTER_P_FRAME || p->gop_mode == MPP_GOP_ALL_INTRA) {
-		mpp_data_update(p->qp_p, avg_qp);
+		mpp_data_update(p->qp_p, p->qp_out);
 		mpp_data_update(p->sse_p, cfg->madp);
 	} else {
 		p->intra_preqp = p->qp_out;
