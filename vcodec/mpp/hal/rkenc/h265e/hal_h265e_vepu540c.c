@@ -503,7 +503,8 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 	    (smera_size > ctx->smera_size)) {
 
 		if (!ctx->shared_buf->dpb_bufs) {
-			hal_bufs_deinit(ctx->dpb_bufs);
+			if (ctx->dpb_bufs)
+				hal_bufs_deinit(ctx->dpb_bufs);
 			hal_bufs_init(&ctx->dpb_bufs);
 		}
 		new_max_cnt = MPP_MAX(new_max_cnt, old_max_cnt);
