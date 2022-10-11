@@ -234,7 +234,8 @@ static MPP_RET h265e_proc_dpb(void *ctx, HalEncTask * task)
 	h265e_dpb_proc_cpb(p->dpb, cpb);
 	h265e_dpb_get_curr(p->dpb);
 	h265e_slice_init(ctx, cpb->curr);
-	h265e_dpb_build_list(p->dpb, cpb);
+	if (h265e_dpb_build_list(p->dpb, cpb))
+		return MPP_NOK;
 
 	rc_task->frm = p->dpb->curr->status;
 

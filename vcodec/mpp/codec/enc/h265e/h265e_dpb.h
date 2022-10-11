@@ -123,7 +123,7 @@ MPP_RET h265e_dpb_deinit(h265_dpb * dpb);
 MPP_RET h265e_dpb_setup_buf_size(h265_dpb * dpb, RK_U32 size[],
 				 RK_U32 count);
 MPP_RET h265e_dpb_get_curr(h265_dpb * dpb);
-void h265e_dpb_build_list(h265_dpb * dpb, EncCpbStatus * cpb);
+MPP_RET h265e_dpb_build_list(h265_dpb * dpb, EncCpbStatus * cpb);
 void h265e_dpb_proc_cpb(h265_dpb * dpb, EncCpbStatus * cpb);
 
 #define h265e_dpb_dump_frms(dpb) h265e_dpb_dump_frm(dpb, __FUNCTION__)

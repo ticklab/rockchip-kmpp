@@ -548,8 +548,8 @@ static MPP_RET h265e_check_frame_cpb(h265_dpb_frm * frm, RK_S32 cnt,
 	return ret;
 }
 
-void h265e_dpb_cpb2rps(h265_dpb * dpb, RK_S32 curPoc, h265_slice * slice,
-		       EncCpbStatus * cpb)
+MPP_RET h265e_dpb_cpb2rps(h265_dpb * dpb, RK_S32 curPoc, h265_slice * slice,
+			  EncCpbStatus * cpb)
 {
 	RK_S32 i;
 	RK_S32 st_size = 0;
@@ -636,6 +636,8 @@ void h265e_dpb_cpb2rps(h265_dpb * dpb, RK_S32 curPoc, h265_slice * slice,
 		if (p == NULL) {
 			mpp_err("ref frame no found in refer index %d",
 				cpb->refr.seq_idx);
+
+			return MPP_NOK;
 		} else
 			ref_dealt_poc = p->poc - curPoc;
 
@@ -667,6 +669,7 @@ void h265e_dpb_cpb2rps(h265_dpb * dpb, RK_S32 curPoc, h265_slice * slice,
 	memcpy(&slice->rpl_modification, rps_list->rpl_modification,
 	       sizeof(h265_rpl_modification));
 	h265e_dbg_func("leave\n");
+	return MPP_OK;
 }
 
 void h265e_dpb_free_unsed(h265_dpb * dpb, EncCpbStatus * cpb)
@@ -788,7 +791,7 @@ void h265e_dpb_proc_cpb(h265_dpb * dpb, EncCpbStatus * cpb)
 	}
 }
 
-void h265e_dpb_build_list(h265_dpb * dpb, EncCpbStatus * cpb)
+MPP_RET h265e_dpb_build_list(h265_dpb * dpb, EncCpbStatus * cpb)
 {
 	RK_S32 poc_cur = dpb->curr->slice->poc;
 	h265_slice *slice = dpb->curr->slice;
@@ -823,7 +826,9 @@ void h265e_dpb_build_list(h265_dpb * dpb, EncCpbStatus * cpb)
 	}
 	// Do decoding refresh marking if any
 	h265e_dpb_dec_refresh_marking(dpb, poc_cur, slice->nal_unit_type);
-	h265e_dpb_cpb2rps(dpb, poc_cur, slice, cpb);
+
+	if (h265e_dpb_cpb2rps(dpb, poc_cur, slice, cpb))
+		return MPP_NOK;
 
 	slice->num_ref_idx[L0] = MPP_MIN(dpb->max_ref_l0,
 					 slice->rps->num_of_pictures);	// Ensuring L0 contains just the -ve POC
@@ -878,4 +883,5 @@ void h265e_dpb_build_list(h265_dpb * dpb, EncCpbStatus * cpb)
 		slice->tot_poc_num = slice->local_rps.num_of_pictures;
 	h265e_dpb_free_unsed(dpb, cpb);
 	h265e_dbg_func("leave\n");
+	return MPP_OK;
 }
