@@ -361,6 +361,10 @@ struct mpp_dev {
 	struct list_head queue_link;
 	s32 core_id;
 	u32 dump_regs;
+
+	/* power info */
+	atomic_t power_enabled;
+	u32 always_on;
 };
 
 struct mpp_session {

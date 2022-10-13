@@ -202,27 +202,33 @@ mpp_taskqueue_trigger_work(struct mpp_dev *mpp)
 
 int mpp_power_on(struct mpp_dev *mpp)
 {
-	pm_runtime_get_sync(mpp->dev);
-	pm_stay_awake(mpp->dev);
+	if (!atomic_xchg(&mpp->power_enabled, 1)) {
+		pm_runtime_get_sync(mpp->dev);
+		pm_stay_awake(mpp->dev);
 
-	if (mpp->hw_ops->clk_on)
-		mpp->hw_ops->clk_on(mpp);
+		if (mpp->hw_ops->clk_on)
+			mpp->hw_ops->clk_on(mpp);
+	}
 
 	return 0;
 }
 
 int mpp_power_off(struct mpp_dev *mpp)
 {
-	if (mpp->hw_ops->clk_off)
-		mpp->hw_ops->clk_off(mpp);
+	if (mpp->always_on)
+		return 0;
+	if (atomic_xchg(&mpp->power_enabled, 0)) {
+		if (mpp->hw_ops->clk_off)
+			mpp->hw_ops->clk_off(mpp);
 
-	pm_relax(mpp->dev);
-	if (mpp_taskqueue_get_pending_task(mpp->queue) ||
-	    mpp_taskqueue_get_running_task(mpp->queue)) {
-		pm_runtime_mark_last_busy(mpp->dev);
-		pm_runtime_put_autosuspend(mpp->dev);
-	} else
-		pm_runtime_put_sync_suspend(mpp->dev);
+		pm_relax(mpp->dev);
+		if (mpp_taskqueue_get_pending_task(mpp->queue) ||
+		    mpp_taskqueue_get_running_task(mpp->queue)) {
+			pm_runtime_mark_last_busy(mpp->dev);
+			pm_runtime_put_autosuspend(mpp->dev);
+		} else
+			pm_runtime_put_sync_suspend(mpp->dev);
+	}
 
 	return 0;
 }
@@ -2107,6 +2113,8 @@ int mpp_dev_probe(struct mpp_dev *mpp,
 	mpp->dev = dev;
 	mpp->hw_ops = mpp->var->hw_ops;
 	mpp->dev_ops = mpp->var->dev_ops;
+	atomic_set(&mpp->power_enabled, 0);
+	mpp->always_on = 0;
 
 	/* Get and attach to service */
 	ret = mpp_attach_service(mpp, dev);

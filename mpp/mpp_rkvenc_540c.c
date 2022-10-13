@@ -1210,6 +1210,7 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 
 		if (st_ppl & BIT(10))
 			mpp_err("enc started status %08x\n", st_ppl);
+
 #if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 		if (dvbm_en) {
 			enc->dvbm_overflow = 0;
@@ -1217,9 +1218,10 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 			update_online_info(mpp);
 			priv->dvbm_link = 1;
 			mpp_write_relaxed(mpp, hw->dvbm_cfg, dvbm_en);
+			mpp->always_on = 1;
 		}
-		priv->dvbm_en = dvbm_en;
 #endif
+		priv->dvbm_en = dvbm_en;
 		/* Flush the register before the start the device */
 		wmb();
 		if (!dvbm_en)
@@ -1473,7 +1475,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 		mpp_time_diff(mpp_task);
 		mpp->cur_task = NULL;
 		task = to_rkvenc_task(mpp_task);
-
+#if IS_ENABLED(CONFIG_ROCKCHIP_DVBM)
 		if (priv->dvbm_en) {
 			/*
 			* Workaround:
@@ -1490,6 +1492,7 @@ static int rkvenc_isr(struct mpp_dev *mpp)
 				enc->dvbm_overflow = 0;
 			}
 		}
+#endif
 		task->irq_status = (mpp->irq_status | mpp->overflow_status);
 		mpp->overflow_status = 0;
 		mpp_debug(DEBUG_IRQ_STATUS, "task %d fmt %d dvbm_en %d irq_status 0x%08x\n",
@@ -1739,6 +1742,9 @@ static int rkvenc_free_session(struct mpp_session *session)
 			rk_dvbm_unlink(enc->port);
 			priv->dvbm_link = 0;
 		}
+		if (priv->dvbm_en)
+			session->mpp->always_on = 0;
+
 		mpp_power_off(session->mpp);
 #endif
 	}
