@@ -333,7 +333,7 @@ MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame)
 		RK_U32 i;
 		if (cfg->codec.coding == MPP_VIDEO_CodingAVC) {
 			mb_w = MPP_ALIGN(cfg->prep.max_width, 64) / 16;
-			mb_h = MPP_ALIGN(cfg->prep.max_height, 16) / 16;
+			mb_h = MPP_ALIGN(cfg->prep.max_height, 64) / 16;
 		} else {
 			mb_w = MPP_ALIGN(cfg->prep.max_width, 32) / 16;
 			mb_h = MPP_ALIGN(cfg->prep.max_height, 32) / 16;
