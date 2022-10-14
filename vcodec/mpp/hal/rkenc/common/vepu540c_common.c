@@ -11,6 +11,7 @@
 #define MODULE_TAG  "vepu541_common"
 
 #include <linux/string.h>
+#include <linux/dma-buf.h>
 
 #include "mpp_log.h"
 #include "mpp_mem.h"
