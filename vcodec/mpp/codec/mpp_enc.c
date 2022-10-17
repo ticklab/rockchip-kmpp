@@ -260,7 +260,7 @@ MPP_RET mpp_enc_stop(MppEnc ctx)
 	MppEncImpl *enc = (MppEncImpl *) ctx;
 	down(&enc->enc_sem);
 	enc_dbg_func("%p in\n", enc);
-	enc->stop_flag = 0;
+	enc->stop_flag = 1;
 	ret = enc->hw_run;
 	enc_dbg_func("%p out\n", enc);
 	up(&enc->enc_sem);
