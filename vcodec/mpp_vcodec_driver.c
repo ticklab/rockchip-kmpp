@@ -141,9 +141,9 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 	}
 	break;
 	case VCODEC_CHAN_RESET: {
-		ret = mpp_vcodec_chan_stop(chan_id, type);
-		if (ret)
-			goto fail;
+		;//ret = mpp_vcodec_chan_stop(chan_id, type);
+		//if (ret)
+		//	goto fail;
 	}
 	break;
 	case VCODEC_CHAN_START: {
