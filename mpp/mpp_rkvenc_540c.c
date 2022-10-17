@@ -1737,15 +1737,12 @@ static int rkvenc_free_session(struct mpp_session *session)
 		struct rkvenc2_session_priv *priv = (struct rkvenc2_session_priv *)session->priv;
 		struct rkvenc_dev *enc = to_rkvenc_dev(session->mpp);
 
-		mpp_power_on(session->mpp);
 		if (priv->dvbm_link) {
 			rk_dvbm_unlink(enc->port);
 			priv->dvbm_link = 0;
 		}
 		if (priv->dvbm_en)
 			session->mpp->always_on = 0;
-
-		mpp_power_off(session->mpp);
 #endif
 	}
 	if (session && session->priv) {
