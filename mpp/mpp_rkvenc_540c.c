@@ -936,7 +936,7 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 			mpp_task->clbk_en = 0;
 	}
 
-	/*if (session->k_space) {
+	if (session->k_space) {
 		u32 i;
 		struct rkvenc_hw_info *hw = task->hw_info;
 
@@ -946,7 +946,7 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 			u32 *reg = task->reg[class].data;
 			mpp_get_dma_attach_mem_info(session, mpp_task, fmt, reg);
 		}
-	}*/
+	}
 	task->clk_mode = CLK_MODE_NORMAL;
 
 	mpp_debug_leave();
