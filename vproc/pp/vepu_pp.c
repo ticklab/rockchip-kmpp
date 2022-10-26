@@ -100,7 +100,7 @@ static int pp_allocate_buffer(struct pp_chn_info_t *info)
 	buf_len = wi * hi * 16;
 
 	info->buf_rfpw = pp_malloc_buffer(info, buf_len);
-	info->buf_rfpr = pp_malloc_buffer(info, buf_len);
+	info->buf_rfpr = info->buf_rfpw;
 	if (IS_ERR_OR_NULL(info->buf_rfpw) ||
 	    IS_ERR_OR_NULL(info->buf_rfpr)) {
 		pp_err("failed\n");
@@ -149,7 +149,6 @@ static int pp_allocate_buffer(struct pp_chn_info_t *info)
 static void pp_release_buffer(struct pp_chn_info_t *info)
 {
 	pp_free_buffer(info, info->buf_rfpw);
-	pp_free_buffer(info, info->buf_rfpr);
 
 	if (info->md_en)
 		pp_free_buffer(info, info->buf_rfmwr);
