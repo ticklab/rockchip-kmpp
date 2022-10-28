@@ -115,6 +115,7 @@ typedef struct H265eV540cHalContext_t {
 	RK_U32 recn_ref_wrap;
 	RK_S32 qpmap_en;
 	RK_S32 smart_en;
+	RK_S32 motion_static_switch_en;
 	MppBuffer recn_ref_buf;
 	WrapBufInfo wrap_infos;
 	struct hal_shared_buf *shared_buf;
@@ -948,15 +949,17 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 		}
 		reg_wgt->iprd_lamb_satd_ofst.lambda_satd_offset = 11;
 		if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC)
-			memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp,
-			       sizeof(lamd_modb_qp));
+			memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp, sizeof(lamd_modb_qp));
 		else
-			memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp_cvr,
-			       sizeof(lamd_modb_qp_cvr));
+			memcpy(&reg_wgt->rdo_wgta_qp_grpa_0_51[0], lamd_modb_qp_cvr, sizeof(lamd_modb_qp_cvr));
 	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 171;
-	if (!ctx->cfg->rc.debreath_en && ctx->smart_en)
-		reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 85;
+	if (ctx->smart_en) {
+		if (ctx->motion_static_switch_en)
+			reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 85;
+		else
+			reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 140;
+	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_p = 85;
 	{
 		/* 0x1760 */
@@ -1050,6 +1053,7 @@ MPP_RET hal_h265e_v540c_init(void *hal, MppEncHalCfg *cfg)
 	ctx->shared_buf = cfg->shared_buf;
 	ctx->qpmap_en = cfg->qpmap_en;
 	ctx->smart_en = cfg->smart_en;
+	ctx->motion_static_switch_en = cfg->motion_static_switch_en;
 
 	//hal_bufs_init(&ctx->dpb_bufs);
 
