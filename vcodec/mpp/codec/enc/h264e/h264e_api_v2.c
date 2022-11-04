@@ -281,6 +281,9 @@ static MPP_RET h264e_proc_prep_cfg(MppEncPrepCfg *dst, MppEncPrepCfg *src)
 				} else {
 					dst->max_width  = src->max_width;
 					dst->max_height = src->max_height;
+					if (dst->rotation == MPP_ENC_ROT_90
+					    || dst->rotation == MPP_ENC_ROT_270)
+						MPP_SWAP(RK_S32, dst->max_width, dst->max_height);
 				}
 			} else {
 				dst->max_width  = dst->width;

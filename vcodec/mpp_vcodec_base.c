@@ -274,10 +274,10 @@ void mpp_vcodec_dec_chan_num(MppCtxType type)
 	return;
 }
 
-#define REF_BODY_SIZE(w, h)			MPP_ALIGN((((w) * (h) * 3 / 2) + 48 * (w)), SZ_4K)
-#define REF_WRAP_BODY_EXT_SIZE(w)		MPP_ALIGN((240 * (w)), SZ_4K)
-#define REF_HEADER_SIZE(w, h)			MPP_ALIGN((((w) * (h) / 64) + (w) / 2), SZ_4K)
-#define REF_WRAP_HEADER_EXT_SIZE(w)		MPP_ALIGN((3 * (w)), SZ_4K)
+#define REF_BODY_SIZE(w, h)			MPP_ALIGN((((w) * (h) * 3 / 2) + 48 * MPP_MAX(w, h)), SZ_4K)
+#define REF_WRAP_BODY_EXT_SIZE(w, h)		MPP_ALIGN((240 * MPP_MAX(w, h)), SZ_4K)
+#define REF_HEADER_SIZE(w, h)			MPP_ALIGN((((w) * (h) / 64) + MPP_MAX(w, h) / 2), SZ_4K)
+#define REF_WRAP_HEADER_EXT_SIZE(w, h)		MPP_ALIGN((3 * MPP_MAX(w, h)), SZ_4K)
 
 static MPP_RET get_wrap_buf(struct hal_shared_buf *ctx, struct vcodec_attr *attr, RK_S32 max_lt_cnt)
 {
@@ -288,9 +288,9 @@ static MPP_RET get_wrap_buf(struct hal_shared_buf *ctx, struct vcodec_attr *attr
 	RK_U32 body_size, body_total_size, hdr_size, hdr_total_size;
 
 	body_size = REF_BODY_SIZE(aligned_w, aligned_h);
-	body_total_size = body_size + REF_WRAP_BODY_EXT_SIZE(aligned_w);
+	body_total_size = body_size + REF_WRAP_BODY_EXT_SIZE(aligned_w, aligned_h);
 	hdr_size = REF_HEADER_SIZE(aligned_w, aligned_h);
-	hdr_total_size = hdr_size + REF_WRAP_HEADER_EXT_SIZE(aligned_w);
+	hdr_total_size = hdr_size + REF_WRAP_HEADER_EXT_SIZE(aligned_w, aligned_h);
 	total_wrap_size = body_total_size + hdr_total_size;
 	if (max_lt_cnt > 0) {
 #ifdef ONLY_SMART_P
@@ -310,6 +310,7 @@ static MPP_RET get_wrap_buf(struct hal_shared_buf *ctx, struct vcodec_attr *attr
 static void mpp_chan_clear_buf_resource(struct mpp_chan *entry)
 {
 	struct hal_shared_buf *ctx = &entry->shared_buf;
+
 	if (ctx->dpb_bufs) {
 		hal_bufs_deinit(ctx->dpb_bufs);
 		ctx->dpb_bufs = NULL;
@@ -322,6 +323,11 @@ static void mpp_chan_clear_buf_resource(struct mpp_chan *entry)
 	if (ctx->stream_buf) {
 		mpp_buffer_put(ctx->stream_buf);
 		ctx->stream_buf = NULL;
+	}
+
+	if (ctx->ext_line_buf) {
+		mpp_buffer_put(ctx->ext_line_buf);
+		ctx->ext_line_buf = NULL;
 	}
 	entry->max_width = 0;
 	entry->max_height = 0;
@@ -386,6 +392,7 @@ MPP_RET mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_att
 			hal_bufs_deinit(ctx->dpb_bufs);
 			ctx->dpb_bufs = NULL;
 		}
+
 		hal_bufs_init(&ctx->dpb_bufs);
 
 		if (attr->shared_buf_en) {
@@ -400,6 +407,24 @@ MPP_RET mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_att
 
 		for (i = 0; i < max_buf_cnt; i++) {
 			if (hal_bufs_get_buf(ctx->dpb_bufs, i) == NULL)
+				goto fail;
+		}
+
+		if (attr->max_width < attr->max_height)
+			MPP_SWAP(RK_U32, attr->max_width,  attr->max_height);
+
+		if (attr->max_width  > entry->max_width && attr->max_width > 3072) {
+			RK_S32 aligned_w = MPP_ALIGN(attr->max_width, 64);
+			RK_S32 h265_buf_size = (aligned_w / 32 - 91) * 26 * 16;
+			RK_S32 h264_buf_size = (aligned_w / 64 - 36) * 56 * 16;
+			RK_S32 extern_line_size = MPP_MAX(h265_buf_size, h264_buf_size);
+
+			if (ctx->ext_line_buf) {
+				mpp_buffer_put(ctx->ext_line_buf);
+				ctx->ext_line_buf = NULL;
+			}
+
+			if (mpp_buffer_get(NULL, &ctx->ext_line_buf, extern_line_size))
 				goto fail;
 		}
 
@@ -420,6 +445,8 @@ MPP_RET mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_att
 				goto fail;
 		}
 	}
+
+
 	return 0;
 fail:
 	mpp_chan_clear_buf_resource(entry);

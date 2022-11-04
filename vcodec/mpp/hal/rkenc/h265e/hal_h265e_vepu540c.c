@@ -97,6 +97,8 @@ typedef struct H265eV540cHalContext_t {
 	/* two-pass deflicker */
 	MppBuffer  buf_pass1;
 
+
+
 	RK_U32 enc_mode;
 	RK_U32 frame_size;
 	RK_U32 smera_size;
@@ -120,6 +122,9 @@ typedef struct H265eV540cHalContext_t {
 	WrapBufInfo wrap_infos;
 	struct hal_shared_buf *shared_buf;
 	RK_U32 is_gray;
+
+	RK_S32 ext_line_buf_size;
+	MppBuffer ext_line_buf;
 } H265eV540cHalContext;
 
 #define TILE_BUF_SIZE  MPP_ALIGN(128 * 1024, 256)
@@ -199,9 +204,9 @@ static void get_wrap_buf(H265eV540cHalContext *ctx, RK_S32 max_lt_cnt)
 	WrapInfo *hdr = &ctx->wrap_infos.hdr;
 
 	body->size = REF_BODY_SIZE(aligned_w, aligned_h);
-	body->total_size = body->size + REF_WRAP_BODY_EXT_SIZE(aligned_w);
+	body->total_size = body->size + REF_WRAP_BODY_EXT_SIZE(aligned_w, aligned_h);
 	hdr->size = REF_HEADER_SIZE(aligned_w, aligned_h);
-	hdr->total_size = hdr->size + REF_WRAP_HEADER_EXT_SIZE(aligned_w);
+	hdr->total_size = hdr->size + REF_WRAP_HEADER_EXT_SIZE(aligned_w, aligned_h);
 	total_wrap_size = body->total_size + hdr->total_size;
 
 	if (max_lt_cnt > 0) {
@@ -441,6 +446,7 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 	RK_S32 max_lt_cnt;
 	RK_S32 smera_size = 0;
 	RK_S32 smera_r_size = 0;
+	RK_S32 aligned_w = MPP_ALIGN(prep->max_width, 64);
 	hal_h265e_enter();
 
 	mb_wd64 = (prep->max_width + 63) / 64;
@@ -498,6 +504,32 @@ static MPP_RET vepu540c_h265_setup_hal_bufs(H265eV540cHalContext *ctx)
 	}
 
 	smera_size = MPP_MAX(smera_size, smera_r_size);
+
+	if (aligned_w > 3 * SZ_1K) {
+		/* 480 bytes for each ctu above 3072 */
+
+		RK_S32 ext_line_buf_size = (aligned_w / 32 - 91) * 26 * 16;
+
+		if (!ctx->shared_buf->ext_line_buf ) {
+			if (ext_line_buf_size != ctx->ext_line_buf_size) {
+				mpp_buffer_put(ctx->ext_line_buf);
+				ctx->ext_line_buf = NULL;
+			}
+
+			if (NULL == ctx->ext_line_buf)
+				mpp_buffer_get(NULL, &ctx->ext_line_buf,
+					       ext_line_buf_size);
+		} else
+			ctx->ext_line_buf = ctx->shared_buf->ext_line_buf;
+
+		ctx->ext_line_buf_size = ext_line_buf_size;
+	} else {
+		if (ctx->ext_line_buf && !ctx->shared_buf->ext_line_buf) {
+			mpp_buffer_put(ctx->ext_line_buf);
+			ctx->ext_line_buf = NULL;
+		}
+		ctx->ext_line_buf_size = 0;
+	}
 
 	if ((frame_size > ctx->frame_size) ||
 	    (new_max_cnt > old_max_cnt) ||
@@ -1110,6 +1142,10 @@ MPP_RET hal_h265e_v540c_deinit(void *hal)
 
 	MPP_FREE(ctx->input_fmt);
 
+	if (!ctx->shared_buf->ext_line_buf && ctx->ext_line_buf) {
+		mpp_buffer_put(ctx->ext_line_buf);
+		ctx->ext_line_buf = NULL;
+	}
 
 	if (!ctx->shared_buf->dpb_bufs && ctx->dpb_bufs)
 		hal_bufs_deinit(ctx->dpb_bufs);
@@ -1165,6 +1201,23 @@ static MPP_RET hal_h265e_vepu540c_prepare(void *hal)
 
 	return MPP_OK;
 }
+
+static void vepu540c_h265_set_ext_line_buf(H265eV540cRegSet *regs,
+					   H265eV540cHalContext *ctx)
+{
+	if (ctx->ext_line_buf) {
+		regs->reg_base.reg0179_adr_ebufb =
+			mpp_dev_get_iova_address(ctx->dev, ctx->ext_line_buf, 179);
+
+		regs->reg_base.reg0178_adr_ebuft =
+			regs->reg_base.reg0179_adr_ebufb + ctx->ext_line_buf_size;
+
+	} else {
+		regs->reg_base.reg0178_adr_ebuft = 0;
+		regs->reg_base.reg0179_adr_ebufb = 0;
+	}
+}
+
 
 static MPP_RET
 vepu540c_h265_uv_address(hevc_vepu540c_base *reg_base, H265eSyntax_new *syn,
@@ -2082,6 +2135,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	vepu540c_h265_set_rc_regs(ctx, regs, task);
 	vepu540c_h265_set_slice_regs(syn, reg_base);
 	vepu540c_h265_set_ref_regs(syn, reg_base);
+	vepu540c_h265_set_ext_line_buf(regs, ctx);
 	if (ctx->osd_cfg.osd_data3)
 		vepu540c_set_osd(&ctx->osd_cfg);
 

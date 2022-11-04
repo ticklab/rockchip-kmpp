@@ -186,7 +186,7 @@ static MPP_RET hal_h264e_vepu540c_deinit(void *hal)
 		p->dev = NULL;
 	}
 
-	if (p->ext_line_buf) {
+	if (!p->shared_buf->ext_line_buf && p->ext_line_buf) {
 		mpp_buffer_put(p->ext_line_buf);
 		p->ext_line_buf = NULL;
 	}
@@ -293,9 +293,9 @@ static void get_wrap_buf(HalH264eVepu540cCtx *ctx, RK_S32 max_lt_cnt)
 	WrapInfo *hdr = &ctx->wrap_infos.hdr;
 
 	body->size = REF_BODY_SIZE(aligned_w, aligned_h);
-	body->total_size = body->size + REF_WRAP_BODY_EXT_SIZE(aligned_w);
+	body->total_size = body->size + REF_WRAP_BODY_EXT_SIZE(aligned_w, aligned_h);
 	hdr->size = REF_HEADER_SIZE(aligned_w, aligned_h);
-	hdr->total_size = hdr->size + REF_WRAP_HEADER_EXT_SIZE(aligned_w);
+	hdr->total_size = hdr->size + REF_WRAP_HEADER_EXT_SIZE(aligned_w, aligned_h);
 	total_wrap_size = body->total_size + hdr->total_size;
 
 	if (max_lt_cnt > 0) {
@@ -543,22 +543,24 @@ static void setup_hal_bufs(HalH264eVepu540cCtx *ctx)
 		max_lt_cnt = info->max_lt_cnt;
 	}
 
-	if (aligned_w > SZ_4K) {
+	if (aligned_w > 3 * SZ_1K) {
 		/* 480 bytes for each ctu above 3072 */
-		RK_S32 ext_line_buf_size = (aligned_w - 3 * SZ_1K) / 64 * 480;
+		RK_S32 ext_line_buf_size = (aligned_w / 64 - 36) * 56 * 16;
+		if (!ctx->shared_buf->ext_line_buf) {
+			if (ext_line_buf_size != ctx->ext_line_buf_size) {
+				mpp_buffer_put(ctx->ext_line_buf);
+				ctx->ext_line_buf = NULL;
+			}
 
-		if (ext_line_buf_size != ctx->ext_line_buf_size) {
-			mpp_buffer_put(ctx->ext_line_buf);
-			ctx->ext_line_buf = NULL;
-		}
-
-		if (NULL == ctx->ext_line_buf)
-			mpp_buffer_get(NULL, &ctx->ext_line_buf,
-				       ext_line_buf_size);
+			if (NULL == ctx->ext_line_buf)
+				mpp_buffer_get(NULL, &ctx->ext_line_buf,
+					       ext_line_buf_size);
+		} else
+			ctx->ext_line_buf = ctx->shared_buf->ext_line_buf;
 
 		ctx->ext_line_buf_size = ext_line_buf_size;
 	} else {
-		if (ctx->ext_line_buf) {
+		if (ctx->ext_line_buf && !ctx->shared_buf->ext_line_buf) {
 			mpp_buffer_put(ctx->ext_line_buf);
 			ctx->ext_line_buf = NULL;
 		}
@@ -2341,6 +2343,8 @@ static MPP_RET hal_h264e_vepu540c_gen_regs(void *hal, HalEncTask *task)
 	setup_vepu540c_split(regs, &cfg->split);
 	setup_vepu540c_me(regs, sps, slice);
 
+	setup_vepu540c_ext_line_buf(regs, ctx);
+
 	if (ctx->osd_cfg.osd_data3)
 		vepu540c_set_osd(&ctx->osd_cfg);
 
@@ -2579,6 +2583,10 @@ static MPP_RET hal_h264e_vepu540c_status_check(void *hal)
 
 	return MPP_OK;
 }
+
+
+
+
 
 static MPP_RET hal_h264e_vepu540c_wait(void *hal, HalEncTask *task)
 {

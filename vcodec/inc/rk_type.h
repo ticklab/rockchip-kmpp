@@ -132,6 +132,7 @@ struct vcodec_attr {
 struct hal_shared_buf {
 	HalBufs    dpb_bufs;
 	MppBuffer  recn_ref_buf;
+	MppBuffer  ext_line_buf;
 	MppBuffer  stream_buf;
 };
 
