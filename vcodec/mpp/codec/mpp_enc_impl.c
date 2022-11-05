@@ -1252,7 +1252,7 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 	if (enc->ring_pool && !enc->ring_pool->init_done && !get_vsm_ops()) {
 		if (!enc->ring_buf_size)
 			enc->ring_buf_size = size;
-		enc->ring_buf_size = MPP_ALIGN(enc->ring_buf_size, 1024);
+		enc->ring_buf_size = MPP_ALIGN(enc->ring_buf_size, SZ_4K);
 		if (enc->shared_buf->stream_buf)
 			buffer = enc->shared_buf->stream_buf;
 		else {

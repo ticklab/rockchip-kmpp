@@ -65,7 +65,8 @@ MPP_RET ring_buf_put_use(ring_buf_pool *ctx, ring_buf *buf)
 	w_pos = ctx->w_pos;
 	r_pos = ctx->r_pos;
 	start_pos = buf->start_offset;
-	end_pos = buf->start_offset + buf->use_len;
+	end_pos = ((buf->start_offset + buf->use_len) % ctx->len);
+
 	if (w_pos >= r_pos) {
 		if ((start_pos < w_pos && start_pos > r_pos) ||
 		    (end_pos >= r_pos && end_pos < w_pos)) {
@@ -107,7 +108,8 @@ MPP_RET ring_buf_put_free(ring_buf_pool *ctx, ring_buf *buf)
 	w_pos = ctx->w_pos;
 	r_pos = ctx->r_pos;
 	start_pos = buf->start_offset;
-	end_pos = buf->start_offset + buf->use_len;
+	end_pos = ((buf->start_offset + buf->use_len) % ctx->len);
+
 	if (r_pos >= w_pos) {
 		if ((end_pos < r_pos && end_pos > w_pos) ||
 		    (start_pos >= w_pos && start_pos < r_pos)) {
@@ -132,7 +134,7 @@ MPP_RET ring_buf_get_free(ring_buf_pool *ctx, ring_buf *buf, RK_U32 align,
 			  RK_U32 min_size, RK_U32 stream_num)
 {
 	RK_U32 align_offset = 0;
-	RK_U32 align_w_pos = 0;
+	RK_U32 align_w_pos = 0, align_r_pos = 0;
 	RK_U32 w_pos = 0, r_pos = 0;
 	if (!ctx || !buf)
 		return MPP_NOK;
@@ -141,59 +143,35 @@ MPP_RET ring_buf_get_free(ring_buf_pool *ctx, ring_buf *buf, RK_U32 align,
 	w_pos = ctx->w_pos;
 	r_pos = ctx->r_pos;
 	buf->mpi_buf_id = ctx->mpi_buf_id;
+	buf->cir_flag = 1;
+
 	ring_buf_dbg("get free pool %p ctx->r_pos %d ctx->w_pos %d\n", ctx,
 		     ctx->r_pos, ctx->w_pos);
-	if (w_pos == r_pos || !stream_num) {
-		ctx->w_pos = 0;
-		ctx->r_pos = 0;
-		w_pos = r_pos = 0;
-		if (ctx->len < min_size)
+
+	align_offset = align - (w_pos & (align - 1));
+	align_r_pos = (r_pos & ~(align - 1));
+	if (r_pos > w_pos) {
+		if (min_size + w_pos + align_offset >= r_pos)
 			return MPP_NOK;
-		align_offset = 0;
-		align_w_pos = w_pos + align_offset;
-		buf->buf = ctx->buf;
-		buf->start_offset = align_w_pos;
-		buf->buf_start = ctx->buf_base + buf->start_offset;
-		buf->size = ctx->len - align_offset;
-	} else {
-		if (r_pos > w_pos) {
-			align_offset = align - (w_pos & (align - 1));
-			if (min_size + w_pos + align_offset >= r_pos)
-				return MPP_NOK;
-			align_w_pos = w_pos + align_offset;
-			buf->start_offset = align_w_pos;
-			buf->buf_start = ctx->buf_base + buf->start_offset;
-
-			buf->buf = ctx->buf;
-
-			buf->size = r_pos - w_pos - align_offset;
-			return MPP_OK;
-		}
-
-		/* w_pos  > r_pos*/
-		if ((min_size + w_pos + align) > ctx->len) {
-			/*size no big enough at the tail but r_pos is zero*/
-			align_offset = 0;
-			if (!r_pos)
-				return MPP_NOK;
-			/*jumb to start pos*/
-			w_pos = 0;
-			if (min_size + w_pos + align_offset >= r_pos)
-				return MPP_NOK;
-			align_w_pos = w_pos + align_offset;
-
-			buf->buf = ctx->buf;
-			buf->start_offset = align_w_pos;
-			buf->buf_start = ctx->buf_base + buf->start_offset;
-			buf->size = r_pos - align_w_pos;
-			return MPP_OK;
-		}
-		align_offset = align - (w_pos & (align - 1));
 		align_w_pos = w_pos + align_offset;
 		buf->start_offset = align_w_pos;
 		buf->buf_start = ctx->buf_base + buf->start_offset;
-		buf->size = ctx->len - align_w_pos;
+		buf->r_pos = align_r_pos;
 		buf->buf = ctx->buf;
+		buf->size = r_pos - w_pos - align_offset;
+		return MPP_OK;
 	}
-	return MPP_OK;
+
+	/* w_pos  > r_pos*/
+	if (ctx->len - (w_pos + align_offset - r_pos) > min_size) {
+		align_w_pos = w_pos + align_offset;
+		buf->start_offset = align_w_pos;
+		buf->buf_start = ctx->buf_base + buf->start_offset;
+		buf->size = ctx->len - align_w_pos + r_pos;
+		buf->r_pos = align_r_pos;
+		buf->buf = ctx->buf;
+		return MPP_OK;
+	}
+
+	return MPP_NOK;
 }

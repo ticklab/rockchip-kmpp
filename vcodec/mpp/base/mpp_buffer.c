@@ -544,7 +544,15 @@ MPP_RET mpp_buffer_flush_for_cpu_with_caller(ring_buf *buf,
 			caller);
 		return MPP_ERR_UNKNOW;
 	}
-	dma_buf_begin_cpu_access_partial(p->dmabuf, DMA_FROM_DEVICE, buf->start_offset, buf->use_len);
+	if ( buf->start_offset + buf->use_len >= p->info.size) {
+		dma_buf_begin_cpu_access_partial(p->dmabuf, DMA_FROM_DEVICE, buf->start_offset,
+						 p->info.size - buf->start_offset);
+
+		dma_buf_begin_cpu_access_partial(p->dmabuf, DMA_FROM_DEVICE, 0,
+						 buf->start_offset + buf->use_len - p->info.size);
+
+	} else
+		dma_buf_begin_cpu_access_partial(p->dmabuf, DMA_FROM_DEVICE, buf->start_offset, buf->use_len);
 	(void)caller;
 	return MPP_OK;
 }

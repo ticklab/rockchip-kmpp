@@ -1664,18 +1664,27 @@ static void setup_vepu540c_io_buf(HalH264eVepu540cCtx *ctx,
 		regs->reg_base.adr_src2 += off_in[1];
 	}
 
-	if (buf_out->buf)
+	if (!buf_out->cir_flag) {
+		if (buf_out->buf)
+			regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out->buf, 173);
+		else
+			regs->reg_base.bsbb_addr = buf_out->mpi_buf_id;
+
+		regs->reg_base.bsbb_addr += buf_out->start_offset;
+		regs->reg_base.bsbr_addr = regs->reg_base.bsbb_addr;
+		regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr;
+		regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr;
+
+		regs->reg_base.bsbt_addr += (siz_out - 1);
+		regs->reg_base.adr_bsbs += off_out;
+	} else {
+		RK_U32 size = mpp_buffer_get_size(buf_out->buf);
 		regs->reg_base.bsbb_addr = mpp_dev_get_iova_address(dev, buf_out->buf, 173);
-	else
-		regs->reg_base.bsbb_addr = buf_out->mpi_buf_id;
+		regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr + ((buf_out->start_offset + off_out) % size);
+		regs->reg_base.bsbr_addr = regs->reg_base.bsbb_addr + buf_out->r_pos;
+		regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr + size;
+	}
 
-	regs->reg_base.bsbb_addr += buf_out->start_offset;
-	regs->reg_base.bsbr_addr = regs->reg_base.bsbb_addr;
-	regs->reg_base.adr_bsbs = regs->reg_base.bsbb_addr;
-	regs->reg_base.bsbt_addr = regs->reg_base.bsbb_addr;
-
-	regs->reg_base.bsbt_addr += (siz_out - 1);
-	regs->reg_base.adr_bsbs += off_out;
 	if (off_out && task->output->buf) {
 		dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),
 					       DMA_TO_DEVICE, task->output->start_offset, off_out);

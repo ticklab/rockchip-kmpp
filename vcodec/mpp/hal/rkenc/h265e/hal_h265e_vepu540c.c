@@ -1829,19 +1829,27 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 		regs->reg0171_meiw_addr = 0;
 	}
 
-	if (enc_task->output->buf) {
-		regs->reg0174_bsbs_addr =
-			mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, 174) + enc_task->output->start_offset;
-	} else
-		regs->reg0174_bsbs_addr = enc_task->output->mpi_buf_id + enc_task->output->start_offset;
+	if (!enc_task->output->cir_flag) {
+		if (enc_task->output->buf) {
+			regs->reg0174_bsbs_addr =
+				mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, 174) + enc_task->output->start_offset;
+		} else
+			regs->reg0174_bsbs_addr = enc_task->output->mpi_buf_id + enc_task->output->start_offset;
 
-	/* TODO: stream size relative with syntax */
-	regs->reg0172_bsbt_addr = regs->reg0174_bsbs_addr;
-	regs->reg0173_bsbb_addr = regs->reg0174_bsbs_addr;
-	regs->reg0175_bsbr_addr = regs->reg0174_bsbs_addr;
+		/* TODO: stream size relative with syntax */
+		regs->reg0172_bsbt_addr = regs->reg0174_bsbs_addr;
+		regs->reg0173_bsbb_addr = regs->reg0174_bsbs_addr;
+		regs->reg0175_bsbr_addr = regs->reg0174_bsbs_addr;
 
-	regs->reg0172_bsbt_addr += enc_task->output->size - 1;
-	regs->reg0174_bsbs_addr = regs->reg0174_bsbs_addr + len;
+		regs->reg0172_bsbt_addr += enc_task->output->size - 1;
+		regs->reg0174_bsbs_addr = regs->reg0174_bsbs_addr + len;
+	} else {
+		RK_U32 size = mpp_buffer_get_size(enc_task->output->buf);
+		regs->reg0173_bsbb_addr = mpp_dev_get_iova_address(ctx->dev, enc_task->output->buf, 173);
+		regs->reg0174_bsbs_addr = regs->reg0173_bsbb_addr + ((enc_task->output->start_offset + len) % size);
+		regs->reg0175_bsbr_addr = regs->reg0173_bsbb_addr + enc_task->output->r_pos;
+		regs->reg0172_bsbt_addr = regs->reg0173_bsbb_addr + size;
+	}
 
 	if (len && task->output->buf) {
 		dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),

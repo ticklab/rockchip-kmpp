@@ -711,15 +711,24 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 		vepu540c_jpeg_set_uv_offset(regs, syn, (Vepu541Fmt) fmt->format, task);
 	}
 
-	if (task->output->buf) {
-		regs->reg0257_adr_bsbb = mpp_dev_get_iova_address(cfg->dev, task->output->buf,
-								  257) + task->output->start_offset;
-	} else
-		regs->reg0257_adr_bsbb = task->output->mpi_buf_id + task->output->start_offset;
+	if (!task->output->cir_flag) {
+		if (task->output->buf) {
+			regs->reg0257_adr_bsbb = mpp_dev_get_iova_address(cfg->dev, task->output->buf,
+									  257) + task->output->start_offset;
+		} else
+			regs->reg0257_adr_bsbb = task->output->mpi_buf_id + task->output->start_offset;
 
-	regs->reg0256_adr_bsbt = regs->reg0257_adr_bsbb + task->output->size - 1;
-	regs->reg0258_adr_bsbr = regs->reg0257_adr_bsbb;
-	regs->reg0259_adr_bsbs = regs->reg0257_adr_bsbb + mpp_packet_get_length(task->packet);
+		regs->reg0256_adr_bsbt = regs->reg0257_adr_bsbb + task->output->size - 1;
+		regs->reg0258_adr_bsbr = regs->reg0257_adr_bsbb;
+		regs->reg0259_adr_bsbs = regs->reg0257_adr_bsbb + mpp_packet_get_length(task->packet);
+	} else {
+		RK_U32 size = mpp_buffer_get_size(task->output->buf);
+		regs->reg0257_adr_bsbb = mpp_dev_get_iova_address(cfg->dev, task->output->buf, 257);
+		regs->reg0259_adr_bsbs = regs->reg0257_adr_bsbb + ((task->output->start_offset +
+								    mpp_packet_get_length(task->packet)) % size);
+		regs->reg0258_adr_bsbr = regs->reg0257_adr_bsbb + task->output->r_pos;
+		regs->reg0256_adr_bsbt = regs->reg0257_adr_bsbb + size;
+	}
 
 	regs->reg0272_enc_rsl.pic_wd8_m1 = MPP_ALIGN(syn->width, 16) / 8 - 1;
 	regs->reg0273_src_fill.pic_wfill = MPP_ALIGN(syn->width, 16) - syn->width;
