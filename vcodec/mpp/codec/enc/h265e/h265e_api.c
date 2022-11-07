@@ -107,10 +107,6 @@ static MPP_RET h265e_init(void *ctx, EncImplCfg * ctrlCfg)
 	 * YUV420SP
 	 */
 	prep->change = 0;
-	prep->width = 1280;
-	prep->height = 720;
-	prep->hor_stride = 1280;
-	prep->ver_stride = 720;
 	prep->format = MPP_FMT_YUV420SP;
 	prep->color = MPP_FRAME_SPC_UNSPECIFIED;
 	prep->colorprim = MPP_FRAME_PRI_UNSPECIFIED;

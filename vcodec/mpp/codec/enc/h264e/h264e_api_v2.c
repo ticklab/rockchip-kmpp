@@ -120,10 +120,6 @@ static void init_h264e_cfg_set(MppEncCfgSet *cfg, MppClientType type)
 	 * YUV420SP
 	 */
 	prep->change = 0;
-	prep->width = 1280;
-	prep->height = 720;
-	prep->hor_stride = 1280;
-	prep->ver_stride = 720;
 	prep->format = MPP_FMT_YUV420SP;
 	prep->rotation = MPP_ENC_ROT_0;
 	prep->color = MPP_FRAME_SPC_UNSPECIFIED;
@@ -288,6 +284,7 @@ static MPP_RET h264e_proc_prep_cfg(MppEncPrepCfg *dst, MppEncPrepCfg *src)
 			} else {
 				dst->max_width  = dst->width;
 				dst->max_height = dst->height;
+				mpp_log("dst->max_width %d, dst->max_height %d", dst->max_width, dst->max_height );
 			}
 		}
 
