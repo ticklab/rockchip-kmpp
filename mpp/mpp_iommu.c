@@ -441,6 +441,36 @@ fail:
 	return ERR_PTR(ret);
 }
 
+int mpp_dma_get_iova(struct dma_buf *dmabuf, struct device *dev)
+{
+	struct dma_buf_attachment *attach;
+	int ret = 0;
+	struct sg_table *sgt;
+
+	attach = dma_buf_attach(dmabuf, dev);
+	if (IS_ERR(attach)) {
+		mpp_err("dma_buf_attach dmabuf %p failed\n", dmabuf);
+		return -1;
+	}
+
+	sgt = dma_buf_map_attachment(attach, DMA_BIDIRECTIONAL);
+
+	if (IS_ERR(sgt)) {
+		mpp_err("dma_buf_map_attachment dmabuf %p failed ret %d\n", dmabuf, ret);
+		goto fail_map;
+	}
+
+	ret = (u32)sg_dma_address(sgt->sgl);
+
+	dma_buf_unmap_attachment(attach, sgt, DMA_BIDIRECTIONAL);
+
+	dma_buf_detach(dmabuf, attach);
+
+	return ret;
+fail_map:
+	dma_buf_detach(dmabuf, attach);
+	return -1;
+}
 struct mpp_dma_buffer *mpp_iova_get_buffer(struct mpp_dma_session *dma,
 					   u32 iova)
 {

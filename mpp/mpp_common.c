@@ -2700,6 +2700,12 @@ static struct device *mpp_chnl_get_dev(struct mpp_session *session)
 	return mpp->dev;
 }
 
+u32 mpp_srv_get_phy(struct dma_buf *buf)
+{
+	return mpp_dma_get_iova(buf, g_srv->dev);
+}
+
+EXPORT_SYMBOL(mpp_srv_get_phy);
 
 struct vcodec_mppdev_svr_fn {
 	struct mpp_session *(*chnl_open)(int client_type);

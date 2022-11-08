@@ -110,6 +110,8 @@ struct mpp_dma_buffer *mpp_iova_get_buffer(struct mpp_dma_session *dma,
 struct mpp_dma_buffer *mpp_iova_get_add_buffer(struct mpp_dma_session *dma,
 					       u32 iova);
 
+int mpp_dma_get_iova(struct dma_buf *dmabuf, struct device *dev);
+
 struct mpp_iommu_info *
 mpp_iommu_probe(struct device *dev);
 int mpp_iommu_remove(struct mpp_iommu_info *info);
