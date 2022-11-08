@@ -1255,9 +1255,8 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 		enc->ring_buf_size = MPP_ALIGN(enc->ring_buf_size, 1024);
 		if (enc->shared_buf->stream_buf)
 			buffer = enc->shared_buf->stream_buf;
-
 		else {
-			mpp_buffer_get(NULL, &buffer, enc->ring_buf_size);
+			mpp_ring_buffer_get(NULL, &buffer, enc->ring_buf_size);
 			if (!buffer) {
 				mpp_err("ring buf get mpp_buf fail \n");
 				return MPP_NOK;

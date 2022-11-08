@@ -279,6 +279,10 @@ typedef struct MppBufferInfo_t {
 #define mpp_buffer_get_mpi_buf_id(buffer) \
         mpp_buffer_get_mpi_buf_id_with_caller(buffer, __FUNCTION__)
 
+#define mpp_ring_buffer_get(group, buffer, size) \
+        mpp_ring_buffer_get_with_tag(group, buffer, size, MODULE_TAG, __FUNCTION__)
+
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -297,6 +301,10 @@ MPP_RET mpp_buffer_import_with_tag(MppBufferGroup group, MppBufferInfo *info, Mp
 				   const char *tag, const char *caller);
 MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer *buffer, size_t size,
 				const char *tag, const char *caller);
+
+MPP_RET mpp_ring_buffer_get_with_tag(MppBufferGroup group, MppBuffer *buffer, size_t size,
+				     const char *tag, const char *caller);
+
 MPP_RET mpp_buffer_put_with_caller(MppBuffer buffer, const char *caller);
 MPP_RET mpp_buffer_inc_ref_with_caller(MppBuffer buffer, const char *caller);
 

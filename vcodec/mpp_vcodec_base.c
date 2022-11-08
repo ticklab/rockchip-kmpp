@@ -441,7 +441,7 @@ MPP_RET mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_att
 				mpp_buffer_put(ctx->stream_buf);
 				ctx->stream_buf = NULL;
 			}
-			if (mpp_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(attr->buf_size, 1024)))
+			if (mpp_ring_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(attr->buf_size, SZ_4K)))
 				goto fail;
 		}
 	}
