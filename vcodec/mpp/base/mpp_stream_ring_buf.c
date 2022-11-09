@@ -39,7 +39,7 @@ MPP_RET ring_buf_init(ring_buf_pool *ctx, MppBuffer buf, RK_U32 max_strm_cnt)
 	ctx->buf = buf;
 	ctx->mpi_buf_id = mpp_buffer_get_mpi_buf_id(buf);
 	ctx->init_done = 1;
-	ctx->min_buf_size = MPP_ALIGN(ctx->len / max_strm_cnt, SZ_1K);
+	ctx->min_buf_size = 10 * SZ_1K;
 	ring_buf_dbg("ctx->len = %d, max_strm_cnt = %d, ctx->min_buf_size = %d", ctx->len,
 		     max_strm_cnt, ctx->min_buf_size);
 	return MPP_OK;

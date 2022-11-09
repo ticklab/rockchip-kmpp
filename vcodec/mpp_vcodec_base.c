@@ -436,13 +436,15 @@ MPP_RET mpp_vcodec_chan_setup_hal_bufs(struct mpp_chan *entry, struct vcodec_att
 	if (!get_vsm_ops()) {
 		if (attr->buf_size > entry->ring_buf_size) {
 			struct hal_shared_buf *ctx = &entry->shared_buf;
-			entry->ring_buf_size = attr->buf_size;
+			RK_U32 buf_size = MPP_MAX(attr->buf_size, SZ_16K);
 			if (ctx->stream_buf) {
 				mpp_buffer_put(ctx->stream_buf);
 				ctx->stream_buf = NULL;
 			}
-			if (mpp_ring_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(attr->buf_size, SZ_4K)))
+			if (mpp_ring_buffer_get(NULL, &ctx->stream_buf, MPP_ALIGN(buf_size, SZ_4K)))
 				goto fail;
+
+			entry->ring_buf_size = buf_size;
 		}
 	}
 
