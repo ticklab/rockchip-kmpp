@@ -1835,12 +1835,8 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 		MppEncImpl *jpeg_enc = (MppEncImpl *)jpeg_ctx;
 		EncTask *jpeg_task = (EncTask *)jpeg_enc->enc_task;
 		jpeg_hal_task = &jpeg_task->info.enc;
-		if (mpidev_fn && mpidev_fn->set_intra_info) {
-			RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
-			RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
-			mpidev_fn->set_intra_info(jpeg_enc->chan_id, dts, pts, 1);
-		}
 	}
+
 	enc_dbg_detail("task %d hal start\n", frm->seq_idx);
 	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, jpeg_hal_task, enc,
 		      ret);
@@ -1874,6 +1870,7 @@ static MPP_RET mpp_enc_comb_end_jpeg(MppEnc ctx, MppPacket *packet)
 	HalEncTask *hal_task = &task->info.enc;
 	EncFrmStatus *frm = &rc_task->frm;
 	MppEncHal hal = enc->enc_hal;
+	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
 
 	hal_task->length -= hal_task->hw_length;
 	ENC_RUN_FUNC3(mpp_enc_hal_ret_task, hal, hal_task, NULL, enc, ret);
@@ -1885,6 +1882,12 @@ static MPP_RET mpp_enc_comb_end_jpeg(MppEnc ctx, MppPacket *packet)
 	enc->qp_out = rc_task->qp_out;
 	enc->time_end = mpp_time();
 	enc->frame_count++;
+
+	if (mpidev_fn && mpidev_fn->set_intra_info) {
+		RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
+		RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
+		mpidev_fn->set_intra_info(enc->chan_id, dts, pts, 1);
+	}
 
 	if (enc->dev && enc->time_base && enc->time_end &&
 	    ((enc->time_end - enc->time_base) >= (RK_S64)(1000 * 1000)))
