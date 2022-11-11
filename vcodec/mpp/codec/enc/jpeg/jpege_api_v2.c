@@ -106,7 +106,6 @@ static MPP_RET jpege_proc_prep_cfg(MppEncPrepCfg *dst, MppEncPrepCfg *src)
 {
 	MPP_RET ret = MPP_OK;
 	RK_U32 change = src->change;
-	MppFrameFormat fmt = dst->format & MPP_FRAME_FMT_MASK;
 
 	mpp_assert(change);
 	if (change) {
@@ -146,19 +145,7 @@ static MPP_RET jpege_proc_prep_cfg(MppEncPrepCfg *dst, MppEncPrepCfg *src)
 			ret = MPP_NOK;
 		}
 
-		if ((fmt != MPP_FMT_YUV420SP    &&
-		     fmt != MPP_FMT_YUV420P     &&
-		     fmt != MPP_FMT_YUV422SP_VU &&
-		     fmt != MPP_FMT_YUV422_YUYV &&
-		     fmt != MPP_FMT_YUV422_UYVY &&
-		     fmt < MPP_FRAME_FMT_RGB)   ||
-		    fmt == MPP_FMT_RGB888       ||
-		    fmt == MPP_FMT_BGR888) {
-			mpp_err_f("invalid format %d is not supportted\n", dst->format);
-			ret = MPP_NOK;
-		}
-
-		dst->change |= change;
+		dst->change = 0;
 
 		// parameter checking
 		if (dst->rotation == MPP_ENC_ROT_90 || dst->rotation == MPP_ENC_ROT_270) {
@@ -309,7 +296,7 @@ static MPP_RET jpege_proc_jpeg_cfg(MppEncJpegCfg *dst, MppEncJpegCfg *src, MppEn
 				       change, dst->quant, dst->q_factor);
 			dst->change = src->change;
 		}
-		dst->change = src->change;
+		dst->change = 0;
 		src->change = 0;
 	}
 
@@ -329,7 +316,7 @@ static MPP_RET jpege_proc_split_cfg(MppEncSliceSplit *dst, MppEncSliceSplit *src
 	if (change & MPP_ENC_SPLIT_CFG_CHANGE_ARG)
 		dst->split_arg = src->split_arg;
 
-	dst->change |= change;
+	dst->change = 0;
 
 	return ret;
 }
