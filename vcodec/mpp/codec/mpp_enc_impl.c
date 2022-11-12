@@ -1838,18 +1838,18 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 		if (mpidev_fn && mpidev_fn->set_intra_info) {
 			RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
 			RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
-			mpidev_fn->set_intra_info(jpeg_enc->chan_id, dts, pts);
+			mpidev_fn->set_intra_info(jpeg_enc->chan_id, dts, pts, 1);
 		}
 	}
 	enc_dbg_detail("task %d hal start\n", frm->seq_idx);
 	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, jpeg_hal_task, enc,
 		      ret);
 
-	if (mpidev_fn && mpidev_fn->set_intra_info && (cfg->codec.coding == MPP_VIDEO_CodingMJPEG
-						       || frm->is_intra)) {
+	if (mpidev_fn && mpidev_fn->set_intra_info) {
 		RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
 		RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
-		mpidev_fn->set_intra_info(enc->chan_id, dts, pts);
+		RK_U32 is_intra = (cfg->codec.coding == MPP_VIDEO_CodingMJPEG || frm->is_intra);
+		mpidev_fn->set_intra_info(enc->chan_id, dts, pts, is_intra);
 	}
 
 

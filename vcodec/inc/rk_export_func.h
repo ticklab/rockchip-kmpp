@@ -69,7 +69,7 @@ struct vcodec_mpidev_fn {
 	void *(*get_chnl_ctx)(struct mpi_obj *obj);
 	int (*get_chnl_id)(void *out_parm);
 	int (*get_chnl_type)(void *out_parm);
-	int (*set_intra_info)(RK_S32 chn_id, RK_U64 dts, RK_U64 pts);
+	int (*set_intra_info)(RK_S32 chn_id, RK_U64 dts, RK_U64 pts, RK_U32 is_intra);
 	int (*notify_drop_frm)(RK_S32 chn_id);
 };
 
