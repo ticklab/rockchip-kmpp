@@ -1971,8 +1971,11 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 			mpp_enc_reenc_force_pskip(enc, task);
 			status->rc_reenc = 0;
 		}
-		if (status->rc_reenc)
+		if (status->rc_reenc) {
+			if (jpeg_ctx)
+				mpp_enc_comb_end_jpeg(jpeg_ctx, jpeg_packet);
 			return MPP_OK;
+		}
 	}
 	enc_dbg_detail("task %d rc enc->frame end\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_frm_end, enc->rc_ctx, rc_task, enc, ret);
