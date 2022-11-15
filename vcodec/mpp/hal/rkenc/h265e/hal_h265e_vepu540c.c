@@ -154,7 +154,7 @@ static RK_S32 aq_qp_dealt_smart[16] = {
 	-8, -7, -6, -5,
 	-4, -3, -2, -1,
 	0, 1, 2, 3,
-	4, 5, 6, 8,
+	4, 6, 7, 9,
 };
 
 static RK_U32 lamd_moda_qp[52] = {
@@ -620,6 +620,7 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 		reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 8;
 		reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 8;
 		if (ctx->smart_en) {
+			reg->rdo_segment_cfg.rdo_segment_multi = 18;
 			reg->rdo_smear_cfg_comb.rdo_smear_lvl16_multi = 16;
 			reg->rdo_segment_cfg.rdo_smear_lvl8_multi = 16;
 			reg->rdo_segment_cfg.rdo_smear_lvl4_multi = 16;
@@ -870,7 +871,7 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_pre_cst->cst_madi_thd0.madi_thd3 = 6;
 	p_pre_cst->cst_madi_thd1.madi_thd4 = 7;
 	p_pre_cst->cst_madi_thd1.madi_thd5 = 10;
-	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC && 0 == ctx->smart_en) {
 		p_pre_cst->cst_wgt0.wgt0 = 20;
 		p_pre_cst->cst_wgt0.wgt1 = 18;
 		p_pre_cst->cst_wgt0.wgt2 = 19;
@@ -903,7 +904,7 @@ static void vepu540c_h265_rdo_cfg(H265eV540cHalContext *ctx, vepu540c_rdo_cfg *r
 	p_pre_cst->cst_madi_thd0.madi_thd3 = 6;
 	p_pre_cst->cst_madi_thd1.madi_thd4 = 5;
 	p_pre_cst->cst_madi_thd1.madi_thd5 = 7;
-	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
+	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC && 0 == ctx->smart_en) {
 		p_pre_cst->cst_wgt0.wgt0 = 20;
 		p_pre_cst->cst_wgt0.wgt1 = 18;
 		p_pre_cst->cst_wgt0.wgt2 = 19;
@@ -990,7 +991,7 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 		if (ctx->motion_static_switch_en)
 			reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 85;
 		else
-			reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 140;
+			reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 128;
 	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_p = 85;
 	{
@@ -1062,6 +1063,14 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 		regs->reg_wgt.rime_multi.rime_multi0 = 4;
 		regs->reg_wgt.rime_multi.rime_multi1 = 4;
 		regs->reg_wgt.rime_multi.rime_multi2 = 4;
+	} else if (ctx->smart_en) {
+		regs->reg_wgt.cime_multi.cime_multi0 = 4;
+		regs->reg_wgt.cime_multi.cime_multi1 = 6;
+		regs->reg_wgt.cime_multi.cime_multi2 = 8;
+		regs->reg_wgt.cime_multi.cime_multi3 = 12;
+		regs->reg_wgt.rime_multi.rime_multi0 = 4;
+		regs->reg_wgt.rime_multi.rime_multi1 = 6;
+		regs->reg_wgt.rime_multi.rime_multi2 = 8;
 	}
 }
 

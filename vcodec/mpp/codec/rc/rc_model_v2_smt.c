@@ -824,6 +824,26 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	RK_S32 fm_lv_min_quality = p->usr_cfg.fm_lv_min_quality;
 	RK_S32 fm_lv_max_i_quality = p->usr_cfg.fm_lv_max_i_quality;
 	RK_S32 fm_lv_max_quality = p->usr_cfg.fm_lv_max_quality;
+	VepuPpInfo *ppinfo = (VepuPpInfo *)mpp_frame_get_ppinfo(task->frame);
+	RK_S32 wp_en = ppinfo->wp_out_par_y & 0x1;
+	RK_S32 wp_weight = (ppinfo->wp_out_par_y >> 4) & 0x1FF;
+	RK_S32 wp_offset = (ppinfo->wp_out_par_y >> 16) & 0xFF;
+	if (wp_en) {
+		if (abs(wp_weight) > 1)
+			fm_lv_min_quality = 33;
+		else if (abs(wp_weight) > 0)
+			fm_lv_min_quality = 32;
+		else
+			fm_lv_min_quality = 30;
+
+		if (abs(wp_offset) > 1)
+			fm_lv_min_quality = 33;
+		else if (abs(wp_offset) > 0)
+			fm_lv_min_quality = 32;
+		else
+			fm_lv_min_quality = 30;
+	}
+
 	if (0 == mpp_data_sum_v2(p->motion_level) && p->usr_cfg.motion_static_switch_en) {
 		fm_lv_min_i_quality = 32;
 		fm_lv_min_quality = 32;

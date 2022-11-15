@@ -159,21 +159,21 @@ static RK_S32 h264_aq_tthd_smart[16] = {
 	0, 0, 0, 0,
 	3, 3, 5, 5,
 	8, 8, 8, 15,
-	15, 20, 25, 35,
+	15, 20, 25, 28,
 };
 
 static RK_S32 h264_P_aq_step_smart[16] = {
 	-8, -7, -6, -5,
 	-4, -3, -2, -1,
 	0, 1, 2, 3,
-	4, 5, 7, 10,
+	4, 6, 8, 10,
 };
 
 static RK_S32 h264_I_aq_step_smart[16] = {
 	-8, -7, -6, -5,
 	-4, -3, -2, -1,
 	0, 1, 2, 3,
-	4, 6, 7, 10,
+	4, 6, 8, 10,
 };
 
 static MPP_RET hal_h264e_vepu540c_deinit(void *hal)
@@ -247,23 +247,23 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 
 		hw->qp_delta_row_i = 1;
 		hw->qp_delta_row = 2;
-		if (p->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
-			if (p->smart_en) {
-				memcpy(hw->aq_thrd_i, h264_aq_tthd_smart, sizeof(hw->aq_thrd_i));
-				memcpy(hw->aq_thrd_p, h264_aq_tthd_smart, sizeof(hw->aq_thrd_p));
-				memcpy(hw->aq_step_i, h264_I_aq_step_smart, sizeof(hw->aq_step_i));
-				memcpy(hw->aq_step_p, h264_P_aq_step_smart, sizeof(hw->aq_step_p));
-			} else  {
+		if (p->smart_en) {
+			memcpy(hw->aq_thrd_i, h264_aq_tthd_smart, sizeof(hw->aq_thrd_i));
+			memcpy(hw->aq_thrd_p, h264_aq_tthd_smart, sizeof(hw->aq_thrd_p));
+			memcpy(hw->aq_step_i, h264_I_aq_step_smart, sizeof(hw->aq_step_i));
+			memcpy(hw->aq_step_p, h264_P_aq_step_smart, sizeof(hw->aq_step_p));
+		} else  {
+			if (p->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
 				memcpy(hw->aq_thrd_i, h264_aq_tthd_default, sizeof(hw->aq_thrd_i));
 				memcpy(hw->aq_thrd_p, h264_aq_tthd_default, sizeof(hw->aq_thrd_p));
 				memcpy(hw->aq_step_i, h264_I_aq_step_default, sizeof(hw->aq_step_i));
 				memcpy(hw->aq_step_p, h264_P_aq_step_default, sizeof(hw->aq_step_p));
+			} else {
+				memcpy(hw->aq_thrd_i, h264_aq_tthd_cvr, sizeof(hw->aq_thrd_i));
+				memcpy(hw->aq_thrd_p, h264_aq_tthd_cvr, sizeof(hw->aq_thrd_p));
+				memcpy(hw->aq_step_i, h264_I_aq_step_cvr, sizeof(hw->aq_step_i));
+				memcpy(hw->aq_step_p, h264_P_aq_step_cvr, sizeof(hw->aq_step_p));
 			}
-		} else {
-			memcpy(hw->aq_thrd_i, h264_aq_tthd_cvr, sizeof(hw->aq_thrd_i));
-			memcpy(hw->aq_thrd_p, h264_aq_tthd_cvr, sizeof(hw->aq_thrd_p));
-			memcpy(hw->aq_step_i, h264_I_aq_step_cvr, sizeof(hw->aq_step_i));
-			memcpy(hw->aq_step_p, h264_P_aq_step_cvr, sizeof(hw->aq_step_p));
 		}
 	}
 
@@ -1991,7 +1991,7 @@ static void setup_vepu540c_l2(HalH264eVepu540cCtx *ctx, H264eSlice *slice,
 			if (ctx->motion_static_switch_en)
 				regs->reg_s3.RDO_QUANT.quant_f_bias_I = 341;
 			else
-				regs->reg_s3.RDO_QUANT.quant_f_bias_I = 580;
+				regs->reg_s3.RDO_QUANT.quant_f_bias_I = 500;
 			memcpy(regs->reg_s3.rdo_wgta_qp_grpa_0_51, &h264e_lambda_default[7],
 			       H264E_LAMBDA_TAB_SIZE);
 		} else {
