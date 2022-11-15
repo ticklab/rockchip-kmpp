@@ -291,7 +291,7 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 		mpp_vcodec_enc_add_packet_list(chan_entry, packet);
 
 	if (ret) {
-		mpp_err("enc handle int err");
+		mpp_err("enc %d handle int err", chan_id);
 		chan_entry->reenc = 0;
 	}
 	atomic_dec(&chan_entry->runing);
