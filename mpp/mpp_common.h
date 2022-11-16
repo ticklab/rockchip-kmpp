@@ -623,17 +623,6 @@ struct mpp_dev_ops {
 
 struct mpp_taskqueue *mpp_taskqueue_init(struct device *dev);
 
-struct mpp_mem_region *
-mpp_task_attach_fd(struct mpp_task *task, int fd);
-int mpp_translate_reg_address(struct mpp_session *session,
-			      struct mpp_task *task, int fmt,
-			      u32 *reg, struct reg_offset_info *off_inf);
-
-int mpp_get_dma_attach_mem_info(struct mpp_session *session,
-				struct mpp_task *task, int fmt,
-				u32 *reg);
-
-
 int mpp_check_req(struct mpp_request *req, int base,
 		  int max_size, u32 off_s, u32 off_e);
 int mpp_extract_reg_offset_info(struct reg_offset_info *off_inf,

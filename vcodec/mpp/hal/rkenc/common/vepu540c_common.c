@@ -603,35 +603,6 @@ MPP_RET vepu540c_set_osd(Vepu540cOsdCfg * cfg)
 
 	return MPP_OK;
 }
-
-MPP_RET vepu540c_osd_put_dma_buf(Vepu540cOsdCfg * cfg)
-{
-
-	MppEncOSDData3 *osd = cfg->osd_data3;
-	MppEncOSDRegion3 *region = osd->region;
-	MppEncOSDRegion3 *tmp = region;
-	RK_U32 num;
-	RK_U32 i = 0;
-
-	if (!osd || osd->num_region == 0)
-		return MPP_OK;
-
-	if (osd->num_region > 8) {
-		mpp_err_f("do NOT support more than 8 regions invalid num %d\n",
-			  osd->num_region);
-		mpp_assert(osd->num_region <= 8);
-		return MPP_NOK;
-	}
-	num = osd->num_region;
-	for (i = 0; i < num; i++, tmp++) {
-		if (tmp->inv_cfg.inv_buf.buf)
-			mpp_dev_release_mpi_ioaddress(cfg->dev, tmp->inv_cfg.inv_buf.buf);
-		if (tmp->osd_buf.buf)
-			mpp_dev_release_mpi_ioaddress(cfg->dev, tmp->osd_buf.buf);
-	}
-	return MPP_OK;
-}
-
 static MPP_RET
 vepu540c_jpeg_set_uv_offset(Vepu540cJpegReg * regs, JpegeSyntax * syn,
 			    Vepu541Fmt input_fmt, HalEncTask * task)

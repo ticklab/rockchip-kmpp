@@ -559,13 +559,6 @@ MPP_RET hal_jpege_v540c_ret_task(void *hal, HalEncTask * task)
 	rc_info->bit_real = task->hw_length * 8;
 	rc_info->quality_real = rc_info->quality_target;
 
-	if (ctx->osd_cfg.osd_data3)
-		vepu540c_osd_put_dma_buf(&ctx->osd_cfg);
-
-	if (!ctx->session_run) {
-		vepu540c_osd_put_dma_buf(&ctx->osd_cfg); //combo case session no run must release agin
-	}
-
 	if (task->jpeg_overflow) {
 		mpp_err("jpege bit stream overflow");
 		return MPP_NOK;

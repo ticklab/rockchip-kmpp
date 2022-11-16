@@ -149,15 +149,23 @@ RK_U32 mpp_dev_get_iova_address(MppDev ctx, MppBuffer mpp_buf, RK_U32 reg_idx)
 	const MppDevApi *api = p->api;
 	void *impl_ctx = p->ctx;
 	struct dma_buf *dma_buf = NULL;
+	RK_S32 phy_addr = 0;
 	if (!mpp_buf) {
 		mpp_err_f("input NULL");
 		return -EINVAL;
 	}
-	dma_buf = mpp_buffer_get_dma(mpp_buf);
-	mpp_assert(dma_buf);
-	if (api->get_address)
-		return api->get_address(impl_ctx, dma_buf, reg_idx);
-	return -EINVAL;
+
+	phy_addr = mpp_buffer_get_phy(mpp_buf);
+	if (phy_addr == -1) {
+		dma_buf = mpp_buffer_get_dma(mpp_buf);
+		mpp_assert(dma_buf);
+		if (api->get_address)
+			phy_addr = api->get_address(impl_ctx, dma_buf, reg_idx);
+
+		if (phy_addr != -1)
+			mpp_buffer_set_phy(mpp_buf, phy_addr);
+	}
+	return (RK_U32)phy_addr;
 }
 
 RK_U32 mpp_dev_get_iova_address2(MppDev ctx, struct dma_buf *dma_buf, RK_U32 reg_idx)
@@ -186,50 +194,6 @@ RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf, RK_U32 offset)
 	if (api->get_address)
 		return api->get_address(impl_ctx, dma_buf, offset);
 	return -EINVAL;
-}
-
-RK_U32 mpp_dev_release_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf)
-{
-	MppDevImpl *p = (MppDevImpl *) ctx;
-	const MppDevApi *api = p->api;
-	void *impl_ctx = p->ctx;
-	struct dma_buf *dma_buf = NULL;
-	if (!mpi_buf) {
-		mpp_err_f("input NULL");
-		return -EINVAL;
-	}
-	dma_buf = mpi_buf_get_dma(mpi_buf);
-	mpp_assert(dma_buf);
-	if (api->release_address && dma_buf)
-		api->release_address(impl_ctx, dma_buf);
-	return -EINVAL;
-}
-
-
-RK_U32 mpp_dev_release_iova_address(MppDev ctx, MppBuffer mpp_buf)
-{
-
-	MppDevImpl *p = (MppDevImpl *) ctx;
-	const MppDevApi *api = p->api;
-	void *impl_ctx = p->ctx;
-	struct dma_buf *dma_buf = NULL;
-	dma_buf = mpp_buffer_get_dma(mpp_buf);
-	mpp_assert(dma_buf);
-	if (api->release_address && dma_buf)
-		api->release_address(impl_ctx, dma_buf);
-	return 0;
-}
-
-RK_U32 mpp_dev_release_iova_address2(MppDev ctx, struct dma_buf *dma_buf)
-{
-
-	MppDevImpl *p = (MppDevImpl *) ctx;
-	const MppDevApi *api = p->api;
-	void *impl_ctx = p->ctx;
-	mpp_assert(dma_buf);
-	if (api->release_address && dma_buf)
-		api->release_address(impl_ctx, dma_buf);
-	return 0;
 }
 
 void mpp_dev_chnl_register(MppDev ctx, void *func, RK_S32 chan_id)

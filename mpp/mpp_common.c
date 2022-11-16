@@ -388,12 +388,6 @@ static void mpp_session_deinit_default(struct mpp_session *session)
 
 		mpp_session_clear(mpp, session);
 
-		if (session->dma) {
-			mpp_iommu_down_read(mpp->iommu_info);
-			mpp_dma_session_destroy(session->dma);
-			mpp_iommu_up_read(mpp->iommu_info);
-			session->dma = NULL;
-		}
 	}
 
 	if (session->srv) {
@@ -1179,7 +1173,6 @@ static int mpp_process_request(struct mpp_session *session,
 			return -EINVAL;
 
 		session->device_type = (enum MPP_DEVICE_TYPE)client_type;
-		session->dma = mpp_dma_session_create(mpp->dev, mpp->session_max_buffers);
 		session->mpp = mpp;
 		if (mpp->dev_ops) {
 			if (mpp->dev_ops->process_task)
@@ -1259,76 +1252,10 @@ static int mpp_process_request(struct mpp_session *session,
 				return -EINVAL;
 
 			mpp_session_clear(mpp, session);
-			mpp_iommu_down_write(mpp->iommu_info);
-			ret = mpp_dma_session_destroy(session->dma);
-			mpp_iommu_up_write(mpp->iommu_info);
 		}
 		return ret;
 	} break;
-	case MPP_CMD_TRANS_FD_TO_IOVA: {
-		u32 i;
-		u32 count;
-		u32 data[MPP_MAX_REG_TRANS_NUM];
 
-		mpp = session->mpp;
-		if (!mpp)
-			return -EINVAL;
-
-		if (req->size <= 0 ||
-		    req->size > sizeof(data))
-			return -EINVAL;
-
-		memset(data, 0, sizeof(data));
-		if (copy_from_user(data, req->data, req->size)) {
-			mpp_err("copy_from_user failed.\n");
-			return -EINVAL;
-		}
-		count = req->size / sizeof(u32);
-		for (i = 0; i < count; i++) {
-			struct mpp_dma_buffer *buffer;
-			int fd = data[i];
-
-			mpp_iommu_down_read(mpp->iommu_info);
-			buffer = mpp_dma_import_fd(mpp->iommu_info,
-						   session->dma, fd);
-			mpp_iommu_up_read(mpp->iommu_info);
-			if (IS_ERR_OR_NULL(buffer)) {
-				mpp_err("can not import fd %d\n", fd);
-				return -EINVAL;
-			}
-			data[i] = (u32)buffer->iova;
-			mpp_debug(DEBUG_IOMMU, "fd %d => iova %08x\n",
-				  fd, data[i]);
-		}
-		if (copy_to_user(req->data, data, req->size)) {
-			mpp_err("copy_to_user failed.\n");
-			return -EINVAL;
-		}
-	} break;
-	case MPP_CMD_RELEASE_FD: {
-		u32 i;
-		int ret;
-		u32 count;
-		u32 data[MPP_MAX_REG_TRANS_NUM];
-
-		if (req->size <= 0 ||
-		    req->size > sizeof(data))
-			return -EINVAL;
-
-		memset(data, 0, sizeof(data));
-		if (copy_from_user(data, req->data, req->size)) {
-			mpp_err("copy_from_user failed.\n");
-			return -EINVAL;
-		}
-		count = req->size / sizeof(u32);
-		for (i = 0; i < count; i++) {
-			ret = mpp_dma_release_fd(session->dma, data[i]);
-			if (ret) {
-				mpp_err("release fd %d failed.\n", data[i]);
-				return ret;
-			}
-		}
-	} break;
 	default: {
 		mpp = session->mpp;
 		if (!mpp) {
@@ -1666,220 +1593,6 @@ const struct file_operations rockchip_mpp_fops = {
 #endif
 };
 
-struct mpp_mem_region *
-mpp_task_attach_fd(struct mpp_task *task, int fd)
-{
-	struct mpp_mem_region *mem_region = NULL, *loop = NULL, *n;
-	struct mpp_dma_buffer *buffer = NULL;
-	struct mpp_dev *mpp = task->session->mpp;
-	struct mpp_dma_session *dma = task->session->dma;
-	u32 mem_num = ARRAY_SIZE(task->mem_regions);
-	bool found = false;
-
-	if (fd <= 0 || !dma || !mpp)
-		return ERR_PTR(-EINVAL);
-
-	if (task->mem_count > mem_num) {
-		mpp_err("mem_count %d must less than %d\n", task->mem_count, mem_num);
-		return ERR_PTR(-ENOMEM);
-	}
-
-	/* find fd whether had import */
-	list_for_each_entry_safe_reverse(loop, n, &task->mem_region_list, reg_link) {
-		if (loop->fd == fd) {
-			found = true;
-			break;
-		}
-	}
-
-	mem_region = &task->mem_regions[task->mem_count];
-	if (found) {
-		memcpy(mem_region, loop, sizeof(*loop));
-		mem_region->is_dup = true;
-	} else {
-		mpp_iommu_down_read(mpp->iommu_info);
-		buffer = mpp_dma_import_fd(mpp->iommu_info, dma, fd);
-		mpp_iommu_up_read(mpp->iommu_info);
-		if (IS_ERR_OR_NULL(buffer)) {
-			mpp_err("can't import dma-buf %d\n", fd);
-			return ERR_PTR(-ENOMEM);
-		}
-
-		mem_region->hdl = buffer;
-		mem_region->iova = buffer->iova;
-		mem_region->len = buffer->size;
-		mem_region->fd = fd;
-		mem_region->is_dup = false;
-	}
-	task->mem_count++;
-	INIT_LIST_HEAD(&mem_region->reg_link);
-	list_add_tail(&mem_region->reg_link, &task->mem_region_list);
-
-	return mem_region;
-}
-
-int mpp_translate_reg_address(struct mpp_session *session,
-			      struct mpp_task *task, int fmt,
-			      u32 *reg, struct reg_offset_info *off_inf)
-{
-	int i;
-	int cnt;
-	const u16 *tbl;
-
-	mpp_debug_enter();
-
-	if (session->trans_count > 0) {
-		cnt = session->trans_count;
-		tbl = session->trans_table;
-	} else {
-		struct mpp_dev *mpp = mpp_get_task_used_device(task, session);
-		struct mpp_trans_info *trans_info = mpp->var->trans_info;
-
-		cnt = trans_info[fmt].count;
-		tbl = trans_info[fmt].table;
-	}
-
-	for (i = 0; i < cnt; i++) {
-		int usr_fd;
-		u32 offset;
-		struct mpp_mem_region *mem_region = NULL;
-
-		if (session->msg_flags & MPP_FLAGS_REG_NO_OFFSET) {
-			usr_fd = reg[tbl[i]];
-			offset = 0;
-		} else {
-			usr_fd = reg[tbl[i]] & 0x3ff;
-			offset = reg[tbl[i]] >> 10;
-		}
-
-		if (usr_fd == 0)
-			continue;
-
-		mem_region = mpp_task_attach_fd(task, usr_fd);
-		if (IS_ERR(mem_region)) {
-			mpp_err("reg[%3d]: 0x%08x fd %d failed\n",
-				tbl[i], reg[tbl[i]], usr_fd);
-			return PTR_ERR(mem_region);
-		}
-		mpp_debug(DEBUG_IOMMU,
-			  "reg[%3d]: %d => %pad, offset %10d, size %lx\n",
-			  tbl[i], usr_fd, &mem_region->iova,
-			  offset, mem_region->len);
-		mem_region->reg_idx = tbl[i];
-		reg[tbl[i]] = mem_region->iova + offset;
-	}
-
-	mpp_debug_leave();
-
-	return 0;
-}
-
-struct mpp_mem_region * mpp_task_get_mem_region(
-	struct mpp_task *task, u32 iova)
-{
-	struct mpp_mem_region *mem_region = NULL, *loop = NULL, *n;
-	struct mpp_dma_buffer *buffer = NULL;
-	struct mpp_dev *mpp = task->session->mpp;
-	struct mpp_dma_session *dma = task->session->dma;
-	u32 mem_num = ARRAY_SIZE(task->mem_regions);
-	bool found = false;
-
-	if (!dma || !mpp)
-		return ERR_PTR(-EINVAL);
-
-	if (task->mem_count > mem_num) {
-		mpp_err("mem_count %d must less than %d\n", task->mem_count, mem_num);
-		return ERR_PTR(-ENOMEM);
-	}
-
-	/* find fd whether had import */
-	list_for_each_entry_safe_reverse(loop, n, &task->mem_region_list, reg_link) {
-		if (iova >= (u32)loop->iova && iova <= (u32)loop->iova + loop->len - 1) {
-			found = true;
-			break;
-		}
-	}
-
-	mem_region = &task->mem_regions[task->mem_count];
-
-	if (found) {
-		memcpy(mem_region, loop, sizeof(*loop));
-		mem_region->is_dup = true;
-	} else {
-		buffer = mpp_iova_get_buffer(dma, iova);
-		mem_region->is_dup = true;
-		if (IS_ERR_OR_NULL(buffer)) {
-			buffer = mpp_iova_get_add_buffer (dma, iova);
-			if (IS_ERR_OR_NULL(buffer)) {
-				mpp_err("can't get iova %x\n", iova);
-				return ERR_PTR(-ENOMEM);
-			}
-
-			mem_region->is_dup = false;
-		}
-		mem_region->hdl = buffer;
-		mem_region->iova = buffer->iova;
-		mem_region->len = buffer->size;
-		mem_region->fd = 0;
-		mem_region->buf = buffer->dmabuf;
-
-		if (kref_read(&buffer->ref) > 1)
-			mem_region->is_dup = false;
-	}
-	task->mem_count++;
-	INIT_LIST_HEAD(&mem_region->reg_link);
-	list_add_tail(&mem_region->reg_link, &task->mem_region_list);
-
-	return mem_region;
-}
-
-int mpp_get_dma_attach_mem_info(struct mpp_session *session,
-				struct mpp_task *task, int fmt,
-				u32 *reg)
-{
-	int i;
-	int cnt;
-	const u16 *tbl;
-
-	mpp_debug_enter();
-
-	if (session->trans_count > 0) {
-		cnt = session->trans_count;
-		tbl = session->trans_table;
-	} else {
-		struct mpp_dev *mpp = session->mpp;
-		struct mpp_trans_info *trans_info = mpp->var->trans_info;
-
-		cnt = trans_info[fmt].count;
-		tbl = trans_info[fmt].table;
-	}
-
-	for (i = 0; i < cnt; i++) {
-		u32 iova_address = 0;
-		struct mpp_mem_region *mem_region = NULL;
-		iova_address = reg[tbl[i]];
-
-		if (iova_address == 0 || (int)(iova_address) == -1)
-			continue;
-		mem_region = mpp_task_get_mem_region(task, iova_address);
-		if (IS_ERR(mem_region)) {
-			mpp_err("reg[%3d]: 0x%08x iova %d failed\n",
-				tbl[i], reg[tbl[i]], iova_address);
-			return PTR_ERR(mem_region);
-		}
-		mpp_debug(DEBUG_IOMMU,
-			  "reg[%3d]: %p => %pad, size %lx\n",
-			  tbl[i], mem_region->buf, &mem_region->iova,
-			  mem_region->len);
-		mem_region->reg_idx = tbl[i];
-	}
-
-	mpp_debug_leave();
-
-	return 0;
-}
-
-
 int mpp_check_req(struct mpp_request *req, int base,
 		  int max_size, u32 off_s, u32 off_e)
 {
@@ -2014,20 +1727,6 @@ int mpp_task_finish(struct mpp_session *session,
 int mpp_task_finalize(struct mpp_session *session,
 		      struct mpp_task *task)
 {
-	struct mpp_mem_region *mem_region = NULL, *n;
-	struct mpp_dev *mpp = mpp_get_task_used_device(task, session);
-
-	/* release memory region attach to this registers table. */
-	list_for_each_entry_safe(mem_region, n,
-				 &task->mem_region_list,
-				 reg_link) {
-		if (!mem_region->is_dup) {
-			mpp_iommu_down_read(mpp->iommu_info);
-			mpp_dma_release(session->dma, mem_region->hdl);
-			mpp_iommu_up_read(mpp->iommu_info);
-		}
-		list_del_init(&mem_region->reg_link);
-	}
 	task->state = 0;
 	return 0;
 }
@@ -2559,7 +2258,6 @@ static struct mpp_session *mpp_chnl_open(int client_type)
 	if (!mpp)
 		return NULL;
 	session->device_type = (enum MPP_DEVICE_TYPE)client_type;
-	session->dma = mpp_dma_session_create(mpp->dev, mpp->session_max_buffers);
 	session->mpp = mpp;
 	if (mpp->dev_ops) {
 		if (mpp->dev_ops->process_task)
@@ -2673,25 +2371,13 @@ static int mpp_chnl_add_req(struct mpp_session *session,  void *reqs)
 static u32 mpp_chnl_get_iova_addr(struct mpp_session *session,  struct dma_buf *buf, u32 reg_idx)
 {
 	struct mpp_dev *mpp = NULL;
-	struct mpp_dma_buffer *buffer = NULL;
-
-	mpp = session->mpp;
-	mpp_iommu_down_read(mpp->iommu_info);
-	buffer = mpp_dma_import(mpp->iommu_info,
-				session->dma, buf);
-	mpp_iommu_up_read(mpp->iommu_info);
-	if (IS_ERR_OR_NULL(buffer)) {
-		mpp_err("can not import dma buf %p reg_idx %d\n", buf, reg_idx);
-		return -EINVAL;
+	if (!session) {
+		mpp_err("session is null");
+		return -1;
 	}
-	//mpp_err("dmabuf %p buffer->iova %x len %ld \n", buf, (u32)buffer->iova, buffer->size);
-	return (u32)buffer->iova;
-}
+	mpp = session->mpp;
 
-static void mpp_chnl_release_iova_addr(struct mpp_session *session,  struct dma_buf *buf)
-{
-	mpp_dma_release_dmabuf(session->dma, buf);
-	return;
+	return mpp_dma_get_iova(buf, mpp->dev);
 }
 
 static struct device *mpp_chnl_get_dev(struct mpp_session *session)
@@ -2724,7 +2410,7 @@ struct vcodec_mppdev_svr_fn g_mpp_svr_fn_ops    = {
 	.chnl_release                               = mpp_chnl_release,
 	.chnl_add_req                               = mpp_chnl_add_req,
 	.chnl_get_iova_addr                         = mpp_chnl_get_iova_addr,
-	.chnl_release_iova_addr                     = mpp_chnl_release_iova_addr,
+	.chnl_release_iova_addr                     = NULL,
 	.mpp_chnl_get_dev                           = mpp_chnl_get_dev,
 };
 

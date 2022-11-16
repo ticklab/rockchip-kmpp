@@ -582,3 +582,31 @@ RK_S32 mpp_buffer_get_mpi_buf_id_with_caller(MppBuffer buffer,
 	}
 	return frm_info.mpi_buf_id;
 }
+
+void mpp_buffer_set_phy_caller(MppBuffer buffer, RK_U32 phy_addr, const char *caller)
+{
+	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
+
+	if (NULL == p) {
+		mpp_err("mpp_buffer_get_offset invalid NULL input from %s\n",
+			caller);
+		return;
+	}
+	p->info.phy_flg = 1;
+	p->info.phy_addr = phy_addr;
+	return;
+}
+RK_S32 mpp_buffer_get_phy_caller(MppBuffer buffer, const char *caller)
+{
+	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
+
+	if (NULL == p) {
+		mpp_err("mpp_buffer_get_offset invalid NULL input from %s\n",
+			caller);
+		return -1;
+	}
+	if (p->info.phy_flg)
+		return (RK_S32)p->info.phy_addr;
+	return -1;
+}
+

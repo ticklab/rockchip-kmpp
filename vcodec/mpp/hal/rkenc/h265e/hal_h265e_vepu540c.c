@@ -2651,9 +2651,6 @@ static MPP_RET hal_h265e_v540c_wait(void *hal, HalEncTask *task)
 		mpp_err_f("poll cmd failed %d status %d \n", ret,
 			  elem->hw_status);
 
-	if (ctx->osd_cfg.osd_data3)
-		vepu540c_osd_put_dma_buf(&ctx->osd_cfg);
-
 	hal_h265e_leave();
 	return ret;
 }

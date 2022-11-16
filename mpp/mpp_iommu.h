@@ -77,48 +77,13 @@ struct mpp_iommu_info {
 	u32 skip_refresh;
 };
 
-struct mpp_dma_session *
-mpp_dma_session_create(struct device *dev, u32 max_buffers);
-int mpp_dma_session_destroy(struct mpp_dma_session *dma);
-
 struct mpp_dma_buffer *
 mpp_dma_alloc(struct device *dev, size_t size);
 int mpp_dma_free(struct mpp_dma_buffer *buffer);
 
-struct mpp_dma_buffer *
-mpp_dma_import_fd(struct mpp_iommu_info *iommu_info,
-		  struct mpp_dma_session *dma, int fd);
-
-struct mpp_dma_buffer *mpp_dma_import(struct mpp_iommu_info *iommu_info,
-				      struct mpp_dma_session *dma, struct dma_buf *dmabuf);
-
-int mpp_dma_release(struct mpp_dma_session *dma,
-		    struct mpp_dma_buffer *buffer);
-
-int mpp_dma_release_fd(struct mpp_dma_session *dma, int fd);
-int mpp_dma_release_dmabuf(struct mpp_dma_session *dma,
-			   struct dma_buf *dmabuf);
-
-int mpp_dma_unmap_kernel(struct mpp_dma_session *dma,
-			 struct mpp_dma_buffer *buffer);
-int mpp_dma_map_kernel(struct mpp_dma_session *dma,
-		       struct mpp_dma_buffer *buffer);
-
-struct mpp_dma_buffer *mpp_iova_get_buffer(struct mpp_dma_session *dma,
-					   u32 iova);
-
-struct mpp_dma_buffer *mpp_iova_get_add_buffer(struct mpp_dma_session *dma,
-					       u32 iova);
-
 int mpp_dma_get_iova(struct dma_buf *dmabuf, struct device *dev);
 
-struct mpp_iommu_info *
-mpp_iommu_probe(struct device *dev);
 int mpp_iommu_remove(struct mpp_iommu_info *info);
-
-int mpp_iommu_attach(struct mpp_iommu_info *info);
-int mpp_iommu_detach(struct mpp_iommu_info *info);
-
 int mpp_iommu_refresh(struct mpp_iommu_info *info, struct device *dev);
 int mpp_iommu_flush_tlb(struct mpp_iommu_info *info);
 

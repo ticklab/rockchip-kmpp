@@ -171,6 +171,8 @@ typedef struct MppBufferInfo_t {
 	void            *hnd;
 	int             fd;
 	int             index;
+	RK_U32          phy_flg;
+	RK_U32          phy_addr;
 } MppBufferInfo;
 
 #define BUFFER_GROUP_SIZE_DEFAULT           (SZ_1M*80)
@@ -282,6 +284,11 @@ typedef struct MppBufferInfo_t {
 #define mpp_ring_buffer_get(group, buffer, size) \
         mpp_ring_buffer_get_with_tag(group, buffer, size, MODULE_TAG, __FUNCTION__)
 
+#define mpp_buffer_set_phy(buffer, phy_addr) \
+        mpp_buffer_set_phy_caller(buffer, phy_addr, __FUNCTION__)
+
+#define mpp_buffer_get_phy(buffer) \
+        mpp_buffer_get_phy_caller(buffer, __FUNCTION__)
 
 
 #ifdef __cplusplus
@@ -338,6 +345,10 @@ RK_S32 mpp_buffer_get_mpi_buf_id_with_caller(MppBuffer buffer, const char *calle
 
 MPP_RET mpi_buf_ref_with_tag(struct mpi_buf *buf, const char *tag, const char *caller);
 MPP_RET mpi_buf_unref_with_tag(struct mpi_buf *buf, const char *tag, const char *caller);
+
+void mpp_buffer_set_phy_caller(MppBuffer buffer, RK_U32 phy_addr, const char *caller);
+RK_S32 mpp_buffer_get_phy_caller(MppBuffer buffer, const char *caller);
+
 
 /*
  * size  : 0 - no limit, other - max buffer size

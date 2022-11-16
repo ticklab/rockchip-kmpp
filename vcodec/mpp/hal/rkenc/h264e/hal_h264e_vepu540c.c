@@ -2610,9 +2610,6 @@ static MPP_RET hal_h264e_vepu540c_wait(void *hal, HalEncTask *task)
 	}
 	hal_h264e_dbg_func("leave %p\n", hal);
 
-	if (ctx->osd_cfg.osd_data3)
-		vepu540c_osd_put_dma_buf(&ctx->osd_cfg);
-
 	return ret;
 }
 

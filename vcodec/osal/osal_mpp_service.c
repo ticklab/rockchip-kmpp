@@ -451,20 +451,10 @@ RK_U32 mpp_service_iova_address(void *ctx, struct dma_buf * buf, RK_U32 offset)
 {
 	RK_U32 iova_address = 0;
 	MppDevMppService *p = (MppDevMppService *) ctx;
-
 	if (p->mppdev_ops->chnl_get_iova_addr)
 		iova_address =
 			p->mppdev_ops->chnl_get_iova_addr(p->chnl, buf, offset);
 	return iova_address;
-}
-
-void mpp_service_iova_release(void *ctx, struct dma_buf *buf)
-{
-	MppDevMppService *p = (MppDevMppService *) ctx;
-
-	if (p->mppdev_ops->chnl_release_iova_addr)
-		p->mppdev_ops->chnl_release_iova_addr(p->chnl, buf);
-	return;
 }
 
 struct device * mpp_service_get_dev(void *ctx)
@@ -489,7 +479,6 @@ const MppDevApi mpp_service_api = {
 	mpp_service_cmd_send,
 	mpp_service_cmd_poll,
 	mpp_service_iova_address,
-	mpp_service_iova_release,
 	mpp_service_chnl_register,
 	mpp_service_get_dev,
 };

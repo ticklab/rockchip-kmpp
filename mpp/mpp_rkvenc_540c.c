@@ -906,35 +906,6 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 	ret = rkvenc_task_get_format(mpp, task);
 	if (ret)
 		goto free_task;
-	/* process fd in register */
-	if (!(msgs->flags & MPP_FLAGS_REG_FD_NO_TRANS)) {
-		u32 i, j;
-		int cnt;
-		u32 off;
-		const u16 *tbl;
-		struct rkvenc_hw_info *hw = task->hw_info;
-
-		for (i = 0; i < hw->fd_class; i++) {
-			u32 class = hw->fd_reg[i].class;
-			u32 fmt = hw->fd_reg[i].base_fmt + task->fmt;
-			u32 *reg = task->reg[class].data;
-			u32 ss = hw->reg_msg[class].base_s / sizeof(u32);
-
-			if (!reg)
-				continue;
-			ret = mpp_translate_reg_address(session, mpp_task, fmt, reg, NULL);
-			if (ret)
-				goto fail;
-
-			cnt = mpp->var->trans_info[fmt].count;
-			tbl = mpp->var->trans_info[fmt].table;
-			for (j = 0; j < cnt; j++) {
-				off = mpp_query_reg_offset_info(&task->off_inf, tbl[j] + ss);
-				mpp_debug(DEBUG_IOMMU, "reg[%d] + offset %d\n", tbl[j] + ss, off);
-				reg[tbl[j]] += off;
-			}
-		}
-	}
 	/* check rec fbc is disable */
 	{
 		u32 val = task->reg[RKVENC_CLASS_PIC].data[REC_FBC_DIS_CLASS_OFFSET];
@@ -942,28 +913,12 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 			mpp_task->clbk_en = 0;
 	}
 
-	if (session->k_space) {
-		u32 i;
-		struct rkvenc_hw_info *hw = task->hw_info;
-
-		for (i = 0; i < hw->fd_class; i++) {
-			u32 class = hw->fd_reg[i].class;
-			u32 fmt = hw->fd_reg[i].base_fmt + task->fmt;
-			u32 *reg = task->reg[class].data;
-			mpp_get_dma_attach_mem_info(session, mpp_task, fmt, reg);
-		}
-	}
 	task->clk_mode = CLK_MODE_NORMAL;
 
 	mpp_debug_leave();
 
 	return mpp_task;
 
-fail:
-	mpp_task_dump_mem_region(mpp, mpp_task);
-	mpp_task_dump_reg(mpp, mpp_task);
-	mpp_task_finalize(session, mpp_task);
-	/* free class register buffer */
 free_task:
 	kfree(task);
 
