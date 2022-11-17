@@ -926,10 +926,10 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		p->bits_target_use =  (p->bits_target_high_rate - p->bits_target_low_rate) / 2 +
 				      p->bits_target_low_rate;
 		p->qp_out = cal_smt_first_i_start_qp(p->bits_target_high_rate * ratio, mb_w * mb_h);
-		if (fm_lv_min_i_quality > 34)
+		if (fm_lv_min_i_quality > 31)
 			p->qp_out = mpp_clip(p->qp_out, fm_lv_min_i_quality, p->qp_max);
 		else
-			p->qp_out = mpp_clip(p->qp_out, 34, p->qp_max);
+			p->qp_out = mpp_clip(p->qp_out, 31, p->qp_max);
 		p->qp_preavg = 0;
 	}
 
