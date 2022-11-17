@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-KERNEL_DIR ?= /home/csy/3588_linux/kernel
-ARCH ?= arm64
-CROSS_COMPILE ?= /home/csy/3588_linux/prebuilts/gcc/linux-x86/aarch64/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
+KERNEL_DIR ?= $(realpath ../../../source/kernel/)
+ARCH ?= arm
+#CROSS_COMPILE ?= /home/csy/3588_linux/prebuilts/gcc/linux-x86/aarch64/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
 #CROSS_COMPILE=/home/csy/3588_linux/prebuilts/gcc/linux-x86/arm/gcc-arm-10.3-2021.07-x86_64-arm-none-linux-gnueabihf/bin/
 KERNEL_ROOT=$(KERNEL_DIR)
 KERNEL_VERSION=5.10
