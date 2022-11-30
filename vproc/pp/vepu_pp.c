@@ -373,8 +373,8 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 		p->wp_con_comb1 = 0x00800080;
 		p->wp_con_comb2 = 0x01000080;
 		p->wp_con_comb3 = 0x01000100;
-		p->wp_con_comb4 = 0x00400040;
-		p->wp_con_comb5 = 0x00080040;
+		p->wp_con_comb4 = 0x00600060;
+		p->wp_con_comb5 = 0x00080060;
 		p->wp_con_comb6 = 0x00080008;
 		break;
 	}
