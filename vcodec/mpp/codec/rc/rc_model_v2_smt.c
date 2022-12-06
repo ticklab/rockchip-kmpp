@@ -844,6 +844,9 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				fm_lv_min_quality = 32;
 			else
 				fm_lv_min_quality = 30;
+
+			if ((abs(wp_weight) > 0 || abs(wp_offset) > 0) && fm_lv_max_quality > 37)
+				fm_lv_max_quality = 37;
 		}
 	}
 
