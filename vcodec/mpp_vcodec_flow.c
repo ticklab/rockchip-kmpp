@@ -24,6 +24,7 @@
 #include "mpp_vcodec_debug.h"
 #include "mpp_packet_impl.h"
 #include "mpp_time.h"
+#define MAX_PACKET_NUM 100
 
 static MPP_RET frame_add_osd(MppFrame frame, MppEncOSDData3 *osd_data)
 {
@@ -170,7 +171,13 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		MPP_RET ret = MPP_OK;
 		cfg_start = mpp_time();
 		atomic_inc(&chan_entry->runing);
-		ret = mpp_enc_cfg_reg((MppEnc)chan_entry->handle, frame);
+		if ((atomic_read(&chan_entry->stream_count) + atomic_read(&chan_entry->str_out_cnt) >
+		     MAX_PACKET_NUM)
+		    && !chan_entry->reenc)
+			ret = MPP_NOK;
+
+		else
+			ret = mpp_enc_cfg_reg((MppEnc)chan_entry->handle, frame);
 		if (MPP_OK == ret) {
 			if (comb_chan && comb_chan->handle) {
 				atomic_inc(&chan_entry->cfg.comb_runing);
