@@ -574,9 +574,10 @@ RK_S32 mpp_buffer_get_mpi_buf_id_with_caller(MppBuffer buffer,
 		return MPP_ERR_UNKNOW;
 	}
 	memset(&frm_info, 0, sizeof(frm_info));
-	if (mpibuf_fn->get_buf_frm_info)
-		mpibuf_fn->get_buf_frm_info(p->mpi_buf, &frm_info, -1);
-	else {
+	if (mpibuf_fn->get_buf_frm_info) {
+		if (mpibuf_fn->get_buf_frm_info(p->mpi_buf, &frm_info, -1))
+			return -1;
+	} else {
 		mpp_err("get buf info fail");
 		return -1;
 	}

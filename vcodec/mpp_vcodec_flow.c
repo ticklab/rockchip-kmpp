@@ -50,9 +50,10 @@ static MPP_RET enc_chan_get_buf_info(struct mpi_buf *buf,
 {
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 	memset(frm_info, 0, sizeof(*frm_info));
-	if (mpibuf_fn->get_buf_frm_info)
-		mpibuf_fn->get_buf_frm_info(buf, frm_info, chan_id);
-	else {
+	if (mpibuf_fn->get_buf_frm_info) {
+		if (mpibuf_fn->get_buf_frm_info(buf, frm_info, chan_id))
+			return MPP_NOK;
+	} else {
 		mpp_err("get buf info fail");
 		return MPP_NOK;
 	}
