@@ -173,10 +173,10 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		atomic_inc(&chan_entry->runing);
 		if ((atomic_read(&chan_entry->stream_count) + atomic_read(&chan_entry->str_out_cnt) >
 		     MAX_PACKET_NUM)
-		    && !chan_entry->reenc)
+		    && !chan_entry->reenc) {
+			mpp_frame_deinit(&frame);
 			ret = MPP_NOK;
-
-		else
+		} else
 			ret = mpp_enc_cfg_reg((MppEnc)chan_entry->handle, frame);
 		if (MPP_OK == ret) {
 			if (comb_chan && comb_chan->handle) {
