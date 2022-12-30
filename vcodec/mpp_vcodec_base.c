@@ -13,6 +13,7 @@
 #include <linux/slab.h>
 #include <linux/of_platform.h>
 #include <linux/cdev.h>
+#include <linux/module.h>
 
 #include "mpp_vcodec_base.h"
 #include "mpp_vcodec_debug.h"
@@ -31,7 +32,9 @@ RK_U32 mpp_vcodec_debug = 0;
 
 #define CHAN_MAX_YUV_POOL_SIZE  1
 #define CHAN_MAX_STREAM_POOL_SIZE  2
-#define MAX_STREAM_CNT 512
+
+int max_stream_cnt = 512;
+module_param(max_stream_cnt, int, 0644);
 
 static struct vcodec_entry g_vcodec_entry;
 
@@ -159,7 +162,7 @@ static int mpp_enc_module_init(void)
 				   (void *)
 				   mpp_vcodec_enc_routine,
 				   (void *)venc);
-	mpp_packet_pool_init(MAX_STREAM_CNT);
+	mpp_packet_pool_init(max_stream_cnt);
 	vcodec_thread_start(thds);
 
 	venc->check = &venc;
