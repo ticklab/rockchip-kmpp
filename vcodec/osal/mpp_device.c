@@ -30,7 +30,7 @@ RK_U32 mpp_device_debug = 0;
 MPP_RET mpp_dev_init(MppDev * ctx, MppClientType type)
 {
 	const MppDevApi *api = NULL;
-	MppDevImpl *impl = mpp_calloc(MppDevImpl, 1);
+	MppDevImpl *impl = NULL;
 	void *impl_ctx = NULL;
 	if (NULL == ctx) {
 		mpp_err_f("found NULL input ctx\n");
