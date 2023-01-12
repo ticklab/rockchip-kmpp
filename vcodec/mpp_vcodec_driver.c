@@ -43,6 +43,7 @@ struct chanid_ctx {
 	atomic_t release_request;
 	struct semaphore ioctl_sem;
 	RK_U32 chan_dup;
+	RK_U32 chan_create;
 };
 static int vcodec_open(struct inode *inode, struct file *filp)
 {
@@ -65,7 +66,7 @@ static int vcodec_close(struct inode *inode, struct file *filp)
 
 	atomic_inc(&ctx->release_request);
 
-	if (!ctx->chan_dup)
+	if (!ctx->chan_dup && ctx->chan_create)
 		mpp_vcodec_chan_destory(ctx->chan_id, ctx->type);
 	if (ctx->param) {
 		kfree(ctx->param);
@@ -132,10 +133,12 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		ctx->chan_dup = attr->chan_dup;
 		if (ret)
 			goto fail;
+		ctx->chan_create = 1;
 	}
 	break;
 	case VCODEC_CHAN_DESTROY: {
-		ret = mpp_vcodec_chan_destory(chan_id, type);
+		if (ctx->chan_create)
+			ret = mpp_vcodec_chan_destory(chan_id, type);
 		if (ret)
 			goto fail;
 	}
