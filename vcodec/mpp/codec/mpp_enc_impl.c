@@ -2077,6 +2077,20 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 		   enc->ringbuf_fail_cnt,
 		   enc->cfg_fail_cnt, enc->start_fail_cnt);
 
+	if (cfg->roi.number > 0) {
+		int i;
+		seq_puts(
+			seq,
+			"\n--------venc roi attr ----------------------------------------------------------------------------\n");
+		seq_printf(seq, "%8s%8s%8s%8s%8s%8s%8s%8s%8s\n", "ID", "roi", "x", "y", "w", "h", "quality",
+			   "intra", "abs_qp");
+		for (i = 0; i < cfg->roi.number; i++) {
+			seq_printf(seq, "%8d%8d%8d%8d%8d%8d%8d%8d%8d\n", chl_id, i,
+				   cfg->roi.regions[i].x, cfg->roi.regions[i].y, cfg->roi.regions[i].w, cfg->roi.regions[i].h,
+				   cfg->roi.regions[i].quality, cfg->roi.regions[i].intra, cfg->roi.regions[i].abs_qp_en);
+		}
+	}
+
 	enc_impl_proc_debug(seq_file, enc->impl, chl_id);
 	rc_proc_show(seq_file, enc->rc_ctx, chl_id);
 }
