@@ -376,6 +376,7 @@ MPP_RET mpp_enc_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 	enc->enc_status = ENC_STATUS_START_IN;
 	ret = mpp_enc_impl_hw_start(ctx, jpeg_ctx);
 	enc->enc_status = ENC_STATUS_START_DONE;
+
 	if (MPP_OK == ret)
 		enc->hw_run = 1;
 	up(&enc->enc_sem);
@@ -383,6 +384,24 @@ MPP_RET mpp_enc_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 	return ret;
 }
 
+RK_S32 mpp_enc_run_task(MppEnc ctx)
+{
+	MppEncImpl *enc = (MppEncImpl *) ctx;
+	MPP_RET ret = MPP_OK;
+
+	if (NULL == enc) {
+		mpp_err_f("found NULL input enc\n");
+		return MPP_ERR_NULL_PTR;
+	}
+
+	enc_dbg_func("%p in\n", enc);
+
+	ret = mpp_dev_ioctl(enc->dev, MPP_DEV_CMD_RUN_TASK, NULL);
+
+	enc_dbg_func("%p out\n", enc);
+
+	return ret;
+}
 
 MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
 			    MppPacket * jpeg_packet)
@@ -434,6 +453,8 @@ MPP_RET mpp_enc_register_chl(MppEnc ctx, void *func, RK_S32 chan_id)
 		return MPP_ERR_NULL_PTR;
 	}
 
+	/* use high 16 bit for online flag */
+	chan_id |= (enc->online << 16);
 	mpp_dev_chnl_register(enc->dev, func, chan_id);
 
 	return ret;

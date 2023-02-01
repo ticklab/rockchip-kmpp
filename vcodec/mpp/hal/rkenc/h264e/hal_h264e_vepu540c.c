@@ -2249,11 +2249,7 @@ static MPP_RET setup_vepu540c_dvbm(HalVepu540cRegSet *regs, HalH264eVepu540cCtx 
 
 	if (!is_full) {
 		rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
-		if (dvbm_adr.overflow) {
-			mpp_err("cur frame already overflow [%d %d]!\n",
-				dvbm_adr.frame_id, dvbm_adr.line_cnt);
-			return MPP_NOK;
-		}
+
 		regs->reg_ctl.dvbm_cfg.dvbm_en = 1;
 		regs->reg_ctl.dvbm_cfg.src_badr_sel = 1;
 		regs->reg_ctl.dvbm_cfg.vinf_frm_match = 1;

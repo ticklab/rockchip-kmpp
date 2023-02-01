@@ -465,6 +465,15 @@ struct device * mpp_service_get_dev(void *ctx)
 	return NULL;
 }
 
+RK_S32 mpp_service_run_task(void *ctx)
+{
+	MppDevMppService *p = (MppDevMppService *)ctx;
+
+	if (p->mppdev_ops->chnl_run_task)
+		return p->mppdev_ops->chnl_run_task(p->chnl);
+
+	return 0;
+}
 
 const MppDevApi mpp_service_api = {
 	"mpp_service",
@@ -481,4 +490,5 @@ const MppDevApi mpp_service_api = {
 	mpp_service_iova_address,
 	mpp_service_chnl_register,
 	mpp_service_get_dev,
+	.run_task = mpp_service_run_task,
 };

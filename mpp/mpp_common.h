@@ -397,6 +397,7 @@ struct mpp_session {
 	void *task[MAX_TASK_CNT];
 	u32 chn_id;
 	u32 k_space;
+	u32 online;
 	/*
 	 * session handler from mpp_dev_ops
 	 * process_task - handle messages of sending task

@@ -311,6 +311,13 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 	return;
 }
 
+int mpp_vcodec_enc_run_task(RK_U32 chan_id)
+{
+	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
+
+	return mpp_enc_run_task(chan_entry->handle);
+}
+
 void *mpp_vcodec_enc_routine(void *param)
 {
 	RK_U32 started_chan_num = 0;

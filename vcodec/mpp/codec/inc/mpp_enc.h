@@ -167,6 +167,7 @@ MPP_RET mpp_enc_deinit(MppEnc ctx);
 
 MPP_RET mpp_enc_start(MppEnc ctx);
 MPP_RET mpp_enc_stop(MppEnc ctx);
+MPP_RET mpp_enc_run_task(MppEnc ctx);
 
 MPP_RET mpp_enc_control(MppEnc ctx, MpiCmd cmd, void *param);
 MPP_RET mpp_enc_notify(MppEnc ctx, RK_U32 flag);

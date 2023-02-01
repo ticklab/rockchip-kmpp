@@ -83,6 +83,7 @@ struct vcodec_mppdev_svr_fn {
 	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
 
 	struct device *(*mpp_chnl_get_dev)(struct mpp_session *session);
+	int (*chnl_run_task)(struct mpp_session *session);
 };
 
 #define VENC_MAX_PACK_INFO_NUM 8
@@ -135,5 +136,6 @@ extern struct vcodec_mppdev_svr_fn *get_mppdev_svr_ops(void);
 extern u32 mpp_srv_get_phy(struct dma_buf *buf);
 
 extern int mpp_vcodec_clear_buf_resource(void);
+extern int mpp_vcodec_run_task(RK_U32 chan_id);
 
 #endif

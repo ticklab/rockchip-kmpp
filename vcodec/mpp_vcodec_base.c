@@ -88,7 +88,6 @@ static struct mpp_chan *mpp_vcodec_get_chn_handle(struct mpi_obj *obj)
 	return entry;
 }
 
-
 static int mpp_vcodec_msg_handle(struct mpi_obj *obj, int event, void *args)
 {
 	int ret = 0;
@@ -720,3 +719,9 @@ int mpp_vcodec_clear_buf_resource(void)
 	return 0;
 }
 EXPORT_SYMBOL(mpp_vcodec_clear_buf_resource);
+
+int mpp_vcodec_run_task(RK_U32 chan_id)
+{
+	return mpp_vcodec_enc_run_task(chan_id);
+}
+EXPORT_SYMBOL(mpp_vcodec_run_task);

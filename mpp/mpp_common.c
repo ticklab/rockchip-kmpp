@@ -136,6 +136,31 @@ mpp_taskqueue_get_pending_task(struct mpp_taskqueue *queue)
 	return task;
 }
 
+static struct mpp_task *
+mpp_session_get_idle_task(struct mpp_session *session)
+{
+	struct mpp_task *task, *n;
+	u32 found = 0;
+	unsigned long flags;
+
+	spin_lock_irqsave(&session->pending_lock, flags);
+	list_for_each_entry_safe(task, n, &session->pending_list, pending_link) {
+		if (task)
+			mpp_debug_func(DEBUG_TASK_INFO, "task %d %#lx session %p chan %d find session %p\n",
+				       task->task_index, task->state, task->session, task->session->chn_id, session);
+		if (task && !test_bit(TASK_STATE_RUNNING, &task->state)) {
+			found = 1;
+			break;
+		}
+	}
+	spin_unlock_irqrestore(&session->pending_lock, flags);
+
+	if (!found)
+		task = NULL;
+
+	return task;
+}
+
 static bool
 mpp_taskqueue_is_running(struct mpp_taskqueue *queue)
 {
@@ -426,6 +451,38 @@ int mpp_session_deinit(struct mpp_session *session)
 	return 0;
 }
 
+void mpp_session_clean_detach(struct mpp_taskqueue *queue)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&queue->session_lock, flags);
+	while (queue->detach_count) {
+		struct mpp_session *session = NULL;
+
+		session = list_first_entry_or_null(&queue->session_detach, struct mpp_session,
+						   session_link);
+
+		if (atomic_read(&session->task_count))
+			return;
+
+		if (session) {
+			list_del_init(&session->session_link);
+			queue->detach_count--;
+		}
+
+		spin_unlock_irqrestore(&queue->session_lock, flags);
+
+		if (session) {
+			mpp_dbg_session("%s detach count %d\n", dev_name(session->mpp->dev),
+					queue->detach_count);
+			mpp_session_deinit(session);
+		}
+
+		spin_lock_irqsave(&queue->session_lock, flags);
+	}
+	spin_unlock_irqrestore(&queue->session_lock, flags);
+}
+
 static void mpp_session_attach_workqueue(struct mpp_session *session,
 					 struct mpp_taskqueue *queue)
 {
@@ -456,7 +513,7 @@ static void mpp_session_detach_workqueue(struct mpp_session *session)
 	queue->detach_count++;
 	spin_unlock_irqrestore(&queue->session_lock, flags);
 
-	mpp_taskqueue_trigger_work(mpp);
+	mpp_session_clean_detach(queue);
 }
 
 static int
@@ -514,9 +571,10 @@ void mpp_free_task(struct kref *ref)
 	}
 	session = task->session;
 
-	mpp_debug_func(DEBUG_TASK_INFO, "task %d:%d free state 0x%lx abort %d\n",
-		       session->index, task->task_index, task->state,
-		       atomic_read(&task->abort_request));
+	mpp_debug_func(DEBUG_TASK_INFO,
+		       "session %d:%d task %d state 0x%lx abort_request %d\n",
+		       session->device_type, session->index, task->task_index,
+		       task->state, atomic_read(&task->abort_request));
 
 	mpp = mpp_get_task_used_device(task, session);
 	if (mpp->dev_ops->free_task)
@@ -525,6 +583,7 @@ void mpp_free_task(struct kref *ref)
 	/* Decrease reference count */
 	atomic_dec(&session->task_count);
 	atomic_dec(&mpp->task_count);
+	mpp_session_clean_detach(mpp->queue);
 }
 
 extern void rkvenc_dump_dbg(struct mpp_dev *mpp);
@@ -618,7 +677,10 @@ static int mpp_process_task_default(struct mpp_session *session,
 	 */
 	atomic_inc(&session->task_count);
 	mpp_session_push_pending(session, task);
-
+	mpp_debug_func(DEBUG_TASK_INFO,
+		       "session %d:%d task %d state 0x%lx\n",
+		       session->device_type, session->index,
+		       task->task_index, task->state);
 	return 0;
 }
 
@@ -724,6 +786,7 @@ static int mpp_task_run(struct mpp_dev *mpp,
 			struct mpp_task *task)
 {
 	int ret;
+	struct mpp_session *session = task->session;
 
 	mpp_debug_enter();
 
@@ -742,8 +805,10 @@ static int mpp_task_run(struct mpp_dev *mpp,
 
 	mpp_power_on(mpp);
 	mpp_time_record(task);
-	mpp_debug_func(DEBUG_TASK_INFO, "pid %d run %s\n",
-		       task->session->pid, dev_name(mpp->dev));
+	mpp_debug_func(DEBUG_TASK_INFO,
+		       "%s session %d:%d task=%d state=0x%lx\n",
+		       dev_name(mpp->dev), session->device_type,
+		       session->index, task->task_index, task->state);
 
 	if (mpp->auto_freq_en && mpp->hw_ops->set_freq)
 		mpp->hw_ops->set_freq(mpp, task);
@@ -772,7 +837,7 @@ static void mpp_task_worker_default(struct kthread_work *work_s)
 	unsigned long flags;
 
 	mpp_debug_enter();
-
+	spin_lock_irqsave(&queue->dev_lock, flags);
 again:
 	task = mpp_taskqueue_get_pending_task(queue);
 	if (!task)
@@ -816,28 +881,72 @@ again:
 	}
 
 done:
-	spin_lock_irqsave(&queue->session_lock, flags);
-	while (queue->detach_count) {
-		struct mpp_session *session = NULL;
+	mpp_session_clean_detach(queue);
+	spin_unlock_irqrestore(&queue->dev_lock, flags);
+}
 
-		session = list_first_entry_or_null(&queue->session_detach, struct mpp_session,
-						   session_link);
-		if (session) {
-			list_del_init(&session->session_link);
-			queue->detach_count--;
-		}
+int mpp_chnl_run_task(struct mpp_session *session)
+{
+	struct mpp_dev *mpp = session->mpp;
+	struct mpp_taskqueue *queue = mpp->queue;
+	struct mpp_task *task = NULL;
+	int ret = 0;
+	unsigned long flags;
 
-		spin_unlock_irqrestore(&queue->session_lock, flags);
+	spin_lock_irqsave(&queue->dev_lock, flags);
+	mpp_debug_func(DEBUG_TASK_INFO, "chan_id %d ++\n", session->chn_id);
 
-		if (session) {
-			mpp_dbg_session("%s detach count %d\n", dev_name(mpp->dev),
-					queue->detach_count);
-			mpp_session_deinit(session);
-		}
-
-		spin_lock_irqsave(&queue->session_lock, flags);
+again:
+	task = mpp_session_get_idle_task(session);
+	if (!task) {
+		ret = -EAGAIN;
+		goto done;
 	}
-	spin_unlock_irqrestore(&queue->session_lock, flags);
+
+	/* if task timeout and aborted, remove it */
+	if (atomic_read(&task->abort_request) > 0) {
+		mpp_taskqueue_pop_pending(queue, task);
+		goto again;
+	}
+
+	/*
+	 * In the link table mode, the prepare function of the device
+	 * will check whether I can insert a new task into device.
+	 * If the device supports the task status query(like the HEVC
+	 * encoder), it can report whether the device is busy.
+	 * If the device does not support multiple task or task status
+	 * query, leave this job to mpp service.
+	 */
+	if (mpp->dev_ops->prepare)
+		task = mpp->dev_ops->prepare(mpp, task);
+	else if (mpp_taskqueue_is_running(queue))
+		task = NULL;
+
+	if (!task) {
+		ret = -EBUSY;
+		mpp_debug_func(DEBUG_TASK_INFO, "chan_id %d device is busy now\n",
+			       session->chn_id);
+		goto done;
+	}
+
+	/* run task */
+	mpp = mpp_get_task_used_device(task, task->session);
+	mpp_taskqueue_pending_to_run(queue, task);
+	set_bit(TASK_STATE_RUNNING, &task->state);
+	mpp_reset_down_read(mpp->reset_group);
+	mpp_time_record(task);
+	schedule_delayed_work(&task->timeout_work,
+			      msecs_to_jiffies(MPP_WORK_TIMEOUT_DELAY));
+	if (mpp->dev_ops->run)
+		mpp->dev_ops->run(mpp, task);
+	set_bit(TASK_STATE_START, &task->state);
+
+done:
+	mpp_session_clean_detach(queue);
+
+	mpp_debug_func(DEBUG_TASK_INFO, "chan_id %d --\n", session->chn_id);
+	spin_unlock_irqrestore(&queue->dev_lock, flags);
+	return ret;
 }
 
 static int mpp_wait_result_default(struct mpp_session *session,
@@ -863,14 +972,16 @@ static int mpp_wait_result_default(struct mpp_session *session,
 	} else {
 		atomic_inc(&task->abort_request);
 		set_bit(TASK_STATE_ABORT, &task->state);
-		mpp_err("timeout, pid %d session %p:%d count %d cur_task %p index %d.\n",
-			session->pid, session, session->index,
-			atomic_read(&session->task_count), task,
-			task->task_index);
+		mpp_err("timeout, pid %d session %d:%d count %d cur_task %d state %lx\n",
+			session->pid, session->device_type, session->index,
+			atomic_read(&session->task_count), task->task_index, task->state);
 	}
 
-	mpp_debug_func(DEBUG_TASK_INFO, "task %d kref_%d\n",
-		       task->task_index, kref_read(&task->ref));
+	mpp_debug_func(DEBUG_TASK_INFO,
+		       "session %d:%d task %d state 0x%lx kref_rd %d ret %d\n",
+		       session->device_type,
+		       session->index, task->task_index, task->state,
+		       kref_read(&task->ref), ret);
 
 	mpp_session_pop_pending(session, task);
 
@@ -2298,7 +2409,12 @@ static struct mpp_session *mpp_chnl_open(int client_type)
 static int mpp_chnl_register(struct mpp_session *session, void *fun, u32 chn_id)
 {
 	session->callback = fun;
-	session->chn_id = chn_id;
+	session->chn_id = chn_id & 0xffff;
+	session->online = chn_id >> 16;
+
+	if (session->online)
+		mpp_power_on(session->mpp);
+
 	return 0;
 }
 
@@ -2369,8 +2485,12 @@ static int mpp_chnl_add_req(struct mpp_session *session,  void *reqs)
 
 				atomic_inc(&mpp->task_count);
 				set_bit(TASK_STATE_PENDING, &task->state);
-				list_add_tail(&task->queue_link, &queue->pending_list);
-				mpp_taskqueue_trigger_work(mpp);
+
+				/* online task trigger by user */
+				if (!session->online) {
+					list_add_tail(&task->queue_link, &queue->pending_list);
+					mpp_taskqueue_trigger_work(mpp);
+				}
 			}
 			if (task_msgs.poll_cnt > 0) {
 				ret = mpp_wait_result(session, &task_msgs);
@@ -2416,6 +2536,7 @@ struct vcodec_mppdev_svr_fn {
 					   struct dma_buf *buf, unsigned int reg_idx);
 	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
 	struct device *(*mpp_chnl_get_dev)(struct mpp_session *session);
+	int (*chnl_run_task)(struct mpp_session *session);
 };
 
 struct vcodec_mppdev_svr_fn g_mpp_svr_fn_ops    = {
@@ -2426,6 +2547,7 @@ struct vcodec_mppdev_svr_fn g_mpp_svr_fn_ops    = {
 	.chnl_get_iova_addr                         = mpp_chnl_get_iova_addr,
 	.chnl_release_iova_addr                     = NULL,
 	.mpp_chnl_get_dev                           = mpp_chnl_get_dev,
+	.chnl_run_task				    = mpp_chnl_run_task,
 };
 
 struct vcodec_mppdev_svr_fn *get_mppdev_svr_ops(void)

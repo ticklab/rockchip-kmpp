@@ -25,6 +25,7 @@ typedef enum MppDevIoctlCmd_e {
 
 	MPP_DEV_CMD_SEND,
 	MPP_DEV_CMD_POLL,
+	MPP_DEV_CMD_RUN_TASK,
 
 	MPP_DEV_IOCTL_CMD_BUTT,
 } MppDevIoctlCmd;
@@ -83,6 +84,7 @@ typedef struct MppDevApi_t {
 	RK_U32(*get_address) (void *ctx, struct dma_buf * buf, RK_U32 offset);
 	void (*chnl_register) (void *ctx, void *func, RK_S32 chan_id);
 	struct device *(*chnl_get_dev)(void *ctx);
+	int(*run_task)(void *ctx);
 } MppDevApi;
 
 typedef void *MppDev;

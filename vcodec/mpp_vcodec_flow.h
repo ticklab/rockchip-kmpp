@@ -11,5 +11,6 @@
 void *mpp_vcodec_enc_routine(void *param);
 void *mpp_vcodec_dec_routine(void *param);
 void mpp_vcodec_enc_int_handle(int chan_id);
+int mpp_vcodec_enc_run_task(RK_U32 chan_id);
 
 #endif

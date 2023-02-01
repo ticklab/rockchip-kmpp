@@ -785,11 +785,7 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 
 		if (!is_full) {
 			rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
-			if (dvbm_adr.overflow) {
-				mpp_err("cur frame already overflow [%d %d]!\n",
-					dvbm_adr.frame_id, dvbm_adr.line_cnt);
-				return MPP_NOK;
-			}
+
 			regs->reg0260_adr_vsy_b = dvbm_adr.ybuf_bot;
 			regs->reg0261_adr_vsc_b = dvbm_adr.cbuf_bot;
 			regs->reg0262_adr_vsy_t = dvbm_adr.ybuf_top;

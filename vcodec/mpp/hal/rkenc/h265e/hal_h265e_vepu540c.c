@@ -1967,11 +1967,6 @@ static MPP_RET vepu540c_h265_set_dvbm(H265eV540cRegSet *regs, HalEncTask *task)
 		regs->reg_base.reg0160_adr_src0 = dvbm_adr.ybuf_sadr;
 		regs->reg_base.reg0161_adr_src1 = dvbm_adr.cbuf_sadr;
 		regs->reg_base.reg0162_adr_src2 = dvbm_adr.cbuf_sadr;
-		if (dvbm_adr.overflow) {
-			mpp_err("cur frame already overflow [%d %d]!\n",
-				dvbm_adr.frame_id, dvbm_adr.line_cnt);
-			return MPP_NOK;
-		}
 	} else {
 		RK_U32 phy_addr = mpp_frame_get_phy_addr(frm);
 		//  MppFrameFormat fmt = mpp_frame_get_fmt(frm);

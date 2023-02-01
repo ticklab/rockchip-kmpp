@@ -51,6 +51,9 @@
 #define RKVENC_ENC_DONE_STATUS		(BIT(0))
 #define REC_FBC_DIS_CLASS_OFFSET	(36)
 
+#define RKVENC_JPEG_BASE_CFG	(0x47c)
+#define JRKVENC_PEGE_ENABLE	(BIT(31))
+
 #define RKVENC_VIDEO_BSBT	(0x2b0)
 #define RKVENC_VIDEO_BSBB	(0x2b4)
 #define RKVENC_VIDEO_BSBS	(0x2b8)
@@ -841,6 +844,7 @@ static void update_online_info(struct mpp_dev *mpp)
 	u32 val;
 	u32 cur_fcnt;
 	u32 cur_lcnt;
+	struct dvbm_addr_cfg dvbm_adr;
 
 	rk_dvbm_ctrl(enc->port, DVBM_VEPU_GET_FRAME_INFO, &info);
 	/* 1. get cur vepu frame info */
@@ -864,6 +868,27 @@ static void update_online_info(struct mpp_dev *mpp)
 	mpp_write(mpp, VEPU_DVBM_ID_REG, val);
 	mpp_dbg_dvbm("%s frame cnt %d line cnt %d\n",
 		     __func__, info.frame_cnt, info.line_cnt);
+
+	rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
+	if (!dvbm_adr.ybuf_bot || !dvbm_adr.cbuf_bot)
+		dev_err(mpp->dev, "the dvbm address do not ready!\n");
+
+	mpp_write(mpp, 0x270, dvbm_adr.ybuf_top);
+	mpp_write(mpp, 0x274, dvbm_adr.cbuf_top);
+	mpp_write(mpp, 0x278, dvbm_adr.ybuf_bot);
+	mpp_write(mpp, 0x27c, dvbm_adr.cbuf_bot);
+	mpp_write(mpp, 0x280, dvbm_adr.ybuf_sadr);
+	mpp_write(mpp, 0x284, dvbm_adr.cbuf_sadr);
+	mpp_write(mpp, 0x288, dvbm_adr.cbuf_sadr);
+	if (mpp_read(mpp, RKVENC_JPEG_BASE_CFG) & JRKVENC_PEGE_ENABLE) {
+		mpp_write(mpp, 0x410, dvbm_adr.ybuf_bot);
+		mpp_write(mpp, 0x414, dvbm_adr.cbuf_bot);
+		mpp_write(mpp, 0x418, dvbm_adr.ybuf_top);
+		mpp_write(mpp, 0x41c, dvbm_adr.cbuf_top);
+		mpp_write(mpp, 0x420, dvbm_adr.ybuf_sadr);
+		mpp_write(mpp, 0x424, dvbm_adr.cbuf_sadr);
+		mpp_write(mpp, 0x428, dvbm_adr.cbuf_sadr);
+	}
 }
 #endif
 
