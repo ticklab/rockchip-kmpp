@@ -243,7 +243,7 @@ MPP_RET bits_model_smt_init(RcModelV2SmtCtx * ctx)
 	ctx->bits_one_gop_use_flag = 0;
 	ctx->gop_min = gop_len;
 
-	ctx->qp_min = 18;
+	ctx->qp_min = 10;
 	ctx->qp_max = 51;
 	ctx->qp_step = 4;
 
@@ -756,6 +756,66 @@ static RK_U8 qscale2qp[96] = {
 	44,  44,  44,  44,  45,  45, 45, 45,
 };
 
+static RK_U8 avg_qp0[52] = {
+	1,    1,    1,    1,     1,    2,    3,    4,
+	5,    6,    7,    8,     9,   10,   11,   12,
+	13,   14,   15,   17,   18,   19,   20,   21,
+	21,   21,   22,   23,   24,   25,   26,   26,
+	27,   28,   28,   28,   29,   29,   30,   31,
+	31,   32,   32,   33,   33,   34,   35,   35,
+	35,   36,   36,   37
+};
+
+static RK_U8 avg_qp1[52] = {
+	4,     4,    5,    6,    7,    8,    9,    10,
+	11,   12,   13,   14,   16,   17,   18,    19,
+	20,   21,   22,   23,   24,   24,   25,    25,
+	25,   25,   26,   27,   27,   28,   29,    29,
+	29,   29,   30,   31,   31,   32,   32,    33,
+	33,   34,   35,   36,   37,   37,   38,    38,
+	38,   39,   40,   41
+};
+
+static RK_U8 prev_qp0[52] = {
+	1,    1,    1,    1,    1,    2,    3,    4,
+	5,    6,    7,    8,    9,    10,    11,    12,
+	13,    14,    15,    17,    18,    19,    20,    20,
+	20,    21,    22,    23,    24,    24,    25,    26,
+	27,    28,    28,    29,    29,    29,    29,    30,
+	30,    31,    31,    32,    33,    33,    33,    33,
+	33,    33,    33,    33
+};
+
+static RK_U8 prev_qp1[52] = {
+	1,    1,    2,    3,    4,    5,    6,    7,
+	8,    9,    10,    11,    12,    13,    14,    15,
+	16,    17,    18,    19,    20,    20,    21,    22,
+	23,    24,    25,    26,    26,    27,    28,    29,
+	29,    30,    31,    31,    31,    32,    32,    33,
+	33,    34,    34,    35,    35,    35,    36,    36,
+	36,    36,    36,    36
+};
+
+static RK_U8 intra_preqp0[52] = {
+	1,    1,    1,    2,    3,    4,    5,    6,
+	7,    8,    9,    10,    11,    12,    13,    14,
+	15,    16,    17,    18,    19,    20,    21,    22,
+	23,    23,    24,    25,    26,    27,    27,    28,
+	28,    29,    30,    31,    32,    32,    33,    34,
+	34,    34,    35,    35,    36,    36,    36,    36,
+	37,    37,    37,    38
+};
+
+static RK_U8 intra_preqp1[52] = {
+	2,    3,    4,    5,    6,    7,    8,    9,
+	10,    11,    12,    13,    14,    15,    16,    17,
+	18,    19,    20,    22,    23,    24,    25,    26,
+	27,    28,    29,    30,    31,    32,    33,    34,
+	35,    36,    37,    38,    39,    40,    41,    42,
+	43,    44,    45,    46,    47,    48,    49,    50,
+	51,    51,    51,    51
+};
+
 static RK_S32 cal_smt_first_i_start_qp(RK_S32 target_bit, RK_U32 total_mb)
 {
 	RK_S32 cnt = 0;
@@ -935,9 +995,9 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	}
 
 	if (NULL == p->qp_p)
-		mpp_data_init(&p->qp_p, MPP_MIN(p->gop_min, 15));
+		mpp_data_init(&p->qp_p, MPP_MIN(p->gop_min, 50));
 	if (NULL == p->sse_p)
-		mpp_data_init(&p->sse_p, MPP_MIN(p->gop_min, 15));
+		mpp_data_init(&p->sse_p, MPP_MIN(p->gop_min, 50));
 
 	if (p->frm_num == 0) {
 		RK_S32 mb_w = MPP_ALIGN(p->usr_cfg.width, 16) / 16;
@@ -962,7 +1022,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 	if (p->frame_type == INTRA_FRAME) {
 		if (p->frm_num > 0) {
 			RK_S32 bit_target_use = (p->bits_target_low_rate + p->bits_target_high_rate) / 2;
-			RK_S32 avg_qp = mpp_clip(mpp_data_avg(p->qp_p, -1, 1, 1), fm_lv_min_i_quality, fm_lv_max_i_quality);
+			RK_S32 avg_qp = mpp_clip(mpp_data_avg(p->qp_p, -1, 1, 1), 20, 37);
 
 			if (bit_target_use < 100)
 				bit_target_use = 100;
@@ -983,20 +1043,11 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 				else if (p->intra_prerealbit * 3 < bit_target_use * 2)
 					p->qp_out = p->intra_preqp - 1;
 			}
-			qp_add = 1;
-			if (p->qp_prev_out < 32)
-				qp_add = 2;
-
-			if (p->qp_prev_out > 45)
-				qp_minus = 4;
-			else if (p->qp_prev_out > 40)
-				qp_minus = 3;
-			else
-				qp_minus = 2;
 			if (!p->reenc_cnt && p->usr_cfg.debreath_cfg.enable)
 				calc_smt_debreath_qp(p);
-			p->qp_out = mpp_clip(p->qp_out, avg_qp - 6, avg_qp - 1);
-			p->qp_out = mpp_clip(p->qp_out, p->qp_prev_out - 4 - qp_minus, p->qp_prev_out + qp_add);
+			p->qp_out = mpp_clip(p->qp_out, avg_qp0[avg_qp], avg_qp1[avg_qp]);
+			p->qp_out = mpp_clip(p->qp_out, prev_qp0[p->qp_prev_out], prev_qp1[p->qp_prev_out]);
+			p->qp_out = mpp_clip(p->qp_out, intra_preqp0[p->intra_preqp], intra_preqp1[p->intra_preqp]);
 		}
 	} else {
 		p->bits_target_use = (p->bits_target_low_rate + p->bits_target_high_rate) / 2;
