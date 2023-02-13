@@ -376,7 +376,7 @@ struct mpp_session {
 	struct mpp_dma_session *dma;
 
 	/* lock for session task pending list */
-	struct mutex pending_lock;
+	spinlock_t pending_lock;
 	/* task pending list in session */
 	struct list_head pending_list;
 
@@ -483,7 +483,7 @@ struct mpp_taskqueue {
 	struct task_struct *kworker_task;
 
 	/* lock for session attach and session_detach */
-	struct mutex session_lock;
+	spinlock_t session_lock;
 	/* link to session session_link for attached sessions */
 	struct list_head session_attach;
 	/* link to session session_link for detached sessions */
@@ -491,7 +491,7 @@ struct mpp_taskqueue {
 	u32 detach_count;
 
 	/* lock for pending list */
-	struct mutex pending_lock;
+	spinlock_t pending_lock;
 	struct list_head pending_list;
 	/* lock for running list */
 	spinlock_t running_lock;
@@ -503,7 +503,7 @@ struct mpp_taskqueue {
 	struct mutex mmu_lock;
 	struct list_head mmu_list;
 	/* lock for dev list */
-	struct mutex dev_lock;
+	spinlock_t dev_lock;
 	struct list_head dev_list;
 	/*
 	 * task_capacity in taskqueue is the minimum task capacity of the
