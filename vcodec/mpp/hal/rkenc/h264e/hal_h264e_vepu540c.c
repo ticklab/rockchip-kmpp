@@ -1942,7 +1942,7 @@ static void setup_vepu540c_me(HalVepu540cRegSet *regs, H264eSps *sps,
 
 #define H264E_LAMBDA_TAB_SIZE       (52 * sizeof(RK_U32))
 
-static RK_U32 h264e_lambda_default[58] = {
+static RK_U32 h264e_lambda_default[60] = {
 	0x00000003, 0x00000005, 0x00000006, 0x00000007,
 	0x00000009, 0x0000000b, 0x0000000e, 0x00000012,
 	0x00000016, 0x0000001c, 0x00000024, 0x0000002d,
@@ -1957,10 +1957,10 @@ static RK_U32 h264e_lambda_default[58] = {
 	0x00016dbc, 0x0001cccc, 0x00024492, 0x0002db79,
 	0x00039999, 0x00048924, 0x0005b6f2, 0x00073333,
 	0x00091249, 0x000b6de5, 0x000e6666, 0x00122492,
-	0x0016dbcb, 0x001ccccc,
+	0x0016dbcb, 0x001ccccc, 0x00244924, 0x002db796,
 };
 
-static RK_U32 h264e_lambda_cvr[58] = {
+static RK_U32 h264e_lambda_cvr[60] = {
 	0x00000009, 0x0000000b, 0x0000000e, 0x00000011,
 	0x00000016, 0x0000001b, 0x00000022, 0x0000002b,
 	0x00000036, 0x00000045, 0x00000056, 0x0000006d,
@@ -1974,7 +1974,7 @@ static RK_U32 h264e_lambda_cvr[58] = {
 	0x0001c313, 0x00027ae1, 0x00031fe6, 0x0003efcf,
 	0x0004f5c3, 0x0006e785, 0x0008b2ef, 0x000af5c3,
 	0x000f1e7a, 0x00130c7f, 0x00180000, 0x001e3cf4,
-	0x002618fe, 0x00300000,
+	0x002618fe, 0x00300000, 0x003c79e8, 0x004c31fc,
 };
 
 static void setup_vepu540c_l2(HalH264eVepu540cCtx *ctx, H264eSlice *slice,
