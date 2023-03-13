@@ -1828,8 +1828,6 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 	HalEncTask *hal_task = &task->info.enc;
 	MPP_RET ret = MPP_OK;
 	HalEncTask *jpeg_hal_task = NULL;
-	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
-	MppEncCfgSet *cfg = &enc->cfg;
 
 	if (jpeg_ctx) {
 		MppEncImpl *jpeg_enc = (MppEncImpl *)jpeg_ctx;
@@ -1840,14 +1838,6 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 	enc_dbg_detail("task %d hal start\n", frm->seq_idx);
 	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, jpeg_hal_task, enc,
 		      ret);
-
-	if (mpidev_fn && mpidev_fn->set_intra_info) {
-		RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
-		RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
-		RK_U32 is_intra = (cfg->codec.coding == MPP_VIDEO_CodingMJPEG || frm->is_intra);
-		mpidev_fn->set_intra_info(enc->chan_id, dts, pts, is_intra);
-	}
-
 
 TASK_DONE:
 	if (ret) {
@@ -2017,6 +2007,18 @@ TASK_DONE:
 	 */
 	enc_dbg_detail("task %d enqueue packet pts %lld\n", frm->seq_idx,
 		       enc->task_pts);
+
+	{
+		struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
+		MppEncCfgSet *cfg = &enc->cfg;
+
+		if (mpidev_fn && mpidev_fn->set_intra_info) {
+			RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
+			RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
+			RK_U32 is_intra = (cfg->codec.coding == MPP_VIDEO_CodingMJPEG || frm->is_intra);
+			mpidev_fn->set_intra_info(enc->chan_id, dts, pts, is_intra);
+		}
+	}
 
 	if (enc->frame)
 		mpp_frame_deinit(&enc->frame);
