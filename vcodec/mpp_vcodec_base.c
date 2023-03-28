@@ -67,12 +67,12 @@ static int mpp_vcodec_unbind(void *ctx)
 	return 0;
 }
 
-static struct vcodec_threads *mpp_vcodec_get_thd_handle(struct mpi_obj *obj)
+static struct mpp_chan *mpp_vcodec_get_chn_handle(struct mpi_obj *obj)
 {
-	struct vcodec_threads *thd = NULL;
 	void *ctx = NULL;
 	struct mpp_chan *entry = NULL;
 	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
+
 	if (!mpidev_fn) {
 		mpp_err("get_mpidev_ops fail");
 		return NULL;
@@ -81,9 +81,29 @@ static struct vcodec_threads *mpp_vcodec_get_thd_handle(struct mpi_obj *obj)
 	if (mpidev_fn->get_chnl_ctx)
 		ctx = mpidev_fn->get_chnl_ctx(obj);
 
+
 	if (ctx)
 		entry = container_of(ctx, struct mpp_chan, yuv_queue);
 
+	return entry;
+}
+
+
+static int mpp_vcodec_msg_handle(struct mpi_obj *obj, int event, void *args)
+{
+	int ret = 0;
+
+	struct vcodec_threads *thd;
+	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
+	struct mpp_chan *entry = NULL;
+
+	if (!mpidev_fn) {
+		mpp_err("get_mpidev_ops fail");
+		return -1;
+	}
+
+	spin_lock(&entry->chan_lock);
+	entry = mpp_vcodec_get_chn_handle(obj);
 	if (entry) {
 		switch (entry->type) {
 		case MPP_CTX_ENC: {
@@ -95,27 +115,19 @@ static struct vcodec_threads *mpp_vcodec_get_thd_handle(struct mpi_obj *obj)
 		}
 		break;
 		}
-	}
-	return thd;
-}
-
-
-static int mpp_vcodec_msg_handle(struct mpi_obj *obj, int event, void *args)
-{
-	int ret = 0;
-
-	struct vcodec_threads *thd;
-	struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
-	if (!mpidev_fn) {
-		mpp_err("get_mpidev_ops fail");
+	} else {
+		spin_unlock(&entry->chan_lock);
 		return -1;
 	}
-	thd = mpp_vcodec_get_thd_handle(obj);
+
 	if (mpidev_fn->handle_message)
 		ret = mpidev_fn->handle_message(obj, event, args);
 
+	spin_unlock(&entry->chan_lock);
+
 	if (ret && thd)
 		vcodec_thread_trigger(thd);
+
 	return 0;
 }
 
@@ -506,12 +518,13 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 	entry->state = CHAN_STATE_NULL;
 	entry->reenc = 0;
 	entry->binder_chan_id = -1;
-	spin_unlock_irqrestore(&entry->chan_lock, lock_flag);
-	atomic_set(&entry->runing, 0);
 	if (mpibuf_fn->buf_queue_destroy) {
 		mpibuf_fn->buf_queue_destroy(entry->yuv_queue);
 		entry->yuv_queue = NULL;
 	}
+	spin_unlock_irqrestore(&entry->chan_lock, lock_flag);
+
+	atomic_set(&entry->runing, 0);
 
 #ifdef CHAN_RELEASE_BUF
 	{
