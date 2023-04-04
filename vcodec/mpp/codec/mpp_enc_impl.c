@@ -1334,7 +1334,7 @@ static MPP_RET mpp_enc_proc_two_pass(MppEncImpl *enc, EncTask *task)
 		ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, NULL, enc,
 			      ret);
 
-		mpp_err("task %d hal wait\n", frm->seq_idx);
+		enc_dbg_detail("task %d hal wait\n", frm->seq_idx);
 		ENC_RUN_FUNC2(mpp_enc_hal_wait, hal, hal_task, enc, ret);
 
 		//enc_dbg_detail("task %d hal ret task\n", frm->seq_idx);
