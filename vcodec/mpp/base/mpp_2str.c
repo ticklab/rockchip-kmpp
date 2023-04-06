@@ -71,7 +71,6 @@ const char *strof_pixel_fmt(MppFrameFormat fmt)
 		"422_UYVY",
 		"422_VYUY",
 		"YUV400",
-		"YUV422P",
 		"YUV440SP",
 		"YUV411SP",
 		"YUV444SP",
