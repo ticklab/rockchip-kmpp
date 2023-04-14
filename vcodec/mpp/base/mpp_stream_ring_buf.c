@@ -148,7 +148,8 @@ MPP_RET ring_buf_get_free(ring_buf_pool *ctx, ring_buf *buf, RK_U32 align,
 	ring_buf_dbg("get free pool %p ctx->r_pos %d ctx->w_pos %d\n", ctx,
 		     ctx->r_pos, ctx->w_pos);
 
-	align_offset = align - (w_pos & (align - 1));
+	if (w_pos & (align - 1))
+		align_offset = align - (w_pos & (align - 1));
 	align_r_pos = (r_pos & ~(align - 1));
 	if (r_pos > w_pos) {
 		if (min_size + w_pos + align_offset >= r_pos)
