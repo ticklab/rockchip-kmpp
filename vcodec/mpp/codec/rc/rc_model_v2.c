@@ -1257,6 +1257,9 @@ MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 	if (ctx->reenc_cnt >= usr_cfg->max_reencode_times)
 		return MPP_OK;
 
+	if (usr_cfg->shared_buf_en)
+		return MPP_OK;
+
 	if (check_super_frame(ctx, cfg))
 		return MPP_NOK;
 
@@ -1274,9 +1277,6 @@ MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 		 usr_cfg->drop_mode, usr_cfg->bps_target, bit_thr, ins_bps);
 		return (ins_bps > bit_thr) ? MPP_NOK : MPP_OK;
 	}
-
-	if (usr_cfg->shared_buf_en)
-		return MPP_OK;
 
 	switch (frame_type) {
 	case INTRA_FRAME:
