@@ -839,35 +839,7 @@ static int rkvenc_callback(void* ctx, enum dvbm_cb_event event, void* arg)
 
 static void update_online_info(struct mpp_dev *mpp)
 {
-	struct dvbm_isp_frm_info info;
-	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
-	u32 val;
-	u32 cur_fcnt;
-	u32 cur_lcnt;
 	struct dvbm_addr_cfg dvbm_adr;
-
-	rk_dvbm_ctrl(enc->port, DVBM_VEPU_GET_FRAME_INFO, &info);
-	/* 1. get cur vepu frame info */
-	val = mpp_read(&enc->mpp, VEPU_LDLY_REG);
-	cur_fcnt = (val & VEPU_FRAME_CNT) >> VEPU_FRAME_CNT_OFF;
-	cur_lcnt = val & VEPU_LINE_CNT;
-
-	if (cur_lcnt >= info.line_cnt)
-		return;
-	/* 2. check overflow */
-	if (rkvenc_check_overflow(enc, &info, cur_fcnt, cur_lcnt))
-		return;
-	/* 3. update infos */
-	val &= (~GENMASK(21, 0));
-	val |= ((info.frame_cnt << 14) | info.line_cnt);
-	mpp_write(mpp, VEPU_LDLY_REG, val);
-
-	val = mpp_read(mpp, VEPU_DVBM_ID_REG);
-	val = (val >> 8) << 8;
-	val |= info.frame_cnt;
-	mpp_write(mpp, VEPU_DVBM_ID_REG, val);
-	mpp_dbg_dvbm("%s frame cnt %d line cnt %d\n",
-		     __func__, info.frame_cnt, info.line_cnt);
 
 	rk_dvbm_ctrl(NULL, DVBM_VEPU_GET_ADR, &dvbm_adr);
 	if (!dvbm_adr.ybuf_bot || !dvbm_adr.cbuf_bot)
