@@ -158,6 +158,19 @@ ERR_RET:
 	return ret;
 }
 
+void mpp_enc_deinit_frame(MppEnc ctx)
+{
+	MppEncImpl *enc = (MppEncImpl *) ctx;
+
+	if (!enc || !enc->frame || !enc->packet)
+		return;
+
+	enc->hw_run = 0;
+	mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev);
+	mpp_packet_deinit(&enc->packet);
+	mpp_frame_deinit(&enc->frame);
+}
+
 MPP_RET mpp_enc_deinit(MppEnc ctx)
 {
 	MppEncImpl *enc = (MppEncImpl *) ctx;
@@ -174,8 +187,9 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 		enc->hal_info = NULL;
 	}
 #endif
+	if (enc->online)
+		mpp_enc_deinit_frame(enc);
 	mpp_enc_impl_free_task(enc);
-
 	if (enc->impl) {
 		enc_impl_deinit(enc->impl);
 		enc->impl = NULL;
@@ -420,6 +434,7 @@ MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
 	enc->enc_status = ENC_STATUS_INT_DONE;
 	down(&enc->enc_sem);
 	enc->hw_run = 0;
+	enc->packet = NULL;
 	up(&enc->enc_sem);
 	enc_dbg_func("%p out\n", enc);
 	return ret;

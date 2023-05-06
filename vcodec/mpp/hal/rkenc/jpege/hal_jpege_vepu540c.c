@@ -168,6 +168,11 @@ MPP_RET hal_jpege_v540c_deinit(void *hal)
 	jpegeV540cHalContext *ctx = (jpegeV540cHalContext *) hal;
 
 	hal_jpege_enter();
+	if (ctx->dev) {
+		mpp_dev_deinit(ctx->dev);
+		ctx->dev = NULL;
+	}
+
 	jpege_bits_deinit(ctx->bits);
 
 	hal_jpege_vepu_deinit_rc(&ctx->hal_rc);
@@ -178,10 +183,6 @@ MPP_RET hal_jpege_v540c_deinit(void *hal)
 
 	MPP_FREE(ctx->input_fmt);
 
-	if (ctx->dev) {
-		mpp_dev_deinit(ctx->dev);
-		ctx->dev = NULL;
-	}
 	hal_jpege_leave();
 	return MPP_OK;
 }

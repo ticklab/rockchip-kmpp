@@ -1145,6 +1145,11 @@ MPP_RET hal_h265e_v540c_deinit(void *hal)
 	RK_U32 i = 0;
 
 	hal_h265e_enter();
+	if (ctx->dev) {
+		mpp_dev_deinit(ctx->dev);
+		ctx->dev = NULL;
+	}
+
 	MPP_FREE(ctx->regs);
 
 	for (i = 0; i < MAX_TITLE_NUM; i++)
@@ -1180,10 +1185,6 @@ MPP_RET hal_h265e_v540c_deinit(void *hal)
 		ctx->buf_pass1 = NULL;
 	}
 
-	if (ctx->dev) {
-		mpp_dev_deinit(ctx->dev);
-		ctx->dev = NULL;
-	}
 	hal_h265e_leave();
 	return MPP_OK;
 }

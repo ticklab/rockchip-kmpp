@@ -103,6 +103,9 @@ const char *enc_info_item_name[ENC_INFO_BUTT] = {
 
 static void mpp_attach_workqueue(struct mpp_dev *mpp,
 				 struct mpp_taskqueue *queue);
+static int
+mpp_session_pop_pending(struct mpp_session *session,
+			struct mpp_task *task);
 
 static int
 mpp_taskqueue_pop_pending(struct mpp_taskqueue *queue,
@@ -381,6 +384,27 @@ static int mpp_session_clear(struct mpp_dev *mpp,
 	return 0;
 }
 
+static void mpp_session_clear_online_task(struct mpp_dev *mpp, struct mpp_session *session)
+{
+	struct mpp_task *mpp_task;
+
+	while (1) {
+		unsigned long flags;
+		struct mpp_taskqueue *queue = mpp->queue;
+
+		mpp_task = mpp_session_get_idle_task(session);
+
+		if (!mpp_task)
+			break;
+		atomic_inc(&mpp_task->abort_request);
+		spin_lock_irqsave(&queue->pending_lock, flags);
+		list_del_init(&mpp_task->queue_link);
+		spin_unlock_irqrestore(&queue->pending_lock, flags);
+		kref_put(&mpp_task->ref, mpp_free_task);
+		mpp_session_pop_pending(session, mpp_task);
+	}
+}
+
 static struct mpp_session *mpp_session_init(void)
 {
 	struct mpp_session *session = kzalloc(sizeof(*session), GFP_KERNEL);
@@ -461,6 +485,9 @@ void mpp_session_clean_detach(struct mpp_taskqueue *queue)
 
 		session = list_first_entry_or_null(&queue->session_detach, struct mpp_session,
 						   session_link);
+
+		if (session->online)
+			mpp_session_clear_online_task(session->mpp, session);
 
 		if (atomic_read(&session->task_count))
 			return;
@@ -583,7 +610,6 @@ void mpp_free_task(struct kref *ref)
 	/* Decrease reference count */
 	atomic_dec(&session->task_count);
 	atomic_dec(&mpp->task_count);
-	mpp_session_clean_detach(mpp->queue);
 }
 
 extern void rkvenc_dump_dbg(struct mpp_dev *mpp);
@@ -2412,8 +2438,10 @@ static int mpp_chnl_register(struct mpp_session *session, void *fun, u32 chn_id)
 	session->chn_id = chn_id & 0xffff;
 	session->online = chn_id >> 16;
 
-	if (session->online)
+	if (session->online) {
+		session->mpp->always_on = 1;
 		mpp_power_on(session->mpp);
+	}
 
 	return 0;
 }

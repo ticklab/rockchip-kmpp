@@ -97,6 +97,7 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 	unsigned long lock_flag;
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 	RK_U64 cfg_start = 0, cfg_end = 0;
+
 	if (!chan_entry) {
 		mpp_err_f("chan_entry is NULL");
 		return MPP_NOK;
@@ -293,6 +294,7 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 		atomic_dec(&chan_entry->cfg.comb_runing);
 		atomic_dec(&comb_entry->runing);
 		wake_up(&comb_entry->stop_wait);
+		chan_entry->binder_chan_id = -1;
 	} else {
 		ret = mpp_enc_int_process((MppEnc)chan_entry->handle, NULL,
 					  &packet, &jpeg_packet);
@@ -314,6 +316,17 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 int mpp_vcodec_enc_run_task(RK_U32 chan_id)
 {
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
+	unsigned long lock_flag;
+
+	if (!chan_entry)
+		return -EINVAL;
+
+	spin_lock_irqsave(&chan_entry->chan_lock, lock_flag);
+	if (chan_entry->state != CHAN_STATE_RUN) {
+		spin_unlock_irqrestore(&chan_entry->chan_lock, lock_flag);
+		return MPP_NOK;
+	}
+	spin_unlock_irqrestore(&chan_entry->chan_lock, lock_flag);
 
 	return mpp_enc_run_task(chan_entry->handle);
 }
@@ -341,7 +354,6 @@ void *mpp_vcodec_enc_routine(void *param)
 		next_chan = venc->curr_high_prior_chan;
 		if (next_chan >= MAX_ENC_NUM)
 			continue;
-
 		if (enc_chan_process_single_chan(next_chan) != MPP_OK)
 			break;
 	}

@@ -182,6 +182,7 @@ MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
 MPP_RET mpp_enc_register_chl(MppEnc ctx, void *func, RK_S32 chan_id);
 void    mpp_enc_proc_debug(void *seq_file, MppEnc ctx, RK_U32 chl_id);
 RK_S32  mpp_enc_check_pkt_pool(MppEnc ctx);
+void mpp_enc_deinit_frame(MppEnc ctx);
 
 #ifdef __cplusplus
 }
