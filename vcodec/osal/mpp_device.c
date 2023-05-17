@@ -222,3 +222,15 @@ struct device * mpp_get_dev(MppDev ctx)
 	return NULL;
 }
 
+RK_S32 mpp_dev_chnl_check_running(MppDev ctx)
+{
+	MppDevImpl *p = (MppDevImpl *) ctx;
+	const MppDevApi *api = p->api;
+	void *impl_ctx = p->ctx;
+
+	if (api->chnl_check_running)
+		return api->chnl_check_running(impl_ctx);
+
+	return 0;
+}
+

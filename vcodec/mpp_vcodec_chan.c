@@ -132,19 +132,20 @@ int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 		mpp_log("destroy channel id %d handle %p\n", chan_id, chan_entry->handle);
 
 		ret = mpp_vcodec_chan_stop(chan_id, type);
-		ret = wait_event_timeout(chan_entry->stop_wait,
-					 !atomic_read(&chan_entry->runing),
-					 msecs_to_jiffies
-					 (VCODEC_WAIT_TIMEOUT_DELAY));
+		if (!(chan_entry->cfg.online && !mpp_enc_check_hw_running(chan_entry->handle)))
+			ret = wait_event_timeout(chan_entry->stop_wait,
+						 !atomic_read(&chan_entry->runing),
+						 msecs_to_jiffies
+						 (VCODEC_WAIT_TIMEOUT_DELAY));
 
-		if (chan_entry->cfg.online && chan_entry->binder_chan_id != -1) {
+		if (chan_entry->cfg.online && chan_entry->binder_chan_id > 0) {
 			struct mpp_chan *comb_chan = mpp_vcodec_get_chan_entry(
 							     chan_entry->binder_chan_id, MPP_CTX_ENC);
 
-			if (comb_chan && comb_chan->handle)
-				mpp_enc_deinit_frame(comb_chan->handle);
 			atomic_dec(&chan_entry->cfg.comb_runing);
 			atomic_dec(&comb_chan->runing);
+			if (comb_chan && comb_chan->handle)
+				mpp_enc_deinit_frame(comb_chan->handle);
 		}
 		mpp_enc_deinit(chan_entry->handle);
 		mpp_vcodec_stream_clear(chan_entry);
@@ -370,15 +371,18 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 	mpp_assert(chan_id == attr->chan_id);
 
 	ret = mpp_vcodec_chan_stop(chan_id, MPP_CTX_ENC);
-	ret = wait_event_timeout(entry->stop_wait,
-				 !atomic_read(&entry->runing),
-				 msecs_to_jiffies
-				 (VCODEC_WAIT_TIMEOUT_DELAY));
+	if (!(entry->cfg.online && !mpp_enc_check_hw_running(entry->handle)))
+		ret = wait_event_timeout(entry->stop_wait,
+					 !atomic_read(&entry->runing),
+					 msecs_to_jiffies
+					 (VCODEC_WAIT_TIMEOUT_DELAY));
 
-	if (entry->cfg.online && entry->binder_chan_id != -1) {
+	if (entry->cfg.online && entry->binder_chan_id > 0) {
 		struct mpp_chan *comb_chan = mpp_vcodec_get_chan_entry(
 						     entry->binder_chan_id, MPP_CTX_ENC);
 
+		atomic_dec(&entry->cfg.comb_runing);
+		atomic_dec(&comb_chan->runing);
 		if (comb_chan && comb_chan->handle)
 			mpp_enc_deinit_frame(comb_chan->handle);
 	}

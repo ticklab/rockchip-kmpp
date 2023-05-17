@@ -417,6 +417,18 @@ RK_S32 mpp_enc_run_task(MppEnc ctx)
 	return ret;
 }
 
+RK_S32 mpp_enc_check_hw_running(MppEnc ctx)
+{
+	MppEncImpl *enc = (MppEncImpl *) ctx;
+
+	if (NULL == enc) {
+		mpp_err_f("found NULL input enc\n");
+		return MPP_ERR_NULL_PTR;
+	}
+
+	return mpp_dev_chnl_check_running(enc->dev);
+}
+
 MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
 			    MppPacket * jpeg_packet)
 {

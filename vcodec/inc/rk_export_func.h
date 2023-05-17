@@ -84,6 +84,7 @@ struct vcodec_mppdev_svr_fn {
 
 	struct device *(*mpp_chnl_get_dev)(struct mpp_session *session);
 	int (*chnl_run_task)(struct mpp_session *session);
+	int (*chnl_check_running)(struct mpp_session *session);
 };
 
 #define VENC_MAX_PACK_INFO_NUM 8

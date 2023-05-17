@@ -911,6 +911,30 @@ done:
 	spin_unlock_irqrestore(&queue->dev_lock, flags);
 }
 
+int mpp_chnl_is_running(struct mpp_session *session)
+{
+	struct mpp_dev *mpp = session->mpp;
+	struct mpp_taskqueue *queue = mpp->queue;
+	struct mpp_task *task, *n;
+	unsigned long flags, flags1;
+	int running = 0;
+
+	spin_lock_irqsave(&queue->dev_lock, flags1);
+	spin_lock_irqsave(&session->pending_lock, flags);
+
+	list_for_each_entry_safe(task, n, &session->pending_list, pending_link) {
+		if (test_bit(TASK_STATE_RUNNING, &task->state)) {
+			running = 1;
+			break;
+		}
+	}
+
+	spin_unlock_irqrestore(&session->pending_lock, flags);
+	spin_unlock_irqrestore(&queue->dev_lock, flags1);
+
+	return running;
+}
+
 int mpp_chnl_run_task(struct mpp_session *session)
 {
 	struct mpp_dev *mpp = session->mpp;
@@ -2565,17 +2589,19 @@ struct vcodec_mppdev_svr_fn {
 	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
 	struct device *(*mpp_chnl_get_dev)(struct mpp_session *session);
 	int (*chnl_run_task)(struct mpp_session *session);
+	int (*chnl_check_running)(struct mpp_session *session);
 };
 
 struct vcodec_mppdev_svr_fn g_mpp_svr_fn_ops    = {
-	.chnl_open                                  = mpp_chnl_open,
-	.chnl_register                              = mpp_chnl_register,
-	.chnl_release                               = mpp_chnl_release,
-	.chnl_add_req                               = mpp_chnl_add_req,
-	.chnl_get_iova_addr                         = mpp_chnl_get_iova_addr,
-	.chnl_release_iova_addr                     = NULL,
-	.mpp_chnl_get_dev                           = mpp_chnl_get_dev,
-	.chnl_run_task				    = mpp_chnl_run_task,
+	.chnl_open			= mpp_chnl_open,
+	.chnl_register			= mpp_chnl_register,
+	.chnl_release			= mpp_chnl_release,
+	.chnl_add_req			= mpp_chnl_add_req,
+	.chnl_get_iova_addr		= mpp_chnl_get_iova_addr,
+	.chnl_release_iova_addr		= NULL,
+	.mpp_chnl_get_dev		= mpp_chnl_get_dev,
+	.chnl_run_task			= mpp_chnl_run_task,
+	.chnl_check_running		= mpp_chnl_is_running,
 };
 
 struct vcodec_mppdev_svr_fn *get_mppdev_svr_ops(void)

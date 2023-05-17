@@ -85,6 +85,7 @@ typedef struct MppDevApi_t {
 	void (*chnl_register) (void *ctx, void *func, RK_S32 chan_id);
 	struct device *(*chnl_get_dev)(void *ctx);
 	int(*run_task)(void *ctx);
+	int(*chnl_check_running)(void *ctx);
 } MppDevApi;
 
 typedef void *MppDev;
@@ -113,6 +114,8 @@ RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf,
 void mpp_dev_chnl_register(MppDev ctx, void *func, RK_S32 chan_id);
 
 struct device * mpp_get_dev(MppDev ctx);
+
+RK_S32 mpp_dev_chnl_check_running(MppDev ctx);
 
 
 #ifdef __cplusplus

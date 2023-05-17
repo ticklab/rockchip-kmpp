@@ -475,20 +475,31 @@ RK_S32 mpp_service_run_task(void *ctx)
 	return 0;
 }
 
+RK_S32 mpp_service_chnl_check_running(void *ctx)
+{
+	MppDevMppService *p = (MppDevMppService *)ctx;
+
+	if (p->mppdev_ops->chnl_check_running)
+		return p->mppdev_ops->chnl_check_running(p->chnl);
+
+	return 0;
+}
+
 const MppDevApi mpp_service_api = {
-	"mpp_service",
-	sizeof(MppDevMppService),
-	mpp_service_init,
-	mpp_service_deinit,
-	mpp_service_reg_wr,
-	mpp_service_reg_rd,
-	NULL,
-	mpp_service_rcb_info,
-	mpp_service_set_info,
-	mpp_service_cmd_send,
-	mpp_service_cmd_poll,
-	mpp_service_iova_address,
-	mpp_service_chnl_register,
-	mpp_service_get_dev,
-	.run_task = mpp_service_run_task,
+	.name			= "mpp_service",
+	.ctx_size		= sizeof(MppDevMppService),
+	.init			= mpp_service_init,
+	.deinit			= mpp_service_deinit,
+	.reg_wr			= mpp_service_reg_wr,
+	.reg_rd			= mpp_service_reg_rd,
+	.reg_offset		= NULL,
+	.rcb_info		= mpp_service_rcb_info,
+	.set_info		= mpp_service_set_info,
+	.cmd_send		= mpp_service_cmd_send,
+	.cmd_poll		= mpp_service_cmd_poll,
+	.get_address		= mpp_service_iova_address,
+	.chnl_register		= mpp_service_chnl_register,
+	.chnl_get_dev		= mpp_service_get_dev,
+	.run_task		= mpp_service_run_task,
+	.chnl_check_running 	= mpp_service_chnl_check_running,
 };
