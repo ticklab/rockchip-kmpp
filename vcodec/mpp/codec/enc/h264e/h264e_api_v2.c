@@ -618,16 +618,16 @@ static MPP_RET h264e_proc_dpb(void *ctx, HalEncTask *task)
 
 	h264e_dbg_func("enter\n");
 
-	// update dpb
+	/* update dpb */
 	h264e_dpb_proc(dpb, cpb);
 
 	curr = dpb->curr;
 	refr = dpb->refr;
 
-	// update slice info
+	/* update slice info */
 	h264e_slice_update(&p->slice, p->cfg, &p->sps, &p->pps, dpb->curr);
 
-	// update frame usage
+	/* update frame usage */
 	frms->seq_idx = curr->seq_idx;
 	frms->curr_idx = curr->slot_idx;
 	frms->curr_is_lt = curr->status.is_lt_ref;
@@ -639,7 +639,7 @@ static MPP_RET h264e_proc_dpb(void *ctx, HalEncTask *task)
 	for (i = 0; i < (RK_S32)MPP_ARRAY_ELEMS(frms->usage); i++)
 		frms->usage[i] = dpb->frames[i].on_used;
 
-	// update dpb to after encoding status
+	/* update dpb to after encoding status */
 	h264e_dpb_check(dpb, cpb);
 
 	frm->val = curr->status.val;
@@ -765,36 +765,37 @@ static void h264e_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 	MppEncPrepCfg *prep = &p->cfg->prep;
 	MppEncH264Cfg *h264 = &p->cfg->codec.h264;
 	MppEncCfgSet *cfg = p->cfg;
-
-
 	struct seq_file *seq  = (struct seq_file *)seq_file;
+
 	seq_puts(seq,
 		 "\n--------h264e chn attr----------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%10s\n", "ID", "Width", "Height", "profile");
-	seq_printf(seq, "%7d%10u%10u%10s\n", chl_id, prep->width, prep->height,
+	seq_printf(seq, "%7s|%10s|%10s|%10s\n", "ID", "Width", "Height", "profile");
+	seq_printf(seq, "%7d|%10u|%10u|%10s\n", chl_id, prep->width, prep->height,
 		   strof_profle(MPP_VIDEO_CodingAVC, h264->profile));
 
 	seq_puts(seq,
 		 "\n--------Syntax INFO1------------------------------------------------------------------------------\n");
 
-	seq_printf(seq, "%7s%10s%10s%10s%15s%15s%15s\n", "ID", "SlcspltEn", "SplitMode", "Slcsize",
+	seq_printf(seq, "%7s|%10s|%10s|%10s|%15s|%15s|%15s\n",
+		   "ID", "SlcspltEn", "SplitMode", "Slcsize",
 		   "IntraRefresh", "RefreshMode", "RefreshNum");
 
-	seq_printf(seq, "%7d%10s%10u%15u%15s%15u%15u\n", chl_id, strof_bool(cfg->split.split_mode),
-		   cfg->split.split_mode, cfg->split.split_arg,
+	seq_printf(seq, "%7d|%10s|%10u|%10u|%15s|%15u|%15u\n",
+		   chl_id, strof_bool(cfg->split.split_mode), cfg->split.split_mode, cfg->split.split_arg,
 		   strof_bool(0), 0, 0);
 
 	seq_puts(seq,
 		 "-----Syntax INFO2---------------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%10s%8s%6s%8s%8s\n", "ID", "profile", "Cabac",
-		   "trans8", "QMatrix", "POC", "alpha", "beta");
-	seq_printf(seq, "%7d%10s%10s%10s%8s%6d%8d%8d\n", chl_id, strof_profle(MPP_VIDEO_CodingAVC,
-									      h264->profile), strof_bool(h264->entropy_coding_mode),
-		   strof_bool(h264->transform8x8_mode), strof_bool(h264->scaling_list_mode), h264->poc_type,
+	seq_printf(seq, "%7s|%10s|%10s|%10s|%8s|%6s|%8s|%8s\n",
+		   "ID", "profile",
+		   "Cabac", "trans8",
+		   "QMatrix", "POC",
+		   "alpha", "beta");
+	seq_printf(seq, "%7d|%10s|%10s|%10s|%8s|%6d|%8d|%8d\n",
+		   chl_id, strof_profle(MPP_VIDEO_CodingAVC, h264->profile),
+		   strof_bool(h264->entropy_coding_mode), strof_bool(h264->transform8x8_mode),
+		   strof_bool(h264->scaling_list_mode), h264->poc_type,
 		   h264->deblock_offset_alpha, h264->deblock_offset_beta);
-
-
-
 }
 
 /*!

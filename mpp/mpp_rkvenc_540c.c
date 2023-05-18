@@ -1803,7 +1803,7 @@ static int rkvenc_dump_session(struct mpp_session *session, struct seq_file *seq
 	/* item name */
 	seq_puts(seq, "------------------------------------------------------");
 	seq_puts(seq, "------------------------------------------------------\n");
-	seq_printf(seq, "|%8s|", (const char *)"session");
+	seq_printf(seq, "%8s|", (const char *)"session");
 	seq_printf(seq, "%8s|", (const char *)"device");
 	for (i = ENC_INFO_BASE; i < ENC_INFO_BUTT; i++) {
 		bool show = priv->codec_info[i].flag;
@@ -1813,7 +1813,7 @@ static int rkvenc_dump_session(struct mpp_session *session, struct seq_file *seq
 	}
 	seq_puts(seq, "\n");
 	/* item data*/
-	seq_printf(seq, "|%8p|", session);
+	seq_printf(seq, "%8p|", session);
 	seq_printf(seq, "%8s|", mpp_device_name[session->device_type]);
 	for (i = ENC_INFO_BASE; i < ENC_INFO_BUTT; i++) {
 		u32 flag = priv->codec_info[i].flag;

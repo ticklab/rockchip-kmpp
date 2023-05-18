@@ -86,14 +86,14 @@ MPP_RET hal_task_group_init(HalTaskGroup * group, RK_S32 count)
 		return MPP_OK;
 	} while (0);
 
-	if (p)
-		mpp_free(p);
+	MPP_FREE(p);
 	if (lock)
 		delete lock;
 	if (tasks)
 		mpp_free(tasks);
 
 	*group = NULL;
+
 	return MPP_NOK;
 }
 
@@ -112,6 +112,7 @@ MPP_RET hal_task_group_deinit(HalTaskGroup group)
 	if (p->lock)
 		delete p->lock;
 	mpp_free(p);
+
 	return MPP_OK;
 }
 

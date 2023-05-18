@@ -134,6 +134,7 @@ MPP_RET hal_jpege_v540c_init(void *hal, MppEncHalCfg * cfg)
 	MPP_RET ret = MPP_OK;
 	jpegeV540cHalContext *ctx = (jpegeV540cHalContext *) hal;
 	JpegV540cRegSet *regs = NULL;
+
 	// mpp_env_get_u32("hal_jpege_debug", &hal_jpege_debug, 0);
 	hal_jpege_enter();
 
@@ -160,6 +161,7 @@ MPP_RET hal_jpege_v540c_init(void *hal, MppEncHalCfg * cfg)
 	mpp_assert(ctx->bits);
 	hal_jpege_vepu_init_rc(&ctx->hal_rc);
 	hal_jpege_leave();
+
 	return ret;
 }
 
@@ -184,6 +186,7 @@ MPP_RET hal_jpege_v540c_deinit(void *hal)
 	MPP_FREE(ctx->input_fmt);
 
 	hal_jpege_leave();
+
 	return MPP_OK;
 }
 
@@ -355,6 +358,7 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 	task->jpeg_tlb_reg = &regs->jpeg_table;
 	ctx->frame_num++;
 	hal_jpege_leave();
+
 	return MPP_OK;
 }
 
@@ -365,7 +369,8 @@ MPP_RET hal_jpege_v540c_start(void *hal, HalEncTask * enc_task)
 	JpegV540cRegSet *hw_regs = ctx->regs;
 	JpegV540cStatus *reg_out = ctx->reg_out;
 	MppDevRegWrCfg cfg;
-	MppDevRegRdCfg cfg1;
+	MppDevRegRdCfg cfg1
+	;
 	hal_jpege_enter();
 
 	if (enc_task->flags.err) {
@@ -439,6 +444,7 @@ MPP_RET hal_jpege_v540c_start(void *hal, HalEncTask * enc_task)
 		mpp_err_f("send cmd failed %d\n", ret);
 	ctx->session_run = 1;
 	hal_jpege_leave();
+
 	return ret;
 }
 
@@ -447,7 +453,6 @@ static MPP_RET hal_jpege_vepu540c_status_check(void *hal)
 {
 	jpegeV540cHalContext *ctx = (jpegeV540cHalContext *) hal;
 	JpegV540cStatus *elem = (JpegV540cStatus *) ctx->reg_out;
-
 	RK_U32 hw_status = elem->hw_status;
 
 	if (hw_status & RKV_ENC_INT_LINKTABLE_FINISH)
@@ -491,6 +496,7 @@ MPP_RET hal_jpege_v540c_wait(void *hal, HalEncTask * task)
 	jpegeV540cHalContext *ctx = (jpegeV540cHalContext *) hal;
 	HalEncTask *enc_task = task;
 	JpegV540cStatus *elem = (JpegV540cStatus *) ctx->reg_out;
+
 	hal_jpege_enter();
 
 	if (enc_task->flags.err) {
@@ -511,15 +517,15 @@ MPP_RET hal_jpege_v540c_wait(void *hal, HalEncTask * task)
 	}
 
 	hal_jpege_leave();
+
 	return ret;
 }
 
 MPP_RET hal_jpege_v540c_get_task(void *hal, HalEncTask * task)
 {
 	jpegeV540cHalContext *ctx = (jpegeV540cHalContext *) hal;
-	// MppFrame frame = task->frame;
-	// EncFrmStatus  *frm_status = &task->rc_task->frm;
 	JpegeSyntax *syntax = (JpegeSyntax *) task->syntax.data;
+
 	hal_jpege_enter();
 
 	memcpy(&ctx->syntax, syntax, sizeof(ctx->syntax));
@@ -550,9 +556,9 @@ MPP_RET hal_jpege_v540c_ret_task(void *hal, HalEncTask * task)
 
 	EncRcTaskInfo *rc_info = &task->rc_task->info;
 	jpegeV540cHalContext *ctx = (jpegeV540cHalContext *) hal;
-	hal_jpege_enter();
 	(void)hal;
 
+	hal_jpege_enter();
 	ctx->hal_rc.last_quality = task->rc_task->info.quality_target;
 	task->length += task->hw_length;
 
@@ -567,6 +573,7 @@ MPP_RET hal_jpege_v540c_ret_task(void *hal, HalEncTask * task)
 
 	ctx->session_run = 0;
 	hal_jpege_leave();
+
 	return MPP_OK;
 }
 

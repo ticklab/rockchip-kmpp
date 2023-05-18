@@ -178,26 +178,21 @@ const char *strof_profle(MppCodingType coding, RK_U32 profile)
 			return h264_profile_str[3];
 		else
 			return unknown_str[0];
-	}
-	break;
+	} break;
 	case MPP_VIDEO_CodingHEVC: {
 		if (profile < 2)
 			return h265_profile_str[0];
 		else
 			return unknown_str[0];
-	}
-	break;
+	} break;
 	case MPP_VIDEO_CodingMJPEG: {
 		return jpeg_profile_str[0];
-	}
-	break;
+	} break;
 	case MPP_VIDEO_CodingVP8: {
 		return vp8_profile_str[0];
-	}
-	break;
+	} break;
 	default: {
-	}
-	break;
+	} break;
 	}
 
 	return NULL;
@@ -211,6 +206,7 @@ const char *strof_bool(RK_U32 enable)
 	};
 	if (enable)
 		return bool_str[1];
+
 	return bool_str[0];
 }
 
@@ -221,6 +217,7 @@ const char *strof_drop(RK_U32 mode)
 		"normal",
 		"pskip",
 	};
+
 	return mode_str[mode];
 }
 
@@ -231,5 +228,6 @@ const char *strof_suprmode(RK_U32 mode)
 		"bit",
 		"size",
 	};
+
 	return mode_str[0];
 }

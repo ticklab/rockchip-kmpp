@@ -46,6 +46,7 @@ static MPP_RET hal_h265ev2_init(void *hal, MppEncHalCfg * cfg)
 	const MppEncHalApi *api = NULL;
 	void *hw_ctx = NULL;
 	MPP_RET ret = MPP_OK;
+
 #ifdef RKVEC580_HEVC
 	api = &hal_h265e_vepu580;
 #endif
@@ -56,16 +57,15 @@ static MPP_RET hal_h265ev2_init(void *hal, MppEncHalCfg * cfg)
 
 	mpp_assert(api);
 
-	if (!ret)
-		hw_ctx = mpp_calloc_size(void, api->ctx_size);
+	hw_ctx = mpp_calloc_size(void, api->ctx_size);
+	if (!hw_ctx)
+		return MPP_ERR_MALLOC;
 
 	ctx->api = api;
 	ctx->hw_ctx = hw_ctx;
 
-	if (ret)
-		return ret;
-
 	ret = api->init(hw_ctx, cfg);
+
 	return ret;
 }
 
@@ -81,6 +81,7 @@ static MPP_RET hal_h265ev2_deinit(void *hal)
 
 	ret = api->deinit(hw_ctx);
 	MPP_FREE(hw_ctx);
+
 	return ret;
 }
 

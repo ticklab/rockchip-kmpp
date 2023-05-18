@@ -177,9 +177,8 @@ static void check_hal_task_pkt_len(HalEncTask *task, const char *reason)
 	RK_U32 packet_length = mpp_packet_get_length(task->packet);
 
 	if (task_length != packet_length) {
-		mpp_err_f(
-			"%s check failed: task length is not match to packet length %d vs %d\n",
-			reason, task_length, packet_length);
+		mpp_err_f("%s check failed: task length is not match to packet length %d vs %d\n",
+			  reason, task_length, packet_length);
 	}
 }
 
@@ -945,6 +944,7 @@ static void set_rc_cfg(RcCfg *cfg, MppEncCfgSet *cfg_set)
 	MppEncCpbInfo *info = &ref->cpb_info;
 	RK_S32 fps = (!!rc->fps_in_denorm) ? (rc->fps_in_num / rc->fps_in_denorm) : 1;
 	RK_S32 status_time = 4 * ((!!fps) ? (rc->gop / fps) : 8);
+
 	if (status_time > 8)
 		status_time = 8;
 	cfg->width = prep->width;
@@ -1067,7 +1067,7 @@ MPP_RET mpp_enc_proc_rc_update(MppEncImpl *enc)
 {
 	MPP_RET ret = MPP_OK;
 
-	// check and update rate control config
+	/* check and update rate control config */
 	if (enc->rc_api_user_cfg) {
 		MppEncCfgSet *cfg = &enc->cfg;
 		MppEncRcCfg *rc_cfg = &cfg->rc;
@@ -1093,13 +1093,12 @@ MPP_RET mpp_enc_proc_rc_update(MppEncImpl *enc)
 
 		enc->rc_cfg_length = enc->rc_cfg_pos;
 		enc->gop_mode = usr_cfg.gop_mode;
-		update_rc_cfg_log(
-			enc, "%s-b:%d[%d:%d]-g:%d-q:%d:[%d:%d]:[%d:%d]:%d\n",
-			name_of_rc_mode[usr_cfg.mode], usr_cfg.bps_target,
-			usr_cfg.bps_min, usr_cfg.bps_max, usr_cfg.igop,
-			usr_cfg.init_quality, usr_cfg.min_quality,
-			usr_cfg.max_quality, usr_cfg.min_i_quality,
-			usr_cfg.max_i_quality, usr_cfg.i_quality_delta);
+		update_rc_cfg_log(enc, "%s-b:%d[%d:%d]-g:%d-q:%d:[%d:%d]:[%d:%d]:%d\n",
+				  name_of_rc_mode[usr_cfg.mode], usr_cfg.bps_target,
+				  usr_cfg.bps_min, usr_cfg.bps_max, usr_cfg.igop,
+				  usr_cfg.init_quality, usr_cfg.min_quality,
+				  usr_cfg.max_quality, usr_cfg.min_i_quality,
+				  usr_cfg.max_i_quality, usr_cfg.i_quality_delta);
 	}
 
 	return ret;
@@ -1246,7 +1245,6 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 	RK_U32 size = (enc->coding == MPP_VIDEO_CodingMJPEG) ?
 		      (width * height) :
 		      (width * height / 2);
-
 	RK_U32 is_intra = mpp_enc_check_next_frm_type(enc);
 
 	if (enc->ring_pool && !enc->ring_pool->init_done && !get_vsm_ops()) {
@@ -1286,6 +1284,7 @@ MPP_RET mpp_enc_alloc_output_from_ringbuf(MppEncImpl *enc)
 static MPP_RET mpp_enc_alloc_output(MppEncImpl *enc)
 {
 	MPP_RET ret = MPP_OK;
+
 #ifdef USE_RING_BUF
 	ret = mpp_enc_alloc_output_from_ringbuf(enc);
 #else
@@ -1375,6 +1374,7 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 	MppPacket packet = hal_task->packet;
 	MppEncRefFrmUsrCfg *frm_cfg = &enc->frm_cfg;
 	MPP_RET ret = MPP_OK;
+
 	if (enc->qpmap_en) {
 		RK_U32 i;
 		hal_task->mv_info = enc->mv_info;
@@ -1420,7 +1420,7 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 	ENC_RUN_FUNC2(rc_frm_start, enc->rc_ctx, rc_task, enc, ret);
 	enc_dbg_detail("task %d rc frame start ok \n", frm->seq_idx);
 
-	// 16. generate header before hardware stream
+	/* generate header before hardware stream */
 	if (enc->hdr_mode == MPP_ENC_HEADER_MODE_EACH_IDR && frm->is_intra &&
 	    !hdr_status->added_by_change && !hdr_status->added_by_ctrl &&
 	    !hdr_status->added_by_mode) {
@@ -1433,10 +1433,10 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 		hal_task->length += enc->hdr_len;
 		hdr_status->added_by_mode = 1;
 	}
-	// check for header adding
+	/* check for header adding */
 	check_hal_task_pkt_len(hal_task, "header adding");
 
-	/* 17. Add all prefix info before encoding */
+	/* Add all prefix info before encoding */
 	if (frm->is_idr && enc->sei_mode >= MPP_ENC_SEI_MODE_ONE_SEQ) {
 		RK_S32 length = 0;
 
@@ -1456,7 +1456,7 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 
 	update_user_datas(enc, packet, hal_task);
 
-	// check for user data adding
+	/* check for user data adding */
 	check_hal_task_pkt_len(hal_task, "user data adding");
 
 	enc_dbg_detail("task %d enc proc hal\n", frm->seq_idx);
@@ -1471,10 +1471,6 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 	enc_dbg_detail("task %d hal generate reg\n", frm->seq_idx);
 	ENC_RUN_FUNC2(mpp_enc_hal_gen_regs, hal, hal_task, enc, ret);
 
-	//  mpp_stopwatch_record(hal_task->stopwatch, "encode hal start");
-//	enc_dbg_detail("task %d hal start\n", frm->seq_idx);
-//	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, NULL, enc, ret);
-//   mpp_stopwatch_record(hal_task->stopwatch, " hal wait");
 TASK_DONE:
 	if (ret)
 		enc->cfg_fail_cnt++;
@@ -1489,9 +1485,9 @@ static MPP_RET mpp_enc_end(MppEncImpl *enc, EncTask *task, EncTask *jpeg_task)
 	HalEncTask *hal_task = &task->info.enc;
 	HalEncTask *jpeg_hal_task = NULL;
 	MPP_RET ret = MPP_OK;
+
 	if (jpeg_task)
 		jpeg_hal_task = &jpeg_task->info.enc;
-	//  mpp_stopwatch_record(hal_task->stopwatch, "encode hal finish");
 
 	enc_dbg_detail("task %d rc hal end\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_hal_end, enc->rc_ctx, rc_task, enc, ret);
@@ -1502,6 +1498,7 @@ static MPP_RET mpp_enc_end(MppEncImpl *enc, EncTask *task, EncTask *jpeg_task)
 
 	enc_dbg_detail("task %d rc frame check reenc\n", frm->seq_idx);
 	ENC_RUN_FUNC2(rc_frm_check_reenc, enc->rc_ctx, rc_task, enc, ret);
+
 TASK_DONE:
 	return ret;
 }
@@ -1623,18 +1620,12 @@ TASK_DONE:
 
 static void mpp_enc_terminate_task(MppEncImpl *enc, EncTask *task)
 {
-	//HalEncTask *hal_task = &task->info.enc;
-	//   EncFrmStatus *frm = &enc->rc_task.frm;
-
-	//    mpp_stopwatch_record(hal_task->stopwatch, "encode task done");
-
 	if (enc->frame) {
 		mpp_frame_deinit(&enc->frame);
 		enc->frame = NULL;
 	}
 
 	if (enc->packet) {
-		/* setup output packet and meta data */
 		mpp_packet_set_length(enc->packet, 0);
 		mpp_packet_ring_buf_put_used(enc->packet, enc->chan_id, enc->dev);
 		mpp_packet_deinit(&enc->packet);
@@ -1689,26 +1680,27 @@ MPP_RET mpp_enc_impl_get_roi_osd(MppEncImpl *enc, MppFrame frame)
 
 static MPP_RET mpp_enc_check_frm_valid(MppEncImpl *enc)
 {
-	if (enc->frame) {
-		RK_U32 hor_stride = 0, ver_stride = 0;
-		RK_U32 width = 0, height = 0;
-		MppEncPrepCfg *prep = &enc->cfg.prep;
-		hor_stride = mpp_frame_get_hor_stride(enc->frame);
-		ver_stride = mpp_frame_get_ver_stride(enc->frame);
-		width = mpp_frame_get_width(enc->frame);
-		height = mpp_frame_get_height(enc->frame);
-		if (prep->rotation == MPP_ENC_ROT_90 || prep->rotation == MPP_ENC_ROT_270)
-			MPP_SWAP(RK_U32, width, height);
-		if (hor_stride != prep->hor_stride ||
-		    ver_stride != prep->ver_stride ||
-		    width < prep->width ||
-		    height < prep->height) {
-			mpp_log("frame info no equal set drop: frame [%d, %d, %d, %d], prep [%d, %d, %d, %d]",
-				width, height, hor_stride, ver_stride, prep->width, prep->height,
-				prep->hor_stride, prep->ver_stride);
-			return MPP_NOK;
-		}
+	RK_U32 hor_stride = 0, ver_stride = 0;
+	RK_U32 width = 0, height = 0;
+	MppEncPrepCfg *prep = &enc->cfg.prep;
+
+	if (!enc->frame)
+		return MPP_ERR_NULL_PTR;
+
+	hor_stride = mpp_frame_get_hor_stride(enc->frame);
+	ver_stride = mpp_frame_get_ver_stride(enc->frame);
+	width = mpp_frame_get_width(enc->frame);
+	height = mpp_frame_get_height(enc->frame);
+	if (prep->rotation == MPP_ENC_ROT_90 || prep->rotation == MPP_ENC_ROT_270)
+		MPP_SWAP(RK_U32, width, height);
+	if (hor_stride != prep->hor_stride || ver_stride != prep->ver_stride ||
+	    width < prep->width || height < prep->height) {
+		mpp_log("frame info no equal set drop: frame [%d, %d, %d, %d], prep [%d, %d, %d, %d]",
+			width, height, hor_stride, ver_stride, prep->width, prep->height,
+			prep->hor_stride, prep->ver_stride);
+		return MPP_NOK;
 	}
+
 	return  MPP_OK;
 }
 
@@ -1725,7 +1717,8 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 	HalEncTask *hal_task = &task->info.enc;
 	MppStopwatch stopwatch = NULL;
 
-	if (status->rc_reenc) { //online will no support reenc
+	/* online will no support reenc */
+	if (status->rc_reenc) {
 		mpp_enc_reenc_simple(enc, task);
 		return MPP_OK;
 	}
@@ -1751,7 +1744,7 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 	status->rc_check_frm_drop = 1;
 	enc_dbg_detail("task %d drop %d\n", frm->seq_idx, frm->drop);
 
-	// when the frame should be dropped just return empty packet
+	/* when the frame should be dropped just return empty packet */
 	if (frm->drop) {
 		hal_task->valid = 0;
 		hal_task->length = 0;
@@ -1775,15 +1768,13 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 
 	mpp_enc_impl_get_roi_osd(enc, enc->frame);
 
-	// 11. check hal info update
+	/* check hal info update */
 	if (!enc->hal_info_updated) {
 		update_enc_hal_info(enc);
 		enc->hal_info_updated = 1;
 	}
-	// 12. generate header before hardware stream
+	/* generate header before hardware stream */
 	if (!hdr_status->ready) {
-		/* config cpb before generating header */
-
 		enc_impl_gen_hdr(enc->impl, enc->hdr_pkt);
 		enc->hdr_len = mpp_packet_get_length(enc->hdr_pkt);
 		hdr_status->ready = 1;
@@ -1811,6 +1802,7 @@ MPP_RET mpp_enc_impl_reg_cfg(MppEnc ctx, MppFrame frame)
 	mpp_enc_refs_stash(enc->refs);
 	ENC_RUN_FUNC2(mpp_enc_normal_cfg, enc, task, enc, ret);
 	frm_cfg->force_flag = 0;
+
 TASK_DONE:
 	if (ret)
 		mpp_enc_terminate_task(enc, task);
@@ -1832,12 +1824,12 @@ MPP_RET mpp_enc_impl_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 	if (jpeg_ctx) {
 		MppEncImpl *jpeg_enc = (MppEncImpl *)jpeg_ctx;
 		EncTask *jpeg_task = (EncTask *)jpeg_enc->enc_task;
+
 		jpeg_hal_task = &jpeg_task->info.enc;
 	}
 
 	enc_dbg_detail("task %d hal start\n", frm->seq_idx);
-	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, jpeg_hal_task, enc,
-		      ret);
+	ENC_RUN_FUNC3(mpp_enc_hal_start, hal, hal_task, jpeg_hal_task, enc, ret);
 
 TASK_DONE:
 	if (ret) {
@@ -1845,6 +1837,7 @@ TASK_DONE:
 		if (jpeg_ctx) {
 			MppEncImpl *jpeg_enc = (MppEncImpl *)jpeg_ctx;
 			EncTask *jpeg_task = (EncTask *)jpeg_enc->enc_task;
+
 			mpp_enc_terminate_task(jpeg_enc, jpeg_task);
 		}
 		enc->cfg_fail_cnt++;
@@ -1915,6 +1908,7 @@ TASK_DONE:
 		mpp_frame_deinit(&enc->frame);
 	reset_enc_task(enc);
 	task->status.val = 0;
+
 	return ret;
 }
 
@@ -1930,15 +1924,16 @@ MPP_RET mpp_enc_impl_int(MppEnc ctx, MppEnc jpeg_ctx, MppPacket *packet,
 	EncTaskStatus *status = &task->status;
 	EncTask *jpeg_task = NULL;
 	MPP_RET ret = MPP_OK;
+
 	if (jpeg_ctx) {
 		MppEncImpl *jpeg_enc = (MppEncImpl *)jpeg_ctx;
+
 		jpeg_task = (EncTask *)jpeg_enc->enc_task;
 	}
 	enc_dbg_detail("task %d hal wait\n", frm->seq_idx);
 	ENC_RUN_FUNC2(mpp_enc_hal_wait, hal, hal_task, enc, ret);
 	ENC_RUN_FUNC3(mpp_enc_end, enc, task, jpeg_task, enc, ret);
-	if (frm->reencode &&
-	    frm->reencode_times < enc->cfg.rc.max_reenc_times) {
+	if (frm->reencode && frm->reencode_times < enc->cfg.rc.max_reenc_times) {
 		hal_task->length -= hal_task->hw_length;
 		hal_task->hw_length = 0;
 		status->rc_reenc = 1;
@@ -2016,6 +2011,7 @@ TASK_DONE:
 			RK_U64 dts = mpp_frame_get_dts(hal_task->frame);
 			RK_U64 pts = mpp_frame_get_pts(hal_task->frame);
 			RK_U32 is_intra = (cfg->codec.coding == MPP_VIDEO_CodingMJPEG || frm->is_intra);
+
 			mpidev_fn->set_intra_info(enc->chan_id, dts, pts, is_intra);
 		}
 	}
@@ -2027,6 +2023,7 @@ TASK_DONE:
 	task->status.val = 0;
 	if (jpeg_ctx)
 		mpp_enc_comb_end_jpeg(jpeg_ctx, jpeg_packet);
+
 	return ret;
 }
 
@@ -2036,59 +2033,62 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 	MppEncCfgSet *cfg = &enc->cfg;
 	EncTask *task = (EncTask *)enc->enc_task;
 	struct seq_file *seq = (struct seq_file *)seq_file;
-	seq_puts(
-		seq,
-		"\n--------venc chn attr 1---------------------------------------------------------------------------\n");
-	seq_printf(seq, "%8s%8s%8s%6s%9s%10s%10s%6s%10s%11s%8s%10s\n", "ID", "Width", "Height",
-		   "Type", "ByFrame", "Sequence", "GopMode", "Prio", "MaxWidth", "MaxHeight", "Online", "RefShare");
+	RK_S32 source_frate, target_frame_rate;
 
-	seq_printf(seq, "%8d%8u%8u%6s%9s%10u%10s%6d%10d%11d%8d%10d\n", chl_id, cfg->prep.width,
-		   cfg->prep.height, strof_coding_type(cfg->codec.coding), "y",
+	seq_puts(seq,
+		 "\n--------venc chn attr 1---------------------------------------------------------------------------\n");
+	seq_printf(seq, "%8s|%8s|%8s|%6s|%9s|%10s|%10s|%6s|%10s|%11s|%8s|%10s\n",
+		   "ID", "Width", "Height", "Type", "ByFrame",
+		   "Sequence", "GopMode", "Prio", "MaxWidth", "MaxHeight",
+		   "Online", "RefShare");
+
+	seq_printf(seq, "%8d|%8u|%8u|%6s|%9s|%10u|%10s|%6d|%10d|%11d|%8d|%10d\n",
+		   chl_id, cfg->prep.width, cfg->prep.height, strof_coding_type(cfg->codec.coding), "y",
 		   task->seq_idx, strof_gop_mode(enc->gop_mode), 0, cfg->prep.max_width, cfg->prep.max_height,
 		   enc->online, enc->ref_buf_shared);
 
-	seq_puts(
-		seq,
-		"\n--------venc chn attr 2---------------------------------------------------------------------------\n");
-	seq_printf(seq, "%8s%8s%8s%8s%12s%12s%12s%12s%10s\n", "ID", "VeStr", "SrcFr",
-		   "TarFr", "Timeref", "PixFmt", "RealFps*10", "rotation", "mirror");
-	seq_printf(seq, "%8d%8s%8d%8d%12x%12s%12u%12s%10s\n", chl_id, "y",
-		   cfg->rc.fps_in_num / cfg->rc.fps_in_denorm,
-		   cfg->rc.fps_out_num / cfg->rc.fps_out_denorm,
-		   (RK_U32)enc->init_time, strof_pixel_fmt(cfg->prep.format),
-		   enc->real_fps, strof_rotation(cfg->prep.rotation),
+	source_frate = cfg->rc.fps_in_num / cfg->rc.fps_in_denorm;
+	target_frame_rate = cfg->rc.fps_out_num / cfg->rc.fps_out_denorm;
+	seq_puts(seq,
+		 "\n--------venc chn attr 2---------------------------------------------------------------------------\n");
+	seq_printf(seq, "%8s|%8s|%8s|%8s|%12s|%12s|%12s|%12s|%10s\n",
+		   "ID", "VeStr", "SrcFr", "TarFr", "Timeref",
+		   "PixFmt", "RealFps*10", "rotation", "mirror");
+	seq_printf(seq, "%8d|%8s|%8d|%8d|%12x|%12s|%12u|%12s|%10s\n",
+		   chl_id, "y", source_frate, target_frame_rate, (RK_U32)enc->init_time,
+		   strof_pixel_fmt(cfg->prep.format), enc->real_fps, strof_rotation(cfg->prep.rotation),
 		   strof_bool(cfg->prep.mirroring));
 
-	seq_puts(
-		seq,
-		"\n--------ring buf status---------------------------------------------------------------------------\n");
+	seq_puts(seq,
+		 "\n--------ring buf status---------------------------------------------------------------------------\n");
 
-	seq_printf(seq, "%8s%8s%8s%8s%10s%10s%10s%10s\n", "ID", "w_pos", "r_pos",
-		   "usd_len", "total_len", "min_size", "l_w_pos", "l_r_pos");
-	seq_printf(seq, "%8d%8d%8d%8d%10d%10d%10d%10d\n", chl_id, enc->ring_pool->w_pos,
-		   enc->ring_pool->r_pos, enc->ring_pool->use_len, enc->ring_pool->len
-		   , enc->ring_pool->min_buf_size, enc->ring_pool->l_w_pos, enc->ring_pool->l_r_pos);
+	seq_printf(seq, "%8s|%8s|%8s|%8s|%10s|%10s|%10s|%10s\n",
+		   "ID", "w_pos", "r_pos",
+		   "usd_len", "total_len", "min_size",
+		   "l_w_pos", "l_r_pos");
+	seq_printf(seq, "%8d|%8d|%8d|%8d|%10d|%10d|%10d|%10d\n",
+		   chl_id, enc->ring_pool->w_pos, enc->ring_pool->r_pos,
+		   enc->ring_pool->use_len, enc->ring_pool->len, enc->ring_pool->min_buf_size,
+		   enc->ring_pool->l_w_pos, enc->ring_pool->l_r_pos);
 
-	seq_puts(
-		seq,
-		"\n--------hw status---------------------------------------------------------------------------------\n");
-	seq_printf(seq, "%8s%8s%12s%14s%14s%14s%16s\n", "ID", "hw_run", "enc_status", "pkt_fail_cnt",
-		   "ring_fail_cnt",
-		   "cfg_fail_cnt", "start_fail_cnt");
-	seq_printf(seq, "%8d%8d%12d%14u%14u%14u%16u\n", chl_id, enc->hw_run, enc->enc_status,
-		   enc->pkt_fail_cnt,
-		   enc->ringbuf_fail_cnt,
-		   enc->cfg_fail_cnt, enc->start_fail_cnt);
+	seq_puts(seq,
+		 "\n--------hw status---------------------------------------------------------------------------------\n");
+	seq_printf(seq, "%8s|%8s|%12s|%14s|%14s|%14s|%16s\n", "ID",
+		   "hw_run", "enc_status", "pkt_fail_cnt",
+		   "ring_fail_cnt", "cfg_fail_cnt", "start_fail_cnt");
+	seq_printf(seq, "%8d|%8d|%12d|%14u|%14u|%14u|%16u\n", chl_id,
+		   enc->hw_run, enc->enc_status, enc->pkt_fail_cnt,
+		   enc->ringbuf_fail_cnt, enc->cfg_fail_cnt, enc->start_fail_cnt);
 
 	if (cfg->roi.number > 0) {
 		int i;
-		seq_puts(
-			seq,
-			"\n--------venc roi attr ----------------------------------------------------------------------------\n");
-		seq_printf(seq, "%8s%8s%8s%8s%8s%8s%8s%8s%8s\n", "ID", "roi", "x", "y", "w", "h", "quality",
-			   "intra", "abs_qp");
+		seq_puts(seq,
+			 "\n--------venc roi attr ----------------------------------------------------------------------------\n");
+		seq_printf(seq, "%8s|%8s|%8s|%8s|%8s|%8s|%8s|%8s|%8s\n", "ID", "roi",
+			   "x", "y", "w", "h",
+			   "quality", "intra", "abs_qp");
 		for (i = 0; i < cfg->roi.number; i++) {
-			seq_printf(seq, "%8d%8d%8d%8d%8d%8d%8d%8d%8d\n", chl_id, i,
+			seq_printf(seq, "%8d|%8d|%8d|%8d|%8d|%8d|%8d|%8d|%8d\n", chl_id, i,
 				   cfg->roi.regions[i].x, cfg->roi.regions[i].y, cfg->roi.regions[i].w, cfg->roi.regions[i].h,
 				   cfg->roi.regions[i].quality, cfg->roi.regions[i].intra, cfg->roi.regions[i].abs_qp_en);
 		}

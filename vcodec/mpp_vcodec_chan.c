@@ -84,11 +84,8 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 		ret = mpp_enc_init(&enc, &cfg);
 		if (ret)
 			break;
-		mpp_enc_register_chl(enc,
-				     (void *)mpp_vcodec_enc_int_handle,
-				     chan_id);
-		mpp_vcodec_chan_entry_init(chan_entry, type, coding,
-					   (void *)enc);
+		mpp_enc_register_chl(enc, (void *)mpp_vcodec_enc_int_handle, chan_id);
+		mpp_vcodec_chan_entry_init(chan_entry, type, coding, (void *)enc);
 #ifdef CHAN_BUF_SHARED
 		if (mpp_vcodec_chan_setup_hal_bufs(chan_entry, attr)) {
 			mpp_enc_deinit(chan_entry->handle);
@@ -103,7 +100,8 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 		chan_entry->last_jeg_combo_end = mpp_time();
 		init_done = 1;
 
-		mpp_log("create channel id %d handle %p\n", chan_id, chan_entry->handle);
+		mpp_log("create channel %d handle %p online %d\n",
+			chan_id, chan_entry->handle, online);
 	} break;
 	default: {
 		mpp_err("create chan error type %d\n", type);
@@ -122,6 +120,7 @@ int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 {
 	int ret;
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
+
 	if (!chan_entry->handle)
 		return 0;
 	mpp_assert(chan_entry->handle != NULL);
@@ -129,8 +128,11 @@ int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 	case MPP_CTX_DEC: {
 	} break;
 	case MPP_CTX_ENC: {
-		mpp_log("destroy channel id %d handle %p\n", chan_id, chan_entry->handle);
+		RK_S32 bind_chan_id = chan_entry->binder_chan_id;
 
+
+		mpp_log("destroy channel %d handle %p online %d\n",
+			chan_id, chan_entry->handle, chan_entry->cfg.online);
 		ret = mpp_vcodec_chan_stop(chan_id, type);
 		if (!(chan_entry->cfg.online && !mpp_enc_check_hw_running(chan_entry->handle)))
 			ret = wait_event_timeout(chan_entry->stop_wait,
@@ -138,9 +140,9 @@ int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 						 msecs_to_jiffies
 						 (VCODEC_WAIT_TIMEOUT_DELAY));
 
-		if (chan_entry->cfg.online && chan_entry->binder_chan_id > 0) {
-			struct mpp_chan *comb_chan = mpp_vcodec_get_chan_entry(
-							     chan_entry->binder_chan_id, MPP_CTX_ENC);
+		if (chan_entry->cfg.online && bind_chan_id > 0) {
+			struct mpp_chan *comb_chan = mpp_vcodec_get_chan_entry(bind_chan_id,
+									       MPP_CTX_ENC);
 
 			atomic_dec(&chan_entry->cfg.comb_runing);
 			atomic_dec(&comb_chan->runing);
@@ -162,14 +164,15 @@ int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 int mpp_vcodec_chan_start(int chan_id, MppCtxType type)
 {
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
+
 	mpp_assert(chan_entry->handle != NULL);
 	switch (type) {
 	case MPP_CTX_DEC: {
 
-	}
-	break;
+	} break;
 	case MPP_CTX_ENC: {
 		unsigned long lock_flag;
+
 		mpp_enc_start(chan_entry->handle);
 		spin_lock_irqsave(&chan_entry->chan_lock, lock_flag);
 		chan_entry->state = CHAN_STATE_RUN;
@@ -179,22 +182,21 @@ int mpp_vcodec_chan_start(int chan_id, MppCtxType type)
 	} break;
 	default: {
 		mpp_err("create chan error type %d\n", type);
-	}
-	break;
+	} break;
 	}
 	return 0;
 }
 
 int mpp_vcodec_chan_stop(int chan_id, MppCtxType type)
 {
-	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	int ret = 0;
+	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
+
 	mpp_assert(chan_entry->handle != NULL);
 	switch (type) {
 	case MPP_CTX_DEC: {
 
-	}
-	break;
+	} break;
 	case MPP_CTX_ENC: {
 		unsigned long lock_flag;
 		ret = mpp_enc_stop(chan_entry->handle);
@@ -209,13 +211,12 @@ int mpp_vcodec_chan_stop(int chan_id, MppCtxType type)
 				       lock_flag);
 		wake_up(&chan_entry->wait);
 		enc_chan_update_chan_prior_tab();
-	}
-	break;
+	} break;
 	default: {
 		mpp_err("create chan error type %d\n", type);
+	} break;
 	}
-	break;
-	}
+
 	return ret;
 }
 
@@ -234,45 +235,45 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 {
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	RK_U32 count = atomic_read(&chan_entry->stream_count);
+	MppPacketImpl *packet = NULL;
 
-	if (count) {
-		MppPacketImpl *packet = NULL;
-		mutex_lock(&chan_entry->stream_done_lock);
-		packet = list_first_entry_or_null(&chan_entry->stream_done,
-						  MppPacketImpl, list);
-		mutex_unlock(&chan_entry->stream_done_lock);
-		atomic_dec(&chan_entry->stream_count);
-
-		enc_packet->flag = mpp_packet_get_flag(packet);
-		enc_packet->len = mpp_packet_get_length(packet);
-		enc_packet->temporal_id = mpp_packet_get_temporal_id(packet);
-		enc_packet->u64pts = mpp_packet_get_pts(packet);
-		enc_packet->u64dts = mpp_packet_get_dts(packet);
-		enc_packet->data_num = 1;
-		enc_packet->u64priv_data = packet->buf.mpi_buf_id; //get mpp_buffer fd from ring buf
-		enc_packet->offset = packet->buf.start_offset;
-		enc_packet->u64packet_addr = (uintptr_t )packet;
-		enc_packet->buf_size = mpp_buffer_get_size(packet->buf.buf);
-
-		mutex_lock(&chan_entry->stream_done_lock);
-		list_del_init(&packet->list);
-		mutex_lock(&chan_entry->stream_remove_lock);
-		list_move_tail(&packet->list, &chan_entry->stream_remove);
-		mutex_unlock(&chan_entry->stream_remove_lock);
-		mutex_unlock(&chan_entry->stream_done_lock);
-		atomic_inc(&chan_entry->str_out_cnt);
-		return 0;
-	} else {
+	if (!count) {
 		mpp_err("no stream count found in list \n");
 		memset(enc_packet, 0, sizeof(struct venc_packet));
+
+		return MPP_NOK;
 	}
-	return -1;
+
+	mutex_lock(&chan_entry->stream_done_lock);
+	packet = list_first_entry_or_null(&chan_entry->stream_done, MppPacketImpl, list);
+	mutex_unlock(&chan_entry->stream_done_lock);
+	atomic_dec(&chan_entry->stream_count);
+
+	enc_packet->flag = mpp_packet_get_flag(packet);
+	enc_packet->len = mpp_packet_get_length(packet);
+	enc_packet->temporal_id = mpp_packet_get_temporal_id(packet);
+	enc_packet->u64pts = mpp_packet_get_pts(packet);
+	enc_packet->u64dts = mpp_packet_get_dts(packet);
+	enc_packet->data_num = 1;
+	enc_packet->u64priv_data = packet->buf.mpi_buf_id;
+	enc_packet->offset = packet->buf.start_offset;
+	enc_packet->u64packet_addr = (uintptr_t )packet;
+	enc_packet->buf_size = mpp_buffer_get_size(packet->buf.buf);
+
+	mutex_lock(&chan_entry->stream_done_lock);
+	list_del_init(&packet->list);
+	mutex_lock(&chan_entry->stream_remove_lock);
+	list_move_tail(&packet->list, &chan_entry->stream_remove);
+	mutex_unlock(&chan_entry->stream_remove_lock);
+	mutex_unlock(&chan_entry->stream_done_lock);
+	atomic_inc(&chan_entry->str_out_cnt);
+
+	return MPP_OK;
 }
 
 int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 			       struct venc_packet *enc_packet)
 {
-
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	MppPacketImpl *packet = NULL, *n;
 	struct venc_module *venc =  NULL;
@@ -315,6 +316,7 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 	struct mpi_buf *buf = NULL;
 	int ret = 0;
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+
 	if (!mpibuf_fn) {
 		mpp_err_f("mpibuf_ops get fail");
 		return -1;
@@ -325,9 +327,9 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 	thd = venc->thd;
 
 	if (mpibuf_fn->dma_buf_import) {
-		dmabuf = dma_buf_get(info->fd);	//add one ref will be free in mpi_buf
-		dma_buf_end_cpu_access(dmabuf, DMA_TO_DEVICE); //flush to device
-		// mpp_log("import dmabuf %p \n", dmabuf);
+		/* add one ref will be free in mpi_buf */
+		dmabuf = dma_buf_get(info->fd);
+		dma_buf_end_cpu_access(dmabuf, DMA_TO_DEVICE);
 		if (IS_ERR(dmabuf)) {
 			mpp_err("dma_buf_get fd %d failed\n", info->fd);
 			return -1;
@@ -338,13 +340,9 @@ int mpp_vcodec_chan_push_frm(int chan_id, void *param)
 
 	if (NULL != buf) {
 		if (mpibuf_fn->buf_queue_push)
-			ret =
-				mpibuf_fn->buf_queue_push(chan_entry->yuv_queue,
-							  buf);
-		if (ret) {
+			ret = mpibuf_fn->buf_queue_push(chan_entry->yuv_queue, buf);
+		if (ret)
 			vcodec_thread_trigger(thd);
-			// mpp_err("push frm to buf queue ok \n");
-		}
 	} else {
 		if (dmabuf)
 			dma_buf_put(dmabuf);
@@ -360,6 +358,7 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 	struct mpp_chan *entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
 	int ret;
 	MppEncCfgImpl *cfg = mpp_malloc(MppEncCfgImpl, 1);
+	RK_S32 bind_chan_id = entry->binder_chan_id;
 
 	if (!cfg) {
 		mpp_err("change_coding_type malloc fail");
@@ -377,9 +376,9 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 					 msecs_to_jiffies
 					 (VCODEC_WAIT_TIMEOUT_DELAY));
 
-	if (entry->cfg.online && entry->binder_chan_id > 0) {
-		struct mpp_chan *comb_chan = mpp_vcodec_get_chan_entry(
-						     entry->binder_chan_id, MPP_CTX_ENC);
+	if (entry->cfg.online && bind_chan_id > 0) {
+		struct mpp_chan *comb_chan = mpp_vcodec_get_chan_entry(bind_chan_id,
+								       MPP_CTX_ENC);
 
 		atomic_dec(&entry->cfg.comb_runing);
 		atomic_dec(&comb_chan->runing);
@@ -409,6 +408,7 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 
 	mpp_vcodec_chan_start(chan_id, MPP_CTX_ENC);
 	mpp_free(cfg);
+
 	return 0;
 }
 
@@ -420,20 +420,18 @@ int mpp_vcodec_chan_control(int chan_id, MppCtxType type, int cmd, void *arg)
 	switch (type) {
 	case MPP_CTX_DEC: {
 		;
-	}
-	break;
+	} break;
 	case MPP_CTX_ENC: {
 		if (cmd == MPP_ENC_SET_CHANGE_STREAM_TYPE)
 			mpp_vcodec_chan_change_coding_type(chan_id, arg);
 		else
 			mpp_enc_control(chan_entry->handle, cmd, arg);
-	}
-	break;
+	} break;
 	default: {
 		mpp_err("control type %d error\n", type);
+	} break;
 	}
-	break;
-	}
+
 	return 0;
 }
 

@@ -1389,16 +1389,20 @@ void rc_model_v2_smt_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 		target_bps = usr_cfg->bps_target;
 	seq_puts(seq,
 		 "\n---------RC base param 1--------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%7s%8s%6s%6s%8s%13s%13s%5s%5s \n", "ChnId", "Gop", "StatTm", "ViFr",
-		   "TrgFr", "RcMode", "MinBr(kbps)", "MaxBr(kbps)", "IQp", "PQp");
+	seq_printf(seq, "%7s|%7s|%8s|%6s|%6s|%8s|%13s|%13s|%5s|%5s \n",
+		   "ChnId", "Gop", "StatTm",
+		   "ViFr", "TrgFr",
+		   "RcMode", "MinBr(kbps)", "MaxBr(kbps)", "IQp", "PQp");
 
 	if (usr_cfg->mode == RC_FIXQP) {
-		seq_printf(seq, "%7d%7u%8u%6u%6u%8s%13s%13s%5u%5u \n", chl_id, usr_cfg->igop, usr_cfg->stats_time,
+		seq_printf(seq, "%7d|%7u|%8u|%6u|%6u|%8s|%13s|%13s|%5u|%5u \n",
+			   chl_id, usr_cfg->igop, usr_cfg->stats_time,
 			   usr_cfg->fps.fps_in_num / usr_cfg->fps.fps_in_denorm,
 			   usr_cfg->fps.fps_out_num / usr_cfg->fps.fps_out_denorm,
 			   strof_rc_mode(usr_cfg->mode), "N/A", "N/A", usr_cfg->init_quality, usr_cfg->init_quality);
 	} else {
-		seq_printf(seq, "%7d%7u%8u%6u%6u%8s%13u%13u%5s%5s \n", chl_id, usr_cfg->igop, usr_cfg->stats_time,
+		seq_printf(seq, "%7d|%7u|%8u|%6u|%6u|%8s|%13u|%13u|%5s|%5s \n",
+			   chl_id, usr_cfg->igop, usr_cfg->stats_time,
 			   usr_cfg->fps.fps_in_num / usr_cfg->fps.fps_in_denorm,
 			   usr_cfg->fps.fps_out_num / usr_cfg->fps.fps_out_denorm,
 			   "smart", usr_cfg->bps_min / 1000, usr_cfg->bps_max / 1000, "N/A", "N/A");
@@ -1406,15 +1410,16 @@ void rc_model_v2_smt_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 
 	seq_puts(seq,
 		 "\n---------RC gop mode attr-------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%12s%10s \n", "ChnId", "GopMode", "IpQpDelta", "BgInterval",
-		   "ViQpDelta");
+	seq_printf(seq, "%7s|%10s|%10s|%12s|%10s \n",
+		   "ChnId", "GopMode", "IpQpDelta",
+		   "BgInterval", "ViQpDelta");
 	if (usr_cfg->gop_mode == SMART_P) {
-		seq_printf(seq, "%7d%10s%10d%12u%10d\n", chl_id, strof_gop_mode(usr_cfg->gop_mode),
-			   usr_cfg->i_quality_delta,
+		seq_printf(seq, "%7d|%10s|%10d|%12u|%10d\n",
+			   chl_id, strof_gop_mode(usr_cfg->gop_mode), usr_cfg->i_quality_delta,
 			   usr_cfg->vgop, usr_cfg->i_quality_delta);
 	} else {
-		seq_printf(seq, "%7d%10s%10d%12s%10s\n", chl_id, strof_gop_mode(usr_cfg->gop_mode),
-			   usr_cfg->i_quality_delta,
+		seq_printf(seq, "%7d|%10s|%10d|%12s|%10s\n",
+			   chl_id, strof_gop_mode(usr_cfg->gop_mode), usr_cfg->i_quality_delta,
 			   "N/A", "N/A");
 	}
 
@@ -1424,11 +1429,12 @@ void rc_model_v2_smt_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 	case RC_VBR: {
 		seq_puts(seq,
 			 "\n---------RC run smart common param------------------------------------------------------------------\n");
-		seq_printf(seq, "%7s%8s%8s%8s%8s%10s%10s%10s%10s%15s \n", "ChnId",
-			   "MaxQp", "MinQp", "MaxIQp", "MinIQp", "FrmMaxQp", "FrmMinQp", "FrmMaxIQp", "FrmMinIQp",
+		seq_printf(seq, "%7s|%8s|%8s|%8s|%8s|%10s|%10s|%10s|%10s|%15s\n",
+			   "ChnId", "MaxQp", "MinQp", "MaxIQp", "MinIQp",
+			   "FrmMaxQp", "FrmMinQp", "FrmMaxIQp", "FrmMinIQp",
 			   "MaxReEncTimes");
 
-		seq_printf(seq, "%7d%8u%8u%8u%8u%10d%10d%10d%10d%15d\n", chl_id,
+		seq_printf(seq, "%7d|%8u|%8u|%8u|%8u|%10d|%10d|%10d|%10d|%15d\n", chl_id,
 			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
 			   usr_cfg->fm_lv_max_quality, usr_cfg->fm_lv_min_quality,
 			   usr_cfg->fm_lv_max_i_quality, usr_cfg->fm_lv_min_i_quality,
@@ -1445,25 +1451,27 @@ void rc_model_v2_smt_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 
 	seq_puts(seq,
 		 "\n--------RC HierarchicalQp INFO--------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%12s%12s%12s%12s%12s%12s%12s%12s\n", "ChnId", "bEnable", "FrameNum[0]",
-		   "FrameNum[1]",
-		   "FrameNum[2]", "FrameNum[3]", "QpDelta[0]", "QpDelta[1]", "QpDelta[2]", "QpDelta[3]");
-	seq_printf(seq, "%7d%10s%12d%12d%12d%12d%12d%12d%12d%12d\n", chl_id,
-		   strof_bool(usr_cfg->hier_qp_cfg.hier_qp_en),
+	seq_printf(seq, "%7s|%10s|%12s|%12s|%12s|%12s|%12s|%12s|%12s|%12s\n",
+		   "ChnId", "bEnable",
+		   "FrameNum[0]", "FrameNum[1]",
+		   "FrameNum[2]", "FrameNum[3]",
+		   "QpDelta[0]", "QpDelta[1]",
+		   "QpDelta[2]", "QpDelta[3]");
+	seq_printf(seq, "%7d|%10s|%12d|%12d|%12d|%12d|%12d|%12d|%12d|%12d\n",
+		   chl_id, strof_bool(usr_cfg->hier_qp_cfg.hier_qp_en),
 		   usr_cfg->hier_qp_cfg.hier_frame_num[0], usr_cfg->hier_qp_cfg.hier_frame_num[1],
-		   usr_cfg->hier_qp_cfg.hier_frame_num[2],
-		   usr_cfg->hier_qp_cfg.hier_frame_num[3], usr_cfg->hier_qp_cfg.hier_qp_delta[0],
-		   usr_cfg->hier_qp_cfg.hier_qp_delta[1],
+		   usr_cfg->hier_qp_cfg.hier_frame_num[2], usr_cfg->hier_qp_cfg.hier_frame_num[3],
+		   usr_cfg->hier_qp_cfg.hier_qp_delta[0], usr_cfg->hier_qp_cfg.hier_qp_delta[1],
 		   usr_cfg->hier_qp_cfg.hier_qp_delta[2], usr_cfg->hier_qp_cfg.hier_qp_delta[3]);
 
 	seq_puts(seq,
 		 "\n--------RC debreath_effect info-------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%18s\n", "ChnId", "bEnable", "Strength0", "DeBrthEfctCnt");
+	seq_printf(seq, "%7s|%10s|%10s|%18s\n", "ChnId", "bEnable", "Strength0", "DeBrthEfctCnt");
 	if (usr_cfg->debreath_cfg.enable)
-		seq_printf(seq, "%7d%10s%10d%18u\n", chl_id, strof_bool(usr_cfg->debreath_cfg.enable),
-			   usr_cfg->debreath_cfg.strength, 0);
+		seq_printf(seq, "%7d|%10s|%10d|%18u\n",
+			   chl_id, strof_bool(usr_cfg->debreath_cfg.enable), usr_cfg->debreath_cfg.strength, 0);
 	else
-		seq_printf(seq, "%7d%10s%10s%18u\n", chl_id, strof_bool(usr_cfg->debreath_cfg.enable), "N/A", 0);
+		seq_printf(seq, "%7d|%10s|%10s|%18u\n", chl_id, strof_bool(usr_cfg->debreath_cfg.enable), "N/A", 0);
 }
 
 const RcImplApi smt_h264e = {

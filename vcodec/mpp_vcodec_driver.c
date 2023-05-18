@@ -29,12 +29,14 @@
 #include "mpp_vcodec_thread.h"
 #include "rk_venc_cfg.h"
 #include "rk_export_func.h"
+
 struct vcodec_msg {
 	__u32 cmd;
 	__u32 ctrl_cmd;
 	__u32 size;
 	__u64 data_ptr;
 };
+
 struct chanid_ctx {
 	RK_S32 chan_id;
 	MppCtxType type;
@@ -45,20 +47,24 @@ struct chanid_ctx {
 	RK_U32 chan_dup;
 	RK_U32 chan_create;
 };
+
 static int vcodec_open(struct inode *inode, struct file *filp)
 {
 	struct chanid_ctx *ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
+
 	if (!ctx)
 		return -ENOMEM;
 	filp->private_data = (void *)ctx;
 	atomic_set(&ctx->release_request, 0);
 	sema_init(&ctx->ioctl_sem, 1);
+
 	return 0;
 }
 
 static int vcodec_close(struct inode *inode, struct file *filp)
 {
 	struct chanid_ctx *ctx = filp->private_data;
+
 	if (!ctx) {
 		mpp_err("chan id ctx is null\n");
 		return -EINVAL;
@@ -74,21 +80,19 @@ static int vcodec_close(struct inode *inode, struct file *filp)
 		ctx->size = 0;
 	}
 	kfree(ctx);
+
 	return 0;
 }
 
 static int vcodec_process_msg(struct vcodec_msg *msg,
 			      struct vcodec_request *req)
 {
-	int ret = 0;
 	req->cmd = msg->cmd;
 	req->ctrl_cmd = msg->ctrl_cmd;
 	req->size = msg->size;
 	req->data = (void *)(unsigned long)msg->data_ptr;
 
-	// mpp_log("cmd %x, ctrl_cmd %08x, size %d\n",
-	//req->cmd, req->ctrl_cmd, req->size);
-	return ret;
+	return 0;
 }
 
 static int vcodec_process_cmd(void *private, struct vcodec_request *req)
@@ -97,7 +101,8 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 	struct chanid_ctx *ctx = private;
 	int chan_id = ctx->chan_id;
 	MppCtxType type = ctx->type;
-	void *param = NULL;
+	void *param = ctx->param;
+
 	if (req->size > 0 && req->size > ctx->size) {
 		if (ctx->param) {
 			kfree(ctx->param);
@@ -109,11 +114,12 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 			return -ENOMEM;
 		ctx->param = param;
 		ctx->size = req->size;
-	} else
-		param = ctx->param;
+	}
+
 	switch (req->cmd) {
 	case VCODEC_CHAN_CREATE: {
 		struct vcodec_attr *attr = (struct vcodec_attr *)param;
+
 		if (copy_from_user(param, req->data, req->size)) {
 			ret = -EFAULT;
 			goto fail;
@@ -134,45 +140,38 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		if (ret)
 			goto fail;
 		ctx->chan_create = 1;
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_DESTROY: {
 		if (ctx->chan_create)
 			ret = mpp_vcodec_chan_destory(chan_id, type);
 		if (ret)
 			goto fail;
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_RESET: {
 		;//ret = mpp_vcodec_chan_stop(chan_id, type);
 		//if (ret)
 		//	goto fail;
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_START: {
 		ret = mpp_vcodec_chan_start(chan_id, type);
 		if (ret)
 			goto fail;
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_STOP: {
 		ret = mpp_vcodec_chan_stop(chan_id, type);
 		if (ret)
 			goto fail;
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_PAUSE: {
 		ret = mpp_vcodec_chan_pause(chan_id, type);
 		if (ret)
 			goto fail;
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_RESUME: {
 		ret = mpp_vcodec_chan_resume(chan_id, type);
 		if (ret)
 			goto fail;
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_CONTROL: {
 		if (req->data) {
 			if (copy_from_user(param, req->data, req->size)) {
@@ -180,9 +179,7 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 				goto fail;
 			}
 		}
-		ret =
-			mpp_vcodec_chan_control(chan_id, type,
-						req->ctrl_cmd, param);
+		ret = mpp_vcodec_chan_control(chan_id, type, req->ctrl_cmd, param);
 		if (ret)
 			goto fail;
 		if (req->data) {
@@ -191,8 +188,7 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 				goto fail;
 			}
 		}
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_IN_FRM_RDY: {
 		if (!req->data) {
 			ret = -EFAULT;
@@ -205,23 +201,24 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 		ret = mpp_vcodec_chan_push_frm(chan_id, param);
 		if (ret)
 			goto fail;
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_OUT_STRM_BUF_RDY: {
 		if (!req->data) {
 			ret = -EFAULT;
 			goto fail;
 		}
 		ret = mpp_vcodec_chan_get_stream(chan_id, type, param);
-		if (ret)
-			return -EINVAL;
+		if (ret) {
+			ret = -EINVAL;
+			goto fail;
+		}
 
 		if (copy_to_user(req->data, param, req->size)) {
 			mpp_err("copy_to_user failed.\n");
-			return -EINVAL;
+			ret = -EINVAL;
+			goto fail;
 		}
-	}
-	break;
+	} break;
 	case VCODEC_CHAN_OUT_STRM_END: {
 		if (!req->data) {
 			ret = -EFAULT;
@@ -232,12 +229,11 @@ static int vcodec_process_cmd(void *private, struct vcodec_request *req)
 			goto fail;
 		}
 		ret = mpp_vcodec_chan_put_stream(chan_id, type, param);
-	}
-	break;
-	default:
+	} break;
+	default: {
 		mpp_err("unknown vcode req cmd %x\n", req->cmd);
 		ret = -EINVAL;
-		goto fail;
+	} break;
 	}
 fail:
 	return ret;
@@ -246,10 +242,10 @@ fail:
 static long vcodec_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
-	void __user *msg;
+	void __user *msg = (void __user *)arg;
 	struct chanid_ctx *ctx = (struct chanid_ctx *)filp->private_data;
 	struct vcodec_request req;
-	msg = (void __user *)arg;
+
 	if (!ctx) {
 		mpp_err("ctx %p\n", ctx);
 		return -EINVAL;
@@ -262,6 +258,7 @@ static long vcodec_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	switch (cmd) {
 	case VOCDEC_IOC_CFG: {
 		struct vcodec_msg v_msg;
+
 		memset(&v_msg, 0, sizeof(v_msg));
 		if (copy_from_user(&v_msg, msg, sizeof(v_msg)))
 			return -EFAULT;
@@ -276,12 +273,13 @@ static long vcodec_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		up(&ctx->ioctl_sem);
 		if (ret)
 			return -EFAULT;
-	}
-	break;
-	default:
+	} break;
+	default: {
 		mpp_err("unknown ioctl cmd %x\n", cmd);
 		return -EINVAL;
+	} break;
 	}
+
 	return 0;
 }
 
@@ -290,8 +288,9 @@ static unsigned int vcodec_poll(struct file *filp, poll_table * wait)
 	struct chanid_ctx *ctx = filp->private_data;
 	int chan_id = ctx->chan_id;
 	MppCtxType type = ctx->type;
-	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	unsigned int mask = 0;
+	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
+
 	if (!list_empty(&chan_entry->stream_done)) {
 		mask |= POLLIN | POLLRDNORM;
 		return mask;
@@ -303,17 +302,13 @@ static unsigned int vcodec_poll(struct file *filp, poll_table * wait)
 	}
 
 	poll_wait(filp, &chan_entry->wait, wait);
-	//mpp_log("poll_wait out \n");
-	if (!list_empty(&chan_entry->stream_done)) {
+	if (!list_empty(&chan_entry->stream_done))
 		mask |= POLLIN | POLLRDNORM;
-		//mpp_log("mask set %d \n", mask);
-	} else {
-		if (chan_entry->state == CHAN_STATE_SUSPEND) {
+	else {
+		if (chan_entry->state == CHAN_STATE_SUSPEND)
 			mask |= POLLIN | POLLHUP | POLLERR;
-			return  mask;
-		}
 	}
-	//	mpp_log("return mask %d \n", mask);
+
 	return mask;
 }
 
@@ -324,7 +319,7 @@ const struct file_operations vcodec_fops = {
 	.unlocked_ioctl = vcodec_ioctl,
 #ifdef CONFIG_COMPAT
 	.compat_ioctl = vcodec_ioctl,
-#endif /*  */
+#endif
 };
 
 struct vcodec_dev {
@@ -339,6 +334,7 @@ struct vcodec_dev {
 	struct proc_dir_entry *venc_procfs;
 #endif
 };
+
 #define MPP_VCODEC_NAME	"vcodec"
 #define MPP_ENC_NAME	"enc"
 #define MPP_DEC_NAME	"dec"
@@ -368,37 +364,37 @@ static int venc_proc_debug(struct seq_file *seq, void *offset)
 {
 	u32 i = 0;
 	MppCtxType type = MPP_CTX_ENC;
-	struct venc_module *venc = NULL;
-	venc = mpp_vcodec_get_enc_module_entry();
+	struct venc_module *venc = mpp_vcodec_get_enc_module_entry();
+
 	if (venc->thd) {
 		seq_puts(
 			seq,
 			"\n--------venc thread status------------------------------------------------------------------------\n");
 
-		seq_printf(seq, "%15s%15s%15s\n", "last_runing", "run_cnt", "que_cnt");
-		seq_printf(seq, "%15lld%15lld%15lld\n", venc->thd->worker->last_us, venc->thd->worker->run_cnt,
-			   venc->thd->queue_cnt);
+		seq_printf(seq, "%15s|%15s|%15s\n", "last_runing", "run_cnt", "que_cnt");
+		seq_printf(seq, "%15lld|%15lld|%15lld\n",
+			   venc->thd->worker->last_us, venc->thd->worker->run_cnt, venc->thd->queue_cnt);
 	}
 
 	for (i = 0; i < MAX_ENC_NUM; i++) {
-		struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(i, type);
-		if (chan_entry->handle) {
-			RK_U32 runing = atomic_read(&chan_entry->runing) > 0;
-			RK_U32 comb_run = atomic_read(&chan_entry->cfg.comb_runing) > 0;
-			seq_puts(
-				seq,
-				"\n--------venc chn runing status--------------------------------------------------------------------\n");
+		struct mpp_chan *chan = mpp_vcodec_get_chan_entry(i, type);
 
-			seq_printf(seq, "%8s%8s%10s%10s%10s%10s%10s%14s%15s%15s\n", "ID", "runing", "combo_run", "cfg_gap",
-				   "strm_cnt",
-				   "strm_out", "gap_time", "cb_gap_time", "last_cb_start", "last_cb_end");
+		if (chan->handle) {
+			RK_U32 runing = atomic_read(&chan->runing) > 0;
+			RK_U32 comb_run = atomic_read(&chan->cfg.comb_runing) > 0;
+			seq_puts(seq,
+				 "\n--------venc chn runing status--------------------------------------------------------------------\n");
 
-			seq_printf(seq, "%8d%8u%10u%10u%10u%10u%10u%14u%15llu%15llu\n", i, runing, comb_run,
-				   chan_entry->last_cfg_time,
-				   atomic_read(&chan_entry->stream_count), atomic_read(&chan_entry->str_out_cnt), chan_entry->gap_time,
-				   chan_entry->combo_gap_time, chan_entry->last_jeg_combo_start,  chan_entry->last_jeg_combo_end);
+			seq_printf(seq, "%8s|%8s|%10s|%10s|%10s|%10s|%10s|%14s|%15s|%15s\n",
+				   "ID", "runing", "combo_run", "cfg_gap", "strm_cnt", "strm_out",
+				   "gap_time", "cb_gap_time", "last_cb_start", "last_cb_end");
 
-			mpp_enc_proc_debug(seq, chan_entry->handle, i);
+			seq_printf(seq, "%8d|%8u|%10u|%10u|%10u|%10u|%10u|%14u|%15llu|%15llu\n",
+				   i, runing, comb_run, chan->last_cfg_time, atomic_read(&chan->stream_count),
+				   atomic_read(&chan->str_out_cnt),
+				   chan->gap_time, chan->combo_gap_time, chan->last_jeg_combo_start,  chan->last_jeg_combo_end);
+
+			mpp_enc_proc_debug(seq, chan->handle, i);
 		}
 	}
 	mpp_packet_pool_proc(seq);
@@ -407,8 +403,6 @@ static int venc_proc_debug(struct seq_file *seq, void *offset)
 
 static int vdec_proc_debug(struct seq_file *seq, void *offset)
 {
-	// MppCtxType type = MPP_CTX_DEC;
-
 	return 0;
 }
 
@@ -489,8 +483,7 @@ static int vcodec_probe(struct platform_device *pdev)
 		dev_err(dev, "add device failed\n");
 		return ret;
 	}
-	vdev->child_dev =
-		device_create(vdev->cls, dev, vdev->dev_id, NULL, "%s", "vcodec");
+	vdev->child_dev = device_create(vdev->cls, dev, vdev->dev_id, NULL, "%s", "vcodec");
 
 	vcodec_procfs_init(vdev);
 
@@ -501,27 +494,32 @@ static int vcodec_remove(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct vcodec_dev *vdev = platform_get_drvdata(pdev);
+
 	vcodec_procfs_remove(vdev);
 	dev_info(dev, "remove device\n");
 	device_destroy(vdev->cls, vdev->dev_id);
 	cdev_del(&vdev->vco_cdev);
 	unregister_chrdev_region(vdev->dev_id, 1);
 	class_destroy(vdev->cls);
+
 	return 0;
 }
 
 static const struct of_device_id vcodec_dt_ids[] = {
-	{.compatible = "rockchip,vcodec",}, {},
+	{
+		.compatible = "rockchip,vcodec",
+	},
+	{},
 };
 
-static struct platform_driver vcodec_driver = {.probe =
-		vcodec_probe, .remove = vcodec_remove, .driver = {.name = "vcodec",
-								  .of_match_table =
-									  of_match_ptr
-									  (vcodec_dt_ids),
-								 },
+static struct platform_driver vcodec_driver = {
+	.probe = vcodec_probe,
+	.remove = vcodec_remove,
+	.driver = {
+		.name = "vcodec",
+		.of_match_table = of_match_ptr(vcodec_dt_ids),
+	},
 };
-
 
 static struct vcodec_mpidev_fn *mpidev_ops = NULL;
 static struct vcodec_mpibuf_fn *mpibuf_ops = NULL;
@@ -532,7 +530,6 @@ void vmpi_register_fn2vcocdec (struct vcodec_mpidev_fn *mpidev_fn,
 	mpibuf_ops = mpibuf_fn;
 	if (mpidev_ops)
 		vcodec_create_mpi_dev();
-	return;
 }
 EXPORT_SYMBOL(vmpi_register_fn2vcocdec);
 
@@ -561,6 +558,7 @@ struct vcodec_mpidev_fn *get_mpidev_ops(void)
 {
 	if (!mpidev_ops)
 		mpp_err("should call vmpi_register_fn2vcocdec \n");
+
 	return mpidev_ops;
 }
 
@@ -568,15 +566,13 @@ struct vcodec_mpibuf_fn *get_mpibuf_ops(void)
 {
 	if (!mpibuf_ops)
 		mpp_err("should call vmpi_register_fn2vcocdec \n");
+
 	return mpibuf_ops;
 }
 
 struct vcodec_vsm_buf_fn *get_vsm_ops(void)
 {
-	if (vsm_buf_ops)
-		return vsm_buf_ops;
-	else
-		return NULL;
+	return vsm_buf_ops ? vsm_buf_ops : NULL;
 }
 
 
@@ -587,6 +583,7 @@ extern struct platform_driver mpp_service_driver;
 static int __init vcodec_init(void)
 {
 	int ret;
+
 	pr_info("init new\n");
 #ifdef BUILD_ONE_KO
 	ret = platform_driver_register(&mpp_service_driver);
@@ -602,14 +599,12 @@ static int __init vcodec_init(void)
 	}
 	mpp_vcodec_init();
 
-	//enc_test();
 	return 0;
 }
 
 static void __exit vcodec_exit(void)
 {
 
-	//test_end();
 	mpp_vcodec_deinit();
 	platform_driver_unregister(&vcodec_driver);
 

@@ -280,6 +280,7 @@ MPP_RET mpp_service_init(void *ctx, MppClientType type)
 {
 	MppDevMppService *p = (MppDevMppService *) ctx;
 	MPP_RET ret = MPP_OK;
+
 	p->mppdev_ops = get_mppdev_svr_ops();
 	if (!p->mppdev_ops) {
 		mpp_err("get_mppdev_svr_ops fail");
@@ -294,12 +295,14 @@ MPP_RET mpp_service_init(void *ctx, MppClientType type)
 		ret = MPP_NOK;
 		mpp_err("mpp_chnl_open fail");
 	}
+
 	return ret;
 }
 
 MPP_RET mpp_service_deinit(void *ctx)
 {
 	MppDevMppService *p = (MppDevMppService *) ctx;
+
 	if (p->chnl && p->mppdev_ops->chnl_release)
 		p->mppdev_ops->chnl_release(p->chnl);
 
@@ -309,6 +312,7 @@ MPP_RET mpp_service_deinit(void *ctx)
 void mpp_service_chnl_register(void *ctx, void *func, RK_S32 chan_id)
 {
 	MppDevMppService *p = (MppDevMppService *) ctx;
+
 	if (p->chnl && p->mppdev_ops->chnl_register)
 		p->mppdev_ops->chnl_register(p->chnl, func, chan_id);
 
@@ -431,6 +435,7 @@ MPP_RET mpp_service_cmd_send(void *ctx)
 	p->req_cnt = 0;
 	p->reg_offset_count = 0;
 	p->rcb_count = 0;
+
 	return ret;
 }
 
@@ -439,11 +444,13 @@ MPP_RET mpp_service_cmd_poll(void *ctx)
 	MppDevMppService *p = (MppDevMppService *) ctx;
 	MppReqV1 dev_req;
 	MPP_RET ret = 0;
+
 	memset(&dev_req, 0, sizeof(dev_req));
 	dev_req.cmd = MPP_CMD_POLL_HW_FINISH;
 	dev_req.flag |= MPP_FLAGS_LAST_MSG;
 	if (p->mppdev_ops->chnl_add_req)
 		p->mppdev_ops->chnl_add_req(p->chnl, &dev_req);
+
 	return ret;
 }
 
@@ -451,17 +458,20 @@ RK_U32 mpp_service_iova_address(void *ctx, struct dma_buf * buf, RK_U32 offset)
 {
 	RK_U32 iova_address = 0;
 	MppDevMppService *p = (MppDevMppService *) ctx;
+
 	if (p->mppdev_ops->chnl_get_iova_addr)
-		iova_address =
-			p->mppdev_ops->chnl_get_iova_addr(p->chnl, buf, offset);
+		iova_address = p->mppdev_ops->chnl_get_iova_addr(p->chnl, buf, offset);
+
 	return iova_address;
 }
 
 struct device * mpp_service_get_dev(void *ctx)
 {
 	MppDevMppService *p = (MppDevMppService *)ctx;
+
 	if (p->mppdev_ops->mpp_chnl_get_dev)
 		return p->mppdev_ops->mpp_chnl_get_dev(p->chnl);
+
 	return NULL;
 }
 

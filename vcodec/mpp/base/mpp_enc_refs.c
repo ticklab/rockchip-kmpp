@@ -168,6 +168,7 @@ void _dump_cpb(EncVirtualCpb * cpb, const char *func, RK_S32 line)
 MPP_RET mpp_enc_refs_init(MppEncRefs * refs)
 {
 	MppEncRefsImpl *p = NULL;
+
 	if (NULL == refs) {
 		mpp_err_f("invalid NULL input refs\n");
 		return MPP_ERR_NULL_PTR;

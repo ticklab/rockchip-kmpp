@@ -811,6 +811,7 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg)
 		regs->reg0263_adr_vsc_t = 0;
 #endif
 	}
+
 	return MPP_OK;
 }
 

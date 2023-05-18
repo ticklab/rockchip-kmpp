@@ -191,10 +191,9 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 
 MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet, RK_S32 chan_id, MppDev dev_ctx)
 {
-	MppPacketImpl *p = NULL;
-	p = (MppPacketImpl *) packet;
-	p->buf.use_len = p->length;
+	MppPacketImpl *p = (MppPacketImpl *)packet;
 
+	p->buf.use_len = p->length;
 	if (p->ring_pool) {
 		if (p->length > p->buf.size) {
 			mpp_err("ring_buf used may be error");
@@ -206,6 +205,7 @@ MPP_RET mpp_packet_ring_buf_put_used(MppPacket * packet, RK_S32 chan_id, MppDev 
 	if (p->flag & MPP_PACKET_FLAG_EXTERNAL) {
 		if (p->length) {
 			struct device *dev = mpp_get_dev(dev_ctx);
+
 			dma_sync_single_for_device(dev, p->buf.mpi_buf_id, p->length, DMA_FROM_DEVICE);
 		}
 		mpp_packet_vsm_buf_free(p, chan_id);

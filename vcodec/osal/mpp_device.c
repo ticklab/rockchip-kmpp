@@ -216,6 +216,7 @@ void mpp_dev_chnl_register(MppDev ctx, void *func, RK_S32 chan_id)
 	MppDevImpl *p = (MppDevImpl *) ctx;
 	const MppDevApi *api = p->api;
 	void *impl_ctx = p->ctx;
+
 	if (api->chnl_register)
 		api->chnl_register(impl_ctx, func, chan_id);
 	return;

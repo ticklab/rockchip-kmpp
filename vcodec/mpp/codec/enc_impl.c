@@ -96,6 +96,7 @@ MPP_RET enc_impl_init(EncImpl * impl, EncImplCfg * cfg)
 MPP_RET enc_impl_deinit(EncImpl impl)
 {
 	EncImplCtx *p = NULL;
+
 	if (NULL == impl) {
 		mpp_err_f("found NULL input\n");
 		return MPP_ERR_NULL_PTR;
@@ -114,6 +115,7 @@ MPP_RET enc_impl_proc_cfg(EncImpl impl, MpiCmd cmd, void *para)
 {
 	EncImplCtx *p = NULL;
 	MPP_RET ret = MPP_OK;
+
 	if (NULL == impl) {
 		mpp_err_f("found NULL input\n");
 		return MPP_ERR_NULL_PTR;
@@ -147,6 +149,7 @@ MPP_RET enc_impl_start(EncImpl impl, HalEncTask * task)
 {
 	EncImplCtx *p = NULL;
 	MPP_RET ret = MPP_OK;
+
 	if (NULL == impl) {
 		mpp_err_f("found NULL input\n");
 		return MPP_ERR_NULL_PTR;
@@ -163,6 +166,7 @@ MPP_RET enc_impl_proc_dpb(EncImpl impl, HalEncTask * task)
 {
 	EncImplCtx *p = NULL;
 	MPP_RET ret = MPP_OK;
+
 	if (NULL == impl) {
 		mpp_err_f("found NULL input\n");
 		return MPP_ERR_NULL_PTR;

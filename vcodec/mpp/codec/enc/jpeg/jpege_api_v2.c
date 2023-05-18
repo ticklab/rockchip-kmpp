@@ -548,11 +548,10 @@ static void jpege_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 
 	seq_puts(seq,
 		 "\n--------jpege chn attr----------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%10s%10s%10s%10s\n", "ID", "Width", "Height", "quant", "qfactor",
-		   "qfmax", "qfmin");
-	seq_printf(seq, "%7d%10u%10u%10u%10u%10u%10u\n", chl_id, prep->width, prep->height, jpege->quant,
-		   jpege->q_factor,
-		   jpege->qf_max, jpege->qf_min);
+	seq_printf(seq, "%7s|%10s|%10s|%10s|%10s|%10s|%10s\n", "ID",
+		   "Width", "Height", "quant", "qfactor", "qfmax", "qfmin");
+	seq_printf(seq, "%7d|%10u|%10u|%10u|%10u|%10u|%10u\n", chl_id,
+		   prep->width, prep->height, jpege->quant, jpege->q_factor, jpege->qf_max, jpege->qf_min);
 }
 
 const EncImplApi api_jpege = {

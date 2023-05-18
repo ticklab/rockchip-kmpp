@@ -32,43 +32,20 @@ static MPP_RET hal_jpege_init(void *hal, MppEncHalCfg * cfg)
 	HaljpegeCtx *ctx = (HaljpegeCtx *) hal;
 	const MppEncHalApi *api = NULL;
 	void *hw_ctx = NULL;
-	MPP_RET ret = MPP_OK;
-	//   RK_U32 vcodec_type = mpp_get_vcodec_type();
 
 	api = &hal_jpege_vepu540c;
 	// mpp_env_get_u32("hal_jpege_debug", &hal_jpege_debug, 0);
 
-	/*  if (vcodec_type & HAVE_RKVENC) {
-	   RK_U32 hw_id = mpp_get_client_hw_id(VPU_CLIENT_RKVENC);
-	   switch (hw_id) {
-	   case HWID_VEPU540C : {
-	   api = &hal_jpege_vepu540c;
-	   } break;
-	   default : {
-	   mpp_err("vcodec type %08x can not find JPEG encoder device\n",
-	   vcodec_type);
-	   ret = MPP_NOK;
-	   } break;
-	   }
-	   }else {
-	   mpp_err("vcodec type %08x can not find JPEG encoder device\n",
-	   vcodec_type);
-	   ret = MPP_NOK;
-	   } */
-
 	mpp_assert(api);
 
-	if (!ret)
-		hw_ctx = mpp_calloc_size(void, api->ctx_size);
+	hw_ctx = mpp_calloc_size(void, api->ctx_size);
+	if (!hw_ctx)
+		return MPP_ERR_MALLOC;
 
 	ctx->api = api;
 	ctx->hw_ctx = hw_ctx;
 
-	if (ret)
-		return ret;
-
-	ret = api->init(hw_ctx, cfg);
-	return ret;
+	return api->init(hw_ctx, cfg);
 }
 
 static MPP_RET hal_jpege_deinit(void *hal)
@@ -83,6 +60,7 @@ static MPP_RET hal_jpege_deinit(void *hal)
 
 	ret = api->deinit(hw_ctx);
 	MPP_FREE(hw_ctx);
+
 	return ret;
 }
 

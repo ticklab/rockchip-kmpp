@@ -29,6 +29,7 @@ MPP_RET check_is_mpp_frame(void *frame)
 
 	mpp_err_f("pointer %p failed on check\n", frame);
 	mpp_abort();
+
 	return MPP_NOK;
 }
 
@@ -67,9 +68,9 @@ MPP_RET mpp_frame_deinit(MppFrame * frame)
 		mpp_buffer_put(p->buffer);
 
 	if (p->osd) {
-		MppEncOSDData3 *osd_data = NULL;
+		MppEncOSDData3 *osd_data = (MppEncOSDData3 *)p->osd;
 		RK_U32 i = 0;
-		osd_data = (MppEncOSDData3 *)p->osd;
+
 		for (i = 0; i < osd_data->num_region; i++) {
 			if (osd_data->region[i].osd_buf.buf)
 				mpi_buf_unref(osd_data->region[i].osd_buf.buf);
@@ -85,16 +86,19 @@ MPP_RET mpp_frame_deinit(MppFrame * frame)
 
 	mpp_free(*frame);
 	*frame = NULL;
+
 	return MPP_OK;
 }
 
 MppFrame mpp_frame_get_next(MppFrame frame)
 {
 	MppFrameImpl *p = NULL;
+
 	if (check_is_mpp_frame(frame))
 		return NULL;
 
 	p = (MppFrameImpl *) frame;
+
 	return (MppFrame) p->next;
 }
 
@@ -107,6 +111,7 @@ MPP_RET mpp_frame_set_next(MppFrame frame, MppFrame next)
 
 	p = (MppFrameImpl *) frame;
 	p->next = (MppFrameImpl *) next;
+
 	return MPP_OK;
 }
 
@@ -118,12 +123,14 @@ MppBuffer mpp_frame_get_buffer(MppFrame frame)
 		return NULL;
 
 	p = (MppFrameImpl *) frame;
+
 	return (MppFrame) p->buffer;
 }
 
 void mpp_frame_set_buffer(MppFrame frame, MppBuffer buffer)
 {
 	MppFrameImpl *p = NULL;
+
 	if (check_is_mpp_frame(frame))
 		return;
 
@@ -142,6 +149,7 @@ void mpp_frame_set_buffer(MppFrame frame, MppBuffer buffer)
 RK_S32 mpp_frame_has_meta(const MppFrame frame)
 {
 	MppFrameImpl *p = NULL;
+
 	if (check_is_mpp_frame(frame))
 		return 0;
 
@@ -153,17 +161,20 @@ RK_S32 mpp_frame_has_meta(const MppFrame frame)
 MPP_RET mpp_frame_add_roi(MppFrame frame, MppRoi roi)
 {
 	MppFrameImpl *p = (MppFrameImpl *)frame;
+
 	if (check_is_mpp_frame(frame) || !roi)
 		return MPP_ERR_NULL_PTR;
 
 	// memcpy(&p->roi, ptr, sizeof(MppEncROICfg));
 	p->roi = roi;
+
 	return 0;
 }
 
 MppRoi mpp_frame_get_roi(MppFrame frame)
 {
 	MppFrameImpl *p = (MppFrameImpl *)frame;
+
 	if (check_is_mpp_frame(frame))
 		return NULL;
 
@@ -175,6 +186,7 @@ MPP_RET mpp_frame_add_osd(MppFrame frame, MppOsd osd)
 	MppFrameImpl *p = (MppFrameImpl *)frame;
 	MppEncOSDData3 *osd_data = NULL;
 	RK_U32 i = 0;
+
 	if (check_is_mpp_frame(frame) || !osd)
 		return MPP_ERR_NULL_PTR;
 
@@ -187,6 +199,7 @@ MPP_RET mpp_frame_add_osd(MppFrame frame, MppOsd osd)
 		if (osd_data->region[i].inv_cfg.inv_buf.buf)
 			mpi_buf_ref(osd_data->region[i].inv_cfg.inv_buf.buf);
 	}
+
 	return 0;
 }
 
@@ -204,6 +217,7 @@ MppOsd mpp_frame_get_osd(MppFrame frame)
 MPP_RET mpp_frame_add_ppinfo(MppFrame frame, MppPpInfo pp_info)
 {
 	MppFrameImpl *p = (MppFrameImpl *)frame;
+
 	if (check_is_mpp_frame(frame) || !pp_info)
 		return MPP_ERR_NULL_PTR;
 
@@ -291,6 +305,7 @@ MPP_RET mpp_frame_info_cmp(MppFrame frame0, MppFrame frame1)
 {
 	MppFrameImpl *f0 = NULL;
 	MppFrameImpl *f1 = NULL;
+
 	if (check_is_mpp_frame(frame0) || check_is_mpp_frame(frame0)) {
 		mpp_err_f("invalid NULL pointer input\n");
 		return MPP_ERR_NULL_PTR;
@@ -305,12 +320,14 @@ MPP_RET mpp_frame_info_cmp(MppFrame frame0, MppFrame frame1)
 	    (f0->ver_stride == f1->ver_stride) &&
 	    (f0->fmt == f1->fmt) && (f0->buf_size == f1->buf_size))
 		return MPP_OK;
+
 	return MPP_NOK;
 }
 
 RK_U32 mpp_frame_get_fbc_offset(MppFrame frame)
 {
 	MppFrameImpl *p = NULL;
+
 	if (check_is_mpp_frame(frame))
 		return 0;
 
@@ -340,22 +357,25 @@ RK_U32 mpp_frame_get_fbc_stride(MppFrame frame)
 		return 0;
 
 	p = (MppFrameImpl *) frame;
+
 	return MPP_ALIGN(p->width, 16);
 }
 
 /*
  * object access function macro
  */
-#define MPP_FRAME_ACCESSORS(type, field) \
-    type mpp_frame_get_##field(const MppFrame s) \
-    { \
-        check_is_mpp_frame((MppFrameImpl*)s); \
-        return ((MppFrameImpl*)s)->field; \
-    } \
-    void mpp_frame_set_##field(MppFrame s, type v) \
-    { \
-        check_is_mpp_frame((MppFrameImpl*)s); \
-        ((MppFrameImpl*)s)->field = v; \
+#define MPP_FRAME_ACCESSORS(type, field)		\
+    type mpp_frame_get_##field(const MppFrame s)	\
+    {							\
+        check_is_mpp_frame((MppFrameImpl*)s);		\
+							\
+        return ((MppFrameImpl*)s)->field;		\
+    }							\
+    void mpp_frame_set_##field(MppFrame s, type v)	\
+    {							\
+        check_is_mpp_frame((MppFrameImpl*)s);		\
+							\
+        ((MppFrameImpl*)s)->field = v;			\
     }
 
 MPP_FRAME_ACCESSORS(RK_U32, width)

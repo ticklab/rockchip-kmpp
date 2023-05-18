@@ -45,12 +45,9 @@ static MPP_RET hal_h264e_init(void *hal, MppEncHalCfg * cfg)
 	HalH264eCtx *ctx = (HalH264eCtx *) hal;
 	const MppEncHalApi *api = NULL;
 	void *hw_ctx = NULL;
-	MPP_RET ret = MPP_OK;
-//      RK_U32 vcodec_type = mpp_get_vcodec_type();
 
 //      mpp_env_get_u32("hal_h264e_debug", &hal_h264e_debug, 0);
 
-//      if (vcodec_type & HAVE_RKVENC) {
 #ifdef RKVEC580_H264
 	api = &hal_h264e_vepu580;
 #endif
@@ -59,28 +56,16 @@ static MPP_RET hal_h264e_init(void *hal, MppEncHalCfg * cfg)
 	api = &hal_h264e_vepu540c;
 #endif
 
-
-
-
-	/*	} else {
-			mpp_err("vcodec type %08x can not find H.264 encoder device\n",
-				vcodec_type);
-			ret = MPP_NOK;
-		}*/
-
 	mpp_assert(api);
 
-	if (!ret)
-		hw_ctx = mpp_calloc_size(void, api->ctx_size);
+	hw_ctx = mpp_calloc_size(void, api->ctx_size);
+	if (!hw_ctx)
+		return MPP_ERR_MALLOC;
 
 	ctx->api = api;
 	ctx->hw_ctx = hw_ctx;
 
-	if (ret)
-		return ret;
-
-	ret = api->init(hw_ctx, cfg);
-	return ret;
+	return api->init(hw_ctx, cfg);
 }
 
 static MPP_RET hal_h264e_deinit(void *hal)
@@ -95,6 +80,7 @@ static MPP_RET hal_h264e_deinit(void *hal)
 
 	ret = api->deinit(hw_ctx);
 	MPP_FREE(hw_ctx);
+
 	return ret;
 }
 

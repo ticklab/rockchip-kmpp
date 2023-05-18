@@ -133,6 +133,7 @@ MPP_RET bits_model_param_deinit(RcModelV2Ctx * ctx)
 		ctx->complex_level = NULL;
 	}
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 }
 
@@ -141,82 +142,82 @@ MPP_RET bits_model_param_init(RcModelV2Ctx * ctx)
 	RK_S32 gop_len = ctx->usr_cfg.igop;
 	RcFpsCfg *fps = &ctx->usr_cfg.fps;
 	RK_S32 mad_len = 10;
-	RK_U32 stat_len =
-		fps->fps_out_num * ctx->usr_cfg.stats_time / fps->fps_out_denorm;
+	RK_U32 stat_len = fps->fps_out_num * ctx->usr_cfg.stats_time / fps->fps_out_denorm;
+
 	stat_len = stat_len ? stat_len : 1;
 
 	bits_model_param_deinit(ctx);
 	mpp_data_init_v2(&ctx->i_bit, I_WINDOW_LEN, 0);
 	if (ctx->i_bit == NULL) {
-		mpp_err("i_bit init fail");
+		mpp_err("i_bit init fail\n");
 		return MPP_ERR_MALLOC;
 	}
 
 	mpp_data_init_v2(&ctx->vi_bit, I_WINDOW_LEN, 0);
 	if (ctx->vi_bit == NULL) {
-		mpp_err("vi_bit init fail");
+		mpp_err("vi_bit init fail\n");
 		return MPP_ERR_MALLOC;
 	}
 	mpp_data_init_v2(&ctx->p_bit, P_WINDOW1_LEN, 0);
 	if (ctx->p_bit == NULL) {
-		mpp_err("p_bit init fail");
+		mpp_err("p_bit init fail\n");
 		return MPP_ERR_MALLOC;
 	}
 
 	mpp_data_init_v2(&ctx->pre_p_bit, P_WINDOW2_LEN, 0);
 	if (ctx->pre_p_bit == NULL) {
-		mpp_err("pre_p_bit init fail");
+		mpp_err("pre_p_bit init fail\n");
 		return MPP_ERR_MALLOC;
 	}
 
 	mpp_data_init_v2(&ctx->pre_i_bit, I_WINDOW_LEN, 0);
 	if (ctx->pre_i_bit == NULL) {
-		mpp_err("pre_i_bit init fail");
+		mpp_err("pre_i_bit init fail\n");
 		return MPP_ERR_MALLOC;
 	}
 
 	mpp_data_init_v2(&ctx->pre_i_mean_qp, I_WINDOW_LEN, -1);
 	if (ctx->pre_i_mean_qp == NULL) {
-		mpp_err("pre_i_mean_qp init fail");
+		mpp_err("pre_i_mean_qp init fail\n");
 		return MPP_ERR_MALLOC;
 	}
 	mpp_data_init_v2(&ctx->madi, P_WINDOW2_LEN, 0);
 	if (ctx->madi == NULL) {
-		mpp_err("madi init fail");
+		mpp_err("madi init fail\n");
 		return MPP_ERR_MALLOC;
 	}
 	mpp_data_init_v2(&ctx->madp, P_WINDOW2_LEN, 0);
 	if (ctx->madp == NULL) {
-		mpp_err("madp init fail");
+		mpp_err("madp init fail\n");
 		return MPP_ERR_MALLOC;
 	}
 	mpp_data_init_v2(&ctx->stat_rate, fps->fps_out_num, 0);
 	if (ctx->stat_rate == NULL) {
-		mpp_err("stat_rate init fail fps_out_num %d", fps->fps_out_num);
+		mpp_err("stat_rate init fail fps_out_num %d\n", fps->fps_out_num);
 		return MPP_ERR_MALLOC;
 	}
 
 	mpp_data_init_v2(&ctx->stat_bits, stat_len, ctx->bit_per_frame);
 	if (ctx->stat_bits == NULL) {
-		mpp_err("stat_bits init fail stat_len %d", stat_len);
+		mpp_err("stat_bits init fail stat_len %d\n", stat_len);
 		return MPP_ERR_MALLOC;
 	}
 
 	mpp_data_init_v2(&ctx->gop_bits, gop_len, 0);
 	if (ctx->gop_bits == NULL) {
-		mpp_err("gop_bits init fail gop_len %d", gop_len);
+		mpp_err("gop_bits init fail gop_len %d\n", gop_len);
 		return MPP_ERR_MALLOC;
 	}
 
 	mpp_data_init_v2(&ctx->motion_level, mad_len, 0);
 	if (ctx->motion_level == NULL) {
-		mpp_err("motion_level init fail mad_len %d", mad_len);
+		mpp_err("motion_level init fail mad_len %d\n", mad_len);
 		return MPP_ERR_MALLOC;
 	}
 
 	mpp_data_init_v2(&ctx->complex_level, mad_len, 0);
 	if (ctx->complex_level == NULL) {
-		mpp_err("complex_level init fail mad_len %d", mad_len);
+		mpp_err("complex_level init fail mad_len %d\n", mad_len);
 		return MPP_ERR_MALLOC;
 	}
 
@@ -248,8 +249,7 @@ void bits_frm_init(RcModelV2Ctx * ctx)
 		mpp_data_reset_v2(ctx->i_bit,
 				  p_bit * ctx->i_scale / 16);
 		ctx->i_sumbits = 2 * p_bit * ctx->i_scale / 16;
-	}
-	break;
+	} break;
 	case SMART_P: {
 		RK_U32 vi_num = 0;
 		mpp_assert(usr_cfg->vgop > 1);
@@ -275,10 +275,9 @@ void bits_frm_init(RcModelV2Ctx * ctx)
 		mpp_data_reset_v2(ctx->vi_bit,
 				  p_bit * ctx->vi_scale / 16);
 		ctx->vi_sumbits = 2 * p_bit * ctx->vi_scale / 16;
-	}
-	break;
-	default:
-		break;
+	} break;
+	default: {
+	} break;
 	}
 	rc_dbg_rc("p_sumbits %d i_sumbits %d vi_sumbits %d\n", ctx->p_sumbits,
 		  ctx->i_sumbits, ctx->vi_sumbits);
@@ -292,18 +291,15 @@ RK_S32 moving_judge_update(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 		mpp_data_update_v2(ctx->pre_i_bit, cfg->bit_real);
 		mpp_data_update_v2(ctx->pre_i_mean_qp,
 				   cfg->quality_real);
-	}
-	break;
-
+	} break;
 	case INTER_P_FRAME: {
 		mpp_data_update_v2(ctx->pre_p_bit, cfg->bit_real);
 		mpp_data_update_v2(ctx->madp, cfg->madp);
-	}
-	break;
-
+	} break;
 	default:
 		break;
 	}
+
 	return 0;
 }
 
@@ -342,8 +338,7 @@ MPP_RET bits_model_update(RcModelV2Ctx * ctx, RK_S32 real_bit, RK_U32 madi)
 	case INTRA_FRAME: {
 		mpp_data_update_v2(ctx->i_bit, real_bit);
 		ctx->i_sumbits = mpp_data_sum_v2(ctx->i_bit);
-		ctx->i_scale =
-			80 * ctx->i_sumbits / (2 * ctx->p_sumbits);
+		ctx->i_scale = 80 * ctx->i_sumbits / (2 * ctx->p_sumbits);
 		rc_dbg_rc("i_sumbits %d p_sumbits %d i_scale %d\n",
 			  ctx->i_sumbits, ctx->p_sumbits, ctx->i_scale);
 	}
@@ -365,8 +360,7 @@ MPP_RET bits_model_update(RcModelV2Ctx * ctx, RK_S32 real_bit, RK_U32 madi)
 	case INTER_VI_FRAME: {
 		mpp_data_update_v2(ctx->vi_bit, real_bit);
 		ctx->vi_sumbits = mpp_data_sum_v2(ctx->vi_bit);
-		ctx->vi_scale =
-			80 * ctx->vi_sumbits / (2 * ctx->p_sumbits);
+		ctx->vi_scale = 80 * ctx->vi_sumbits / (2 * ctx->p_sumbits);
 		/* NOTE: vi_scale may be set to zero. So we should limit the range */
 		ctx->vi_scale = mpp_clip(ctx->vi_scale, 16, 320);
 	}
@@ -377,11 +371,11 @@ MPP_RET bits_model_update(RcModelV2Ctx * ctx, RK_S32 real_bit, RK_U32 madi)
 	}
 
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 }
 
-MPP_RET bits_model_alloc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg,
-			 RK_S64 total_bits)
+MPP_RET bits_model_alloc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg, RK_S64 total_bits)
 {
 	RcCfg *usr_cfg = &ctx->usr_cfg;
 	RK_U32 max_i_prop = usr_cfg->max_i_bit_prop * 16;
@@ -401,6 +395,7 @@ MPP_RET bits_model_alloc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg,
 		super_bit_thr = usr_cfg->super_cfg.super_p_thd;
 	if (usr_cfg->gop_mode == SMART_P) {
 		RK_U32 vi_num = 0;
+
 		mpp_assert(usr_cfg->vgop > 1);
 		vi_num = gop_len / usr_cfg->vgop;
 		if (vi_num > 0)
@@ -413,37 +408,29 @@ MPP_RET bits_model_alloc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg,
 				super_bit_thr =
 					usr_cfg->super_cfg.super_i_thd;
 			}
-		}
-		break;
-
+		} break;
 		case INTER_P_FRAME: {
 			i_scale = mpp_clip(i_scale, 16, max_i_prop);
 			total_bits = total_bits * 16;
-		}
-		break;
+		} break;
 		case INTER_VI_FRAME: {
 			i_scale = mpp_clip(i_scale, 16, max_i_prop);
 			total_bits = total_bits * vi_scale;
-		}
-		break;
+		} break;
 		default:
 			break;
 		}
 
-		alloc_bits =
-			(RK_U32) div_s64(total_bits,
-					 (i_scale + 16 * (gop_len - vi_num) +
-					  vi_num * vi_scale));
+		alloc_bits = (RK_U32)div_s64(total_bits,
+					     (i_scale + 16 * (gop_len - vi_num) + vi_num * vi_scale));
 
 		if (!alloc_bits) {
 			mpp_log_f("found zero alloc bits\n");
-			mpp_log_f
-			("total_bits %lld, i_scale %d, gop_len %d, vi_num %d, vi_scale %d",
-			 total_bits, i_scale, gop_len, vi_num, vi_scale);
-			mpp_log_f
-			("gop_total_bits %lld, i_sumbits %d, p_sumbits %d, vgop %d igop %d",
-			 ctx->gop_total_bits, ctx->i_sumbits,
-			 ctx->p_sumbits, usr_cfg->vgop, usr_cfg->igop);
+			mpp_log_f("total_bits %lld, i_scale %d, gop_len %d, vi_num %d, vi_scale %d\n",
+				  total_bits, i_scale, gop_len, vi_num, vi_scale);
+			mpp_log_f("gop_total_bits %lld, i_sumbits %d, p_sumbits %d, vgop %d igop %d\n",
+				  ctx->gop_total_bits, ctx->i_sumbits,
+				  ctx->p_sumbits, usr_cfg->vgop, usr_cfg->igop);
 		}
 	} else {
 		switch (ctx->frame_type) {
@@ -465,18 +452,17 @@ MPP_RET bits_model_alloc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg,
 		default:
 			break;
 		}
-		if (gop_len > 1) {
-			alloc_bits =
-				(RK_S32) div_s64(total_bits,
-						 (i_scale + 16 * (gop_len - 1)));
-		} else
+		if (gop_len > 1)
+			alloc_bits = (RK_S32)div_s64(total_bits, (i_scale + 16 * (gop_len - 1)));
+
+		else
 			alloc_bits = (RK_S32) div_s64(total_bits, i_scale);
 	}
-	rc_dbg_rc("i_scale  %d, total_bits %lld", i_scale, total_bits);
+	rc_dbg_rc("i_scale  %d, total_bits %lld\n", i_scale, total_bits);
 	if (alloc_bits > super_bit_thr &&
 	    (usr_cfg->super_cfg.rc_priority == MPP_ENC_RC_BY_FRM_SIZE_FIRST)) {
 		alloc_bits = super_bit_thr - (super_bit_thr >> 4);
-		rc_dbg_rc("alloc bits max then super_bit_thr %d",
+		rc_dbg_rc("alloc bits max then super_bit_thr %d\n",
 			  super_bit_thr);
 	}
 
@@ -486,6 +472,7 @@ MPP_RET bits_model_alloc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg,
 	mpp_assert(alloc_bits);
 
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 }
 
@@ -499,18 +486,13 @@ MPP_RET calc_next_i_ratio(RcModelV2Ctx * ctx)
 
 	rc_dbg_func("enter %p\n", ctx);
 	if (gop_len > 1) {
-		bits_alloc =
-			(RK_U32) div_s64(ctx->gop_total_bits * max_i_prop,
-					 (max_i_prop + 16 * (gop_len - 1)));
-	} else {
-		bits_alloc =
-			(RK_U32) div_s64(ctx->gop_total_bits * max_i_prop,
-					 max_i_prop);
-	}
+		bits_alloc = (RK_U32)div_s64(ctx->gop_total_bits * max_i_prop,
+					     (max_i_prop + 16 * (gop_len - 1)));
+	} else
+		bits_alloc = (RK_U32)div_s64(ctx->gop_total_bits * max_i_prop, max_i_prop);
 
 	if (ctx->pre_real_bits > bits_alloc || ctx->next_i_ratio) {
-		RK_S32 ratio =
-			((ctx->pre_real_bits - bits_alloc) << 8) / bits_alloc;
+		RK_S32 ratio = ((ctx->pre_real_bits - bits_alloc) << 8) / bits_alloc;
 
 		ratio = mpp_clip(ratio, -256, 256);
 		ratio = ctx->next_i_ratio + ratio;
@@ -520,10 +502,11 @@ MPP_RET calc_next_i_ratio(RcModelV2Ctx * ctx)
 		} else
 			ratio = 0;
 		ctx->next_i_ratio = ratio;
-		rc_dbg_rc("ctx->next_i_ratio %d", ctx->next_i_ratio);
+		rc_dbg_rc("ctx->next_i_ratio %d\n", ctx->next_i_ratio);
 	}
 
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 
 }
@@ -546,7 +529,7 @@ MPP_RET calc_debreath_qp(RcModelV2Ctx * ctx)
 
 	qp_start_sum = MPP_MIN(ctx->gop_qp_sum / ctx->gop_frm_cnt, (RK_S32)sizeof(strength_map) - 1);
 
-	rc_dbg_qp("i start_qp %d, qp_start_sum = %d, intra_lv4_prop %d",
+	rc_dbg_qp("i start_qp %d, qp_start_sum = %d, intra_lv4_prop %d\n",
 		  ctx->start_qp, qp_start_sum, ctx->pre_iblk4_prop);
 
 	dealt_qp = strength_map[debreath_cfg->strength] - intra_qp_map[idx2];
@@ -558,6 +541,7 @@ MPP_RET calc_debreath_qp(RcModelV2Ctx * ctx)
 	ctx->start_qp = mpp_clip(new_start_qp, ctx->usr_cfg.min_i_quality, ctx->usr_cfg.max_i_quality);
 
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 }
 
@@ -575,11 +559,12 @@ MPP_RET calc_cbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 
 	rc_dbg_func("enter %p\n", p);
 
-	rc_dbg_bps("%10s|%10s|%10s|%10s|%10s|%8s", "r_bits", "t_bits",
-		   "ins_bps", "p_ins_bps", "target_bps", "watl");
-	rc_dbg_bps("%10d %10d %10d %10d %10d %8d", pre_real_bits,
-		   pre_target_bits, ins_bps, pre_ins_bps, target_bps,
-		   p->stat_watl >> 10);
+	rc_dbg_bps("%10s|%10s|%10s|%10s|%10s|%8s\n",
+		   "r_bits", "t_bits", "ins_bps",
+		   "p_ins_bps", "target_bps", "watl");
+	rc_dbg_bps("%10d %10d %10d %10d %10d %8d\n",
+		   pre_real_bits, pre_target_bits, ins_bps,
+		   pre_ins_bps, target_bps, p->stat_watl >> 10);
 
 	bits_model_alloc(p, cfg, p->gop_total_bits);
 
@@ -623,13 +608,15 @@ MPP_RET calc_cbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 	wl_ratio = mpp_clip(wl_ratio, -16, 32);
 	p->next_ratio = bit_diff_ratio + ins_ratio + bps_ratio + wl_ratio;
 
-	rc_dbg_qp("%10s|%10s|%10s|%10s|%10s|%10s", "diff_ratio", "ins_ratio",
-		  "bps_ratio", "wl_ratio", "next_ratio", "cur_qp_s");
-	rc_dbg_qp("%10d %10d %10d %10d %10d|%10d", bit_diff_ratio,
-		  ins_ratio - bit_diff_ratio, bps_ratio, wl_ratio,
-		  p->next_ratio, p->cur_scale_qp);
+	rc_dbg_qp("%10s|%10s|%10s|%10s|%10s|%10s\n",
+		  "diff_ratio", "ins_ratio", "bps_ratio",
+		  "wl_ratio", "next_ratio", "cur_qp_s");
+	rc_dbg_qp("%10d %10d %10d %10d %10d|%10d\n",
+		  bit_diff_ratio, ins_ratio - bit_diff_ratio, bps_ratio,
+		  wl_ratio, p->next_ratio, p->cur_scale_qp);
 
 	rc_dbg_func("leave %p\n", p);
+
 	return MPP_OK;
 }
 
@@ -638,10 +625,10 @@ MPP_RET reenc_calc_super_frm_ratio(void *ctx, EncRcTaskInfo * cfg)
 	RcModelV2Ctx *p = (RcModelV2Ctx *) ctx;
 
 	rc_dbg_func("enter %p\n", p);
-	p->next_ratio =
-		160 * (4 * (cfg->bit_real - p->cur_super_thd) / cfg->bit_target);
+	p->next_ratio = 160 * (4 * (cfg->bit_real - p->cur_super_thd) / cfg->bit_target);
 	p->next_ratio = mpp_clip(p->next_ratio, 128, 640);
 	rc_dbg_func("leave %p\n", p);
+
 	return MPP_OK;
 }
 
@@ -718,9 +705,10 @@ MPP_RET reenc_calc_cbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 			p->next_ratio = (qp_c << 6) - p->cur_scale_qp;
 	}
 #endif
-	rc_dbg_rc("cbr target_bit %d real_bit %d reenc next ratio %d",
+	rc_dbg_rc("cbr target_bit %d real_bit %d reenc next ratio %d\n",
 		  target_bit, real_bit, p->next_ratio);
 	rc_dbg_func("leave %p\n", p);
+
 	return MPP_OK;
 }
 
@@ -787,33 +775,24 @@ MPP_RET calc_vbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 	bits_model_alloc(p, cfg, p->gop_total_bits);
 	if (pre_target_bits > pre_real_bits) {
 		if (p->start_qp >= 37)
-			bit_diff_ratio =
-				128 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 128 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 		else if (p->start_qp >= 35)
-			bit_diff_ratio =
-				80 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 80 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 		else if (p->start_qp >= 33)
-			bit_diff_ratio =
-				32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 		else
-			bit_diff_ratio =
-				16 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 16 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 	} else {
 		if (p->start_qp <= 29)
-			bit_diff_ratio =
-				192 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 192 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 		else if (p->start_qp <= 31)
-			bit_diff_ratio =
-				144 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 144 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 		else if (p->start_qp <= 33)
-			bit_diff_ratio =
-				96 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 96 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 		else if (p->start_qp <= 36)
-			bit_diff_ratio =
-				64 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 64 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 		else
-			bit_diff_ratio =
-				32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+			bit_diff_ratio = 32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 	}
 
 	idx1 = ins_bps / (max_bps_target >> 5);
@@ -823,11 +802,10 @@ MPP_RET calc_vbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 	idx2 = mpp_clip(idx2, 0, 63);
 	ins_ratio = tab_lnx[idx1] - tab_lnx[idx2];
 
-	rc_dbg_bps("%10s|%10s|%10s|%10s|%10s|%10s", "r_bits", "t_bits",
-		   "ins_bps", "p_ins_bps", "bps_ch", "max_bps");
-	rc_dbg_bps("%10d %10d %10d %10d %10d %10d", pre_real_bits,
-		   pre_target_bits, ins_bps, pre_ins_bps, bps_change,
-		   max_bps_target);
+	rc_dbg_bps("%10s|%10s|%10s|%10s|%10s|%10s\n",
+		   "r_bits", "t_bits", "ins_bps", "p_ins_bps", "bps_ch", "max_bps");
+	rc_dbg_bps("%10d %10d %10d %10d %10d %10d\n",
+		   pre_real_bits, pre_target_bits, ins_bps, pre_ins_bps, bps_change, max_bps_target);
 
 	if (ins_bps > bps_change && ins_bps > pre_ins_bps)
 		ins_ratio = 6 * ins_ratio;
@@ -849,11 +827,12 @@ MPP_RET calc_vbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 
 	p->next_ratio = bit_diff_ratio + ins_ratio + bps_ratio;
 
-	rc_dbg_qp("%10s|%10s|%10s|%10s|%10s", "diff_ratio", "ins_ratio",
-		  "bps_ratio", "next_ratio", "cur_qp_s");
-	rc_dbg_qp("%10d %10d %10d %10d|%10d", bit_diff_ratio, ins_ratio,
-		  bps_ratio, p->next_ratio, p->cur_scale_qp);
+	rc_dbg_qp("%10s|%10s|%10s|%10s|%10s\n",
+		  "diff_ratio", "ins_ratio", "bps_ratio", "next_ratio", "cur_qp_s");
+	rc_dbg_qp("%10d %10d %10d %10d|%10d\n",
+		  bit_diff_ratio, ins_ratio, bps_ratio, p->next_ratio, p->cur_scale_qp);
 	rc_dbg_func("leave %p\n", p);
+
 	return MPP_OK;
 }
 
@@ -864,10 +843,8 @@ MPP_RET reenc_calc_vbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 	RcCfg *usr_cfg = &p->usr_cfg;
 	RK_S32 stat_time = usr_cfg->stats_time;
 	RK_S32 pre_ins_bps = mpp_data_sum_v2(p->stat_bits) / stat_time;
-	RK_S32 ins_bps =
-		(pre_ins_bps * stat_time -
-		 mpp_data_get_pre_val_v2(p->stat_bits,
-					 -1) + cfg->bit_real) / stat_time;
+	RK_S32 ins_bps = (pre_ins_bps * stat_time -
+			  mpp_data_get_pre_val_v2(p->stat_bits, -1) + cfg->bit_real) / stat_time;
 	RK_S32 bps_change = p->target_bps;
 	RK_S32 max_bps_target = usr_cfg->bps_max;
 
@@ -902,8 +879,9 @@ MPP_RET reenc_calc_vbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 	bps_ratio = mpp_clip(bps_ratio, -32, 32);
 
 	p->next_ratio = bit_diff_ratio + ins_ratio + bps_ratio;
-	rc_dbg_rc("vbr reenc next ratio %d", p->next_ratio);
+	rc_dbg_rc("vbr reenc next ratio %d\n", p->next_ratio);
 	rc_dbg_func("leave %p\n", p);
+
 	return MPP_OK;
 }
 
@@ -919,13 +897,13 @@ RK_S32 moving_ratio_calc(RcModelV2Ctx * ctx)
 
 	for (i = 0; i < 2; i++) {
 		RK_S32 pre_I_bit = mpp_data_get_pre_val_v2(ctx->pre_i_bit, i);
-		RK_S32 pre_mean_qp =
-			mpp_data_get_pre_val_v2(ctx->pre_i_mean_qp, i);
+		RK_S32 pre_mean_qp = mpp_data_get_pre_val_v2(ctx->pre_i_mean_qp, i);
+
 		if (pre_mean_qp == -1)
 			scale = 32;
-
 		else {
 			RK_S32 index = pre_mean_qp + 8 - ctx->pre_mean_qp;
+
 			if (index >= 0) {
 				index = mpp_clip(index, 0, 15);
 				scale = mean_qp2scale[index];
@@ -933,31 +911,29 @@ RK_S32 moving_ratio_calc(RcModelV2Ctx * ctx)
 				scale = 14;
 		}
 		total_bit += (scale * pre_I_bit >> 5);
-		rc_dbg_rc("pre_mean_qp = %d, ctx->pre_mean_qp %d", pre_mean_qp,
-			  ctx->pre_mean_qp);
-		rc_dbg_rc("scale = %d, pre_I_bit %d", scale, pre_I_bit);
+		rc_dbg_rc("pre_mean_qp = %d, ctx->pre_mean_qp %d\n", pre_mean_qp, ctx->pre_mean_qp);
+		rc_dbg_rc("scale = %d, pre_I_bit %d\n", scale, pre_I_bit);
 	}
 
 	pbit_sum = mpp_data_sum_v2(ctx->pre_p_bit);
 	madi_sum = mpp_data_sum_v2(ctx->madi);
 	madp_sum = mpp_data_sum_v2(ctx->madp);
-	rc_dbg_rc("pbit_sum %d,madi_sum = %d, madp_sum = %d", pbit_sum,
-		  madi_sum, madp_sum);
+	rc_dbg_rc("pbit_sum %d,madi_sum = %d, madp_sum = %d\n", pbit_sum, madi_sum, madp_sum);
 	if (pbit_sum == 0 || total_bit == 0)
 		percent = 255;
-
 	else {
 		RK_S32 index = (total_bit << 6) / pbit_sum;
+
 		index = mpp_clip(index >> 4, 1, 99);
 		percent = (bit2percent[index] << 8) / 100;
 	}
-	rc_dbg_rc("means qp percent %d min_still_percent %d", percent,
+	rc_dbg_rc("means qp percent %d min_still_percent %d\n", percent,
 		  ctx->min_still_percent);
 	percent_a = (ctx->min_still_percent - 30) << 8;
 	percent_b = 100 - ctx->min_still_percent;
 
 	percent = (percent_a + percent * percent_b) / 70;
-	rc_dbg_rc("percent_a = %d percent_b %d", percent_a, percent_b);
+	rc_dbg_rc("percent_a = %d percent_b %d\n", percent_a, percent_b);
 	mv_percnt = (ctx->prev_md_prop * 100) >> 8;
 	mv_ratio = (percent_a + 7680 + mv_percnt * percent_b) / 100;
 	rc_dbg_rc("mv_ratio = %d", mv_ratio);
@@ -965,19 +941,17 @@ RK_S32 moving_ratio_calc(RcModelV2Ctx * ctx)
 	if (madi_sum) {
 		mad_ratio = 20 * madp_sum / madi_sum;
 		mad_ratio = mpp_clip(mad_ratio, 5, 100);
-		rc_dbg_rc("mad_ratio = %d", mad_ratio);
+		rc_dbg_rc("mad_ratio = %d\n", mad_ratio);
 		mad_ratio = (mad_ratio << 8) / 100;
 	}
 	mad_ratio = (percent_a + 7680 + percent_b * mad_ratio) / 100;
 
-	moving_ratio =
-		(percent + 1 +
-		 (mv_ratio * motion_sensitivity +
-		  (100 - motion_sensitivity) * mad_ratio) / 100) >> 1;
-	rc_dbg_rc("moving_ratio = %d, motion_sensitivity = %d", moving_ratio,
-		  motion_sensitivity);
-	rc_dbg_rc("percent %d mad_ratio %d hr_ratio %d, moving_ratio %d",
+	moving_ratio = (percent + 1 + (mv_ratio * motion_sensitivity +
+				       (100 - motion_sensitivity) * mad_ratio) / 100) >> 1;
+	rc_dbg_rc("moving_ratio = %d, motion_sensitivity = %d\n", moving_ratio, motion_sensitivity);
+	rc_dbg_rc("percent %d mad_ratio %d hr_ratio %d, moving_ratio %d\n",
 		  percent, mad_ratio, mv_ratio, moving_ratio);
+
 	return moving_ratio;
 }
 
@@ -1010,7 +984,7 @@ MPP_RET calc_avbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 
 	else
 		p->moving_ratio = moving_ratio;
-	rc_dbg_rc("final moving_ratio = %d", moving_ratio);
+	rc_dbg_rc("final moving_ratio = %d\n", moving_ratio);
 
 	if (moving_ratio <= 0)
 		moving_ratio = 1;
@@ -1026,18 +1000,15 @@ MPP_RET calc_avbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 		moving_ratio += 255;
 	moving_percent = 100 * moving_ratio >> 8;
 
-	rc_dbg_bps("%10s|%10s|%10s|%10s|%10s", "m_ratio", "r_bits", "t_bits",
-		   "ins_bps", "p_ins_bps");
-	rc_dbg_bps("%10d %10d %10d %10d %10d", p->moving_ratio, pre_real_bits,
-		   pre_target_bits, ins_bps, pre_ins_bps);
+	rc_dbg_bps("%10s|%10s|%10s|%10s|%10s\n",
+		   "m_ratio", "r_bits", "t_bits", "ins_bps", "p_ins_bps");
+	rc_dbg_bps("%10d %10d %10d %10d %10d",
+		   p->moving_ratio, pre_real_bits, pre_target_bits, ins_bps, pre_ins_bps);
 
 	if (pre_target_bits > pre_real_bits)
-		bit_diff_ratio =
-			32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
+		bit_diff_ratio = 32 * (pre_real_bits - pre_target_bits) / pre_target_bits;
 	else
-		bit_diff_ratio =
-			64 * (pre_real_bits -
-			      pre_target_bits) / pre_target_bits * moving_percent;
+		bit_diff_ratio = 64 * (pre_real_bits - pre_target_bits) / pre_target_bits * moving_percent;
 
 	i_ratio = mpp_clip(p->pre_i_scale >> 4, 10, 200);
 	idx1 = ins_bps / (max_bps_target >> 5);
@@ -1062,13 +1033,9 @@ MPP_RET calc_avbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 	ins_ratio = mpp_clip(ins_ratio >> 2, -128, 256);
 	bit_diff_ratio = mpp_clip(10 * bit_diff_ratio / i_ratio, -128, 256);
 	rgop_dratio =
-		mpp_clip(24 *
-			 (RK_U32) div_s64(((p->real_gbits - gop_bits) >> 10),
-					  gop_kbits), -1, 1);
+		mpp_clip(24 * (RK_U32)div_s64(((p->real_gbits - gop_bits) >> 10), gop_kbits), -1, 1);
 	agop_dratio =
-		mpp_clip(48 *
-			 (RK_U32) div_s64(((p->avg_gbits - gop_bits) >> 10),
-					  gop_kbits), -1, 1);
+		mpp_clip(48 * (RK_U32)div_s64(((p->avg_gbits - gop_bits) >> 10), gop_kbits), -1, 1);
 	if (p->pre_i_scale > 640) {
 		bit_diff_ratio = mpp_clip(bit_diff_ratio, -16, 32);
 		ins_ratio = mpp_clip(ins_ratio, -16, 32);
@@ -1078,21 +1045,21 @@ MPP_RET calc_avbr_ratio(void *ctx, EncRcTaskInfo * cfg)
 	if (max_bps_target >= ins_bps) {
 		if (final_qratio > 0) {
 			if (p->scale_qp >= (p->max_still_qp << 6)) {
-				final_qratio =
-					ins_ratio + agop_dratio + rgop_dratio;
+				final_qratio = ins_ratio + agop_dratio + rgop_dratio;
 				qratio = -6;
 			}
 		}
 	}
 	p->next_ratio = qratio + final_qratio;
 
-	rc_dbg_qp("%10s|%10s|%10s|%10s|%10s|%10s|%10s", "diff_ratio",
-		  "ins_ratio", "rg_ratio", "ag_ratio", "qratio", "next_ratio",
-		  "cur_qp_s");
-	rc_dbg_qp("%10d %10d %10d %10d %10d %10d %10d", bit_diff_ratio,
-		  ins_ratio, rgop_dratio, agop_dratio, qratio, p->next_ratio,
-		  p->cur_scale_qp);
+	rc_dbg_qp("%10s|%10s|%10s|%10s|%10s|%10s|%10s",
+		  "diff_ratio", "ins_ratio", "rg_ratio", "ag_ratio",
+		  "qratio", "next_ratio", "cur_qp_s");
+	rc_dbg_qp("%10d %10d %10d %10d %10d %10d %10d",
+		  bit_diff_ratio, ins_ratio, rgop_dratio,
+		  agop_dratio, qratio, p->next_ratio, p->cur_scale_qp);
 	rc_dbg_func("leave %p\n", p);
+
 	return MPP_OK;
 }
 
@@ -1111,7 +1078,7 @@ MPP_RET bits_model_init(RcModelV2Ctx * ctx)
 					   usr_cfg->min_i_bit_prop, 100);
 	usr_cfg->init_ip_ratio = mpp_clip(usr_cfg->init_ip_ratio, 160, 640);
 
-	rc_dbg_rc("min_i_bit_prop %d max_i_bit_prop %d, init_ip_ratio %d",
+	rc_dbg_rc("min_i_bit_prop %d max_i_bit_prop %d, init_ip_ratio %d\n",
 		  usr_cfg->min_i_bit_prop, usr_cfg->max_i_bit_prop,
 		  usr_cfg->init_ip_ratio);
 
@@ -1119,7 +1086,7 @@ MPP_RET bits_model_init(RcModelV2Ctx * ctx)
 		rc_dbg_rc("infinte gop, set default for rc bit calc\n");
 		usr_cfg->igop = gop_len = 500;
 	} else if (gop_len == 1) {
-		rc_dbg_rc("all intra gop \n");
+		rc_dbg_rc("all intra gop\n");
 		usr_cfg->init_ip_ratio = 16;
 
 		/* disable debreath on all intra case */
@@ -1128,15 +1095,15 @@ MPP_RET bits_model_init(RcModelV2Ctx * ctx)
 
 		usr_cfg->igop = gop_len = 500;
 	} else {
-		usr_cfg->igop = gop_len =
-					mpp_clip(usr_cfg->igop, usr_cfg->igop, 500);
+		usr_cfg->igop = mpp_clip(usr_cfg->igop, usr_cfg->igop, 500);
+		gop_len = usr_cfg->igop;
 	}
 
 	if (!ctx->min_still_percent) {
-		if (usr_cfg->bps_min && usr_cfg->bps_max) {
-			ctx->min_still_percent =
-				usr_cfg->bps_min * 100 / usr_cfg->bps_max;
-		} else
+		if (usr_cfg->bps_min && usr_cfg->bps_max)
+			ctx->min_still_percent = usr_cfg->bps_min * 100 / usr_cfg->bps_max;
+
+		else
 			ctx->min_still_percent = 25;
 		rc_dbg_rc("min_still_percent  %d", ctx->min_still_percent);
 	}
@@ -1177,21 +1144,17 @@ MPP_RET bits_model_init(RcModelV2Ctx * ctx)
 	if (gop_len >= 1)
 		gop_bits = (RK_S64) gop_len * target_bps * fps->fps_out_denorm;
 	else
-		gop_bits =
-			(RK_S64) fps->fps_out_num * target_bps *
-			fps->fps_out_denorm;
+		gop_bits = (RK_S64) fps->fps_out_num * target_bps * fps->fps_out_denorm;
 
 	ctx->gop_total_bits = (RK_U32) div_s64(gop_bits, fps->fps_out_num);
-	ctx->bit_per_frame =
-		target_bps * fps->fps_out_denorm / fps->fps_out_num;
+	ctx->bit_per_frame = target_bps * fps->fps_out_denorm / fps->fps_out_num;
 	ctx->watl_thrd = 3 * target_bps;
 	ctx->stat_watl = ctx->watl_thrd >> 3;
 	ctx->watl_base = ctx->stat_watl;
 
-	rc_dbg_rc
-	("gop %d total bit %lld per_frame %d statistics time %d second\n",
-	 ctx->usr_cfg.igop, ctx->gop_total_bits, ctx->bit_per_frame,
-	 ctx->usr_cfg.stats_time);
+	rc_dbg_rc("gop %d total bit %lld per_frame %d statistics time %d second\n",
+		  ctx->usr_cfg.igop, ctx->gop_total_bits, ctx->bit_per_frame,
+		  ctx->usr_cfg.stats_time);
 
 	if (bits_model_param_init(ctx))
 		return MPP_NOK;
@@ -1223,9 +1186,8 @@ MPP_RET check_super_frame(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 			bits_thr = usr_cfg->super_cfg.super_i_thd;
 
 		if ((RK_U32) cfg->bit_real >= bits_thr) {
-			if (usr_cfg->super_cfg.super_mode ==
-			    MPP_ENC_RC_SUPER_FRM_DROP) {
-				rc_dbg_rc("super frame drop current frame");
+			if (usr_cfg->super_cfg.super_mode == MPP_ENC_RC_SUPER_FRM_DROP) {
+				rc_dbg_rc("super frame drop current frame\n");
 				usr_cfg->drop_mode = MPP_ENC_RC_DROP_FRM_NORMAL;
 				usr_cfg->drop_gap = 0;
 			}
@@ -1233,6 +1195,7 @@ MPP_RET check_super_frame(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 		}
 	}
 	rc_dbg_func("leave %p\n", ctx);
+
 	return ret;
 }
 
@@ -1243,15 +1206,13 @@ MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 	RK_S32 bit_thr = 0;
 	RK_S32 stat_time = usr_cfg->stats_time;
 	RK_S32 last_ins_bps = mpp_data_sum_v2(ctx->stat_bits) / stat_time;
-	RK_S32 ins_bps =
-		(last_ins_bps * stat_time -
-		 mpp_data_get_pre_val_v2(ctx->stat_bits, -1)
-		 + cfg->bit_real) / stat_time;
+	RK_S32 ins_bps = (last_ins_bps * stat_time - mpp_data_get_pre_val_v2(ctx->stat_bits, -1)
+			  + cfg->bit_real) / stat_time;
 	RK_S32 target_bps;
 	RK_S32 ret = MPP_OK;
 
 	rc_dbg_func("enter %p\n", ctx);
-	rc_dbg_rc("reenc check target_bps %d last_ins_bps %d ins_bps %d",
+	rc_dbg_rc("reenc check target_bps %d last_ins_bps %d ins_bps %d\n",
 		  usr_cfg->bps_target, last_ins_bps, ins_bps);
 
 	if (ctx->reenc_cnt >= usr_cfg->max_reencode_times)
@@ -1266,15 +1227,12 @@ MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 	if (usr_cfg->debreath_cfg.enable && !ctx->first_frm_flg)
 		return MPP_OK;
 
-	rc_dbg_drop("drop mode %d frame_type %d\n", usr_cfg->drop_mode,
-		    frame_type);
+	rc_dbg_drop("drop mode %d frame_type %d\n", usr_cfg->drop_mode, frame_type);
 	if (usr_cfg->drop_mode && frame_type == INTER_P_FRAME) {
-		bit_thr =
-			(RK_S32) (usr_cfg->bps_max * (100 + usr_cfg->drop_thd) /
-				  100);
-		rc_dbg_drop
-		("drop mode %d check max_bps %d bit_thr %d ins_bps %d",
-		 usr_cfg->drop_mode, usr_cfg->bps_target, bit_thr, ins_bps);
+		bit_thr = (RK_S32)(usr_cfg->bps_max * (100 + usr_cfg->drop_thd) / 100);
+		rc_dbg_drop("drop mode %d check max_bps %d bit_thr %d ins_bps %d\n",
+			    usr_cfg->drop_mode, usr_cfg->bps_target, bit_thr, ins_bps);
+
 		return (ins_bps > bit_thr) ? MPP_NOK : MPP_OK;
 	}
 
@@ -1293,8 +1251,8 @@ MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 		if (usr_cfg->mode == RC_CBR) {
 			target_bps = usr_cfg->bps_target;
 			if (target_bps / 20 < ins_bps - last_ins_bps &&
-			    (target_bps + target_bps / 10 < ins_bps
-			     || target_bps - target_bps / 10 > ins_bps))
+			    (target_bps + target_bps / 10 < ins_bps ||
+			     target_bps - target_bps / 10 > ins_bps))
 				ret = MPP_NOK;
 		} else {
 			target_bps = usr_cfg->bps_max;
@@ -1305,6 +1263,7 @@ MPP_RET check_re_enc(RcModelV2Ctx * ctx, EncRcTaskInfo * cfg)
 	}
 
 	rc_dbg_func("leave %p ret %d\n", ctx, ret);
+
 	return ret;
 }
 
@@ -1318,6 +1277,7 @@ MPP_RET rc_model_v2_init(void *ctx, RcCfg * cfg)
 	bits_model_init(p);
 
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 }
 
@@ -1329,6 +1289,7 @@ MPP_RET rc_model_v2_deinit(void *ctx)
 	bits_model_param_deinit(p);
 
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 }
 
@@ -1393,8 +1354,7 @@ MPP_RET rc_model_v2_start(void *ctx, EncRcTask * task)
 
 	/* quality determination */
 	if (p->first_frm_flg)
-		info->quality_target =
-			(usr_cfg->init_quality <= 0) ? -1 : usr_cfg->init_quality;
+		info->quality_target = (usr_cfg->init_quality <= 0) ? -1 : usr_cfg->init_quality;
 
 	if (frm->is_intra) {
 		info->quality_max = usr_cfg->max_i_quality;
@@ -1505,8 +1465,7 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 					cal_first_i_start_qp(info->bit_target,
 							     mb_w * mb_h);
 			} else {
-				mpp_log
-				("init qp not set on fix qp mode, use default qp\n");
+				mpp_log("init qp not set on fix qp mode, use default qp\n");
 				info->quality_target = 26;
 			}
 		}
@@ -1586,11 +1545,10 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 				if (i_quality_delta > max_ip_delta)
 					i_quality_delta = max_ip_delta;
 
-				rc_dbg_rc
-				("qp prev %d:%d curr %d - %d (max %d) -> %d reenc %d\n",
-				 p->pre_i_qp, qp_scale >> 6, start_qp,
-				 usr_cfg->i_quality_delta, max_ip_delta,
-				 start_qp - i_quality_delta, p->reenc_cnt);
+				rc_dbg_rc("qp prev %d:%d curr %d - %d (max %d) -> %d reenc %d\n",
+					  p->pre_i_qp, qp_scale >> 6, start_qp,
+					  usr_cfg->i_quality_delta, max_ip_delta,
+					  start_qp - i_quality_delta, p->reenc_cnt);
 
 				start_qp -= i_quality_delta;
 			}
@@ -1606,17 +1564,14 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 			p->gop_frm_cnt = 0;
 			p->gop_qp_sum = 0;
 		} else {
-			qp_scale =
-				mpp_clip(qp_scale, (qpmin << 6),
-					 (info->quality_max << 6));
+			qp_scale = mpp_clip(qp_scale, (qpmin << 6), (info->quality_max << 6));
 			p->cur_scale_qp = qp_scale;
 			rc_dbg_rc("qp %d -> %d\n", p->start_qp, qp_scale >> 6);
 			p->start_qp = qp_scale >> 6;
-			if (frm->ref_mode == REF_TO_PREV_INTRA
-			    && usr_cfg->vi_quality_delta) {
-				rc_dbg_rc("qp %d -> %d (vi)\n", p->start_qp,
-					  p->start_qp -
-					  usr_cfg->vi_quality_delta);
+
+			if (frm->ref_mode == REF_TO_PREV_INTRA && usr_cfg->vi_quality_delta) {
+				rc_dbg_rc("qp %d -> %d (vi)\n",
+					  p->start_qp, p->start_qp - usr_cfg->vi_quality_delta);
 				p->start_qp -= usr_cfg->vi_quality_delta;
 			}
 			p->start_qp =	mpp_clip(p->start_qp, qpmin, max_p_frame_qp);
@@ -1626,27 +1581,23 @@ MPP_RET rc_model_v2_hal_start(void *ctx, EncRcTask * task)
 	if (usr_cfg->hier_qp_cfg.hier_qp_en && !p->reenc_cnt) {
 		rc_hier_calc_dealt_qp(p);
 		if (p->qp_layer_id) {
-			RK_S32 hier_qp_delta =
-				usr_cfg->hier_qp_cfg.hier_qp_delta[p->qp_layer_id -
-										  1];
+			RK_S32 hier_qp_delta = usr_cfg->hier_qp_cfg.hier_qp_delta[p->qp_layer_id - 1];
 
 			p->start_qp -= hier_qp_delta;
-			rc_dbg_qp("hier_qp: layer %d delta %d", p->qp_layer_id,
-				  hier_qp_delta);
+			rc_dbg_qp("hier_qp: layer %d delta %d", p->qp_layer_id, hier_qp_delta);
 		}
 	}
 
-	p->start_qp =
-		mpp_clip(p->start_qp, qpmin, info->quality_max);
+	p->start_qp = mpp_clip(p->start_qp, qpmin, info->quality_max);
 	info->quality_target = p->start_qp;
 
 	rc_dbg_rc("bitrate [%d : %d : %d] -> [%d : %d : %d]\n",
-		  bit_min, bit_target, bit_max,
-		  info->bit_min, info->bit_target, info->bit_max);
+		  bit_min, bit_target, bit_max, info->bit_min, info->bit_target, info->bit_max);
 	rc_dbg_rc("quality [%d : %d : %d] -> [%d : %d : %d]\n",
 		  quality_min, quality_target, quality_max,
 		  info->quality_min, info->quality_target, info->quality_max);
 	rc_dbg_func("leave %p\n", p);
+
 	return MPP_OK;
 }
 
@@ -1663,6 +1614,7 @@ MPP_RET rc_model_v2_hal_end(void *ctx, EncRcTask * task)
 		p->pre_p_qp = p->cur_scale_qp >> 6;
 
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 }
 
@@ -1677,8 +1629,7 @@ MPP_RET rc_model_v2_check_reenc(void *ctx, EncRcTask * task)
 
 	frm->reencode = 0;
 
-	if ((usr_cfg->mode == RC_FIXQP) ||
-	    (task->force.force_flag & ENC_RC_FORCE_QP) ||
+	if ((usr_cfg->mode == RC_FIXQP) || (task->force.force_flag & ENC_RC_FORCE_QP) ||
 	    p->on_drop || p->on_pskip)
 		return MPP_OK;
 
@@ -1691,8 +1642,7 @@ MPP_RET rc_model_v2_check_reenc(void *ctx, EncRcTask * task)
 		if (usr_cfg->drop_gap && p->drop_cnt >= usr_cfg->drop_gap)
 			drop_mode = MPP_ENC_RC_DROP_FRM_DISABLED;
 
-		rc_dbg_drop("reenc drop_mode %d drop_cnt %d\n", drop_mode,
-			    p->drop_cnt);
+		rc_dbg_drop("reenc drop_mode %d drop_cnt %d\n", drop_mode, p->drop_cnt);
 
 		switch (drop_mode) {
 		case MPP_ENC_RC_DROP_FRM_NORMAL: {
@@ -1718,8 +1668,7 @@ MPP_RET rc_model_v2_check_reenc(void *ctx, EncRcTask * task)
 			if (p->re_calc_ratio)
 				p->re_calc_ratio(p, cfg);
 
-			if (p->next_ratio != 0
-			    && cfg->quality_target < cfg->quality_max) {
+			if (p->next_ratio != 0 && cfg->quality_target < cfg->quality_max) {
 				p->reenc_cnt++;
 				frm->reencode = 1;
 			}
@@ -1779,6 +1728,7 @@ MPP_RET rc_model_v2_end(void *ctx, EncRcTask * task)
 
 DONE:
 	rc_dbg_func("leave %p\n", ctx);
+
 	return MPP_OK;
 }
 
@@ -1793,16 +1743,21 @@ void rc_model_v2_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 		target_bps = usr_cfg->bps_target;
 	seq_puts(seq,
 		 "\n---------RC base param 1--------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%7s%8s%6s%6s%8s%10s%5s%5s \n", "ChnId", "Gop", "StatTm", "ViFr",
-		   "TrgFr", "RcMode", "Br(kbps)", "IQp", "PQp");
+	seq_printf(seq, "%7s|%7s|%8s|%6s|%6s|%8s|%10s|%5s|%5s \n",
+		   "ChnId", "Gop", "StatTm",
+		   "ViFr",
+		   "TrgFr",
+		   "RcMode", "Br(kbps)", "IQp", "PQp");
 
 	if (usr_cfg->mode == RC_FIXQP) {
-		seq_printf(seq, "%7d%7u%8u%6u%6u%8s%10s%5u%5u \n", chl_id, usr_cfg->igop, usr_cfg->stats_time,
+		seq_printf(seq, "%7d|%7u|%8u|%6u|%6u|%8s|%10s|%5u|%5u \n",
+			   chl_id, usr_cfg->igop, usr_cfg->stats_time,
 			   usr_cfg->fps.fps_in_num / usr_cfg->fps.fps_in_denorm,
 			   usr_cfg->fps.fps_out_num / usr_cfg->fps.fps_out_denorm,
 			   strof_rc_mode(usr_cfg->mode), "N/A", usr_cfg->init_quality, usr_cfg->init_quality);
 	} else {
-		seq_printf(seq, "%7d%7u%8u%6u%6u%8s%10u%5s%5s \n", chl_id, usr_cfg->igop, usr_cfg->stats_time,
+		seq_printf(seq, "%7d|%7u|%8u|%6u|%6u|%8s|%10u|%5s|%5s \n",
+			   chl_id, usr_cfg->igop, usr_cfg->stats_time,
 			   usr_cfg->fps.fps_in_num / usr_cfg->fps.fps_in_denorm,
 			   usr_cfg->fps.fps_out_num / usr_cfg->fps.fps_out_denorm,
 			   strof_rc_mode(usr_cfg->mode), target_bps / 1000, "N/A", "N/A");
@@ -1810,36 +1765,41 @@ void rc_model_v2_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 
 	seq_puts(seq,
 		 "\n---------RC base param 2--------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%8s%8s%8s%8s%12s \n", "ChnId", "MinQp", "MaxQp", "MinIQp", "MaxIQp",
-		   "EnableIdr");
-	seq_printf(seq, "%7d%8d%8d%8d%8d%12s \n", chl_id, usr_cfg->min_quality, usr_cfg->max_quality,
-		   usr_cfg->min_i_quality, usr_cfg->max_i_quality, "Y");
+	seq_printf(seq, "%7s|%8s|%8s|%8s|%8s|%12s \n",
+		   "ChnId", "MinQp", "MaxQp", "MinIQp", "MaxIQp", "EnableIdr");
+	seq_printf(seq, "%7d|%8d|%8d|%8d|%8d|%12s \n",
+		   chl_id, usr_cfg->min_quality, usr_cfg->max_quality, usr_cfg->min_i_quality, usr_cfg->max_i_quality,
+		   "Y");
 
 
 	seq_puts(seq,
 		 "\n---------RC run comm param 1----------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%8s%12s%12s%10s \n", "ChnId", "bLost", "LostThr", "LostFrmStr", "EncGap");
-	seq_printf(seq, "%7d%8s%12u%12d%10u \n", chl_id, strof_drop(usr_cfg->drop_mode), usr_cfg->drop_thd,
-		   p->drop_cnt, usr_cfg->drop_gap);
+	seq_printf(seq, "%7s|%8s|%12s|%12s|%10s \n",
+		   "ChnId", "bLost", "LostThr", "LostFrmStr", "EncGap");
+	seq_printf(seq, "%7d|%8s|%12u|%12d|%10u \n",
+		   chl_id, strof_drop(usr_cfg->drop_mode), usr_cfg->drop_thd, p->drop_cnt, usr_cfg->drop_gap);
 
 	seq_puts(seq,
 		 "\n---------RC run comm param 2----------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%12s%12s%12s%12s \n", "ChnId", "SprFrmMod", "SprIFrm", "SprPFrm", "RCPriority");
-	seq_printf(seq, "%7d%12s%12u%12u%12u \n", chl_id, strof_suprmode(usr_cfg->super_cfg.super_mode),
-		   usr_cfg->super_cfg.super_i_thd,
+	seq_printf(seq, "%7s|%12s|%12s|%12s|%12s \n",
+		   "ChnId", "SprFrmMod", "SprIFrm",
+		   "SprPFrm", "RCPriority");
+	seq_printf(seq, "%7d|%12s|%12u|%12u|%12u \n",
+		   chl_id, strof_suprmode(usr_cfg->super_cfg.super_mode), usr_cfg->super_cfg.super_i_thd,
 		   usr_cfg->super_cfg.super_p_thd, usr_cfg->super_cfg.rc_priority);
 
 	seq_puts(seq,
 		 "\n---------RC gop mode attr-------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%12s%10s \n", "ChnId", "GopMode", "IpQpDelta", "BgInterval",
-		   "ViQpDelta");
+	seq_printf(seq, "%7s|%10s|%10s|%12s|%10s \n",
+		   "ChnId", "GopMode", "IpQpDelta",
+		   "BgInterval", "ViQpDelta");
 	if (usr_cfg->gop_mode == SMART_P) {
-		seq_printf(seq, "%7d%10s%10d%12u%10d\n", chl_id, strof_gop_mode(usr_cfg->gop_mode),
-			   usr_cfg->i_quality_delta,
+		seq_printf(seq, "%7d|%10s|%10d|%12u|%10d\n",
+			   chl_id, strof_gop_mode(usr_cfg->gop_mode), usr_cfg->i_quality_delta,
 			   usr_cfg->vgop, usr_cfg->i_quality_delta);
 	} else {
-		seq_printf(seq, "%7d%10s%10d%12s%10s\n", chl_id, strof_gop_mode(usr_cfg->gop_mode),
-			   usr_cfg->i_quality_delta,
+		seq_printf(seq, "%7d|%10s|%10d|%12s|%10s\n",
+			   chl_id, strof_gop_mode(usr_cfg->gop_mode), usr_cfg->i_quality_delta,
 			   "N/A", "N/A");
 	}
 
@@ -1847,41 +1807,47 @@ void rc_model_v2_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 	case RC_CBR: {
 		seq_puts(seq,
 			 "\n---------RC run cbr param-------------------------------------------------------------------------\n");
-		seq_printf(seq, "%7s%10s%10s%8s%8s%8s%8s%10s%10s%10s%10s%15s \n", "ChnId", "MinIprop", "MaxIprop",
-			   "MaxQp", "MinQp", "MaxIQp", "MinIQp",  "FrmMaxQp", "FrmMinQp", "FrmMaxIQp", "FrmMinIQp",
-			   "MaxReEncTimes");
+		seq_printf(seq, "%7s|%10s|%10s|%8s|%8s|%8s|%8s|%10s|%10s|%10s|%10s|%15s \n",
+			   "ChnId", "MinIprop", "MaxIprop",
+			   "MaxQp", "MinQp", "MaxIQp",
+			   "MinIQp",  "FrmMaxQp", "FrmMinQp",
+			   "FrmMaxIQp", "FrmMinIQp", "MaxReEncTimes");
 
-		seq_printf(seq, "%7d%10u%10u%8u%8u%8u%8u%10d%10d%10d%10d%15d\n", chl_id, usr_cfg->min_i_bit_prop,
-			   usr_cfg->max_i_bit_prop,
-			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
-			   usr_cfg->fm_lv_max_quality, usr_cfg->fm_lv_min_quality, usr_cfg->fm_lv_max_i_quality,
-			   usr_cfg->fm_lv_min_i_quality, usr_cfg->max_reencode_times);
+		seq_printf(seq, "%7d|%10u|%10u|%8u|%8u|%8u|%8u|%10d|%10d|%10d|%10d|%15d\n",
+			   chl_id, usr_cfg->min_i_bit_prop, usr_cfg->max_i_bit_prop,
+			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality,
+			   usr_cfg->min_i_quality, usr_cfg->fm_lv_max_quality, usr_cfg->fm_lv_min_quality,
+			   usr_cfg->fm_lv_max_i_quality, usr_cfg->fm_lv_min_i_quality, usr_cfg->max_reencode_times);
 
 	} break;
 	case RC_VBR: {
 		RK_U32 ChgPs = usr_cfg->bps_target * 100 / usr_cfg->bps_max;
+
 		seq_puts(seq,
 			 "\n---------RC run vbr common param------------------------------------------------------------------\n");
-		seq_printf(seq, "%7s%8s%10s%10s%8s%8s%8s%8s%10s%10s%10s%10s%15s \n", "ChnId", "ChgPs", "MinIprop",
-			   "MaxIprop", "MaxQp", "MinQp", "MaxIQp", "MinIQp", "FrmMaxQp", "FrmMinQp", "FrmMaxIQp", "FrmMinIQp",
+		seq_printf(seq, "%7s|%8s|%10s|%10s|%8s|%8s|%8s|%8s|%10s|%10s|%10s|%10s|%15s \n",
+			   "ChnId", "ChgPs", "MinIprop",
+			   "MaxIprop", "MaxQp", "MinQp",
+			   "MaxIQp", "MinIQp", "FrmMaxQp",
+			   "FrmMinQp", "FrmMaxIQp", "FrmMinIQp",
 			   "MaxReEncTimes");
 
-		seq_printf(seq, "%7d%8d%10u%10u%8u%8u%8u%8u%10d%10d%10d%10d%15d\n", chl_id, ChgPs,
-			   usr_cfg->min_i_bit_prop,
-			   usr_cfg->max_i_bit_prop,
-			   usr_cfg->max_quality, usr_cfg->min_quality, usr_cfg->max_i_quality, usr_cfg->min_i_quality,
-			   usr_cfg->fm_lv_max_quality, usr_cfg->fm_lv_min_quality, usr_cfg->fm_lv_max_i_quality,
-			   usr_cfg->fm_lv_min_i_quality, usr_cfg->max_reencode_times);
+		seq_printf(seq, "%7d|%8d|%10u|%10u|%8u|%8u|%8u|%8u|%10d|%10d|%10d|%10d|%15d\n",
+			   chl_id, ChgPs, usr_cfg->min_i_bit_prop,
+			   usr_cfg->max_i_bit_prop, usr_cfg->max_quality, usr_cfg->min_quality,
+			   usr_cfg->max_i_quality, usr_cfg->min_i_quality, usr_cfg->fm_lv_max_quality,
+			   usr_cfg->fm_lv_min_quality, usr_cfg->fm_lv_max_i_quality, usr_cfg->fm_lv_min_i_quality,
+			   usr_cfg->max_reencode_times);
 
 
 	} break;
 	case RC_AVBR: {
 		seq_puts(seq,
 			 "\n---------RC run avbr param------------------------------------------------------------------------\n");
-		seq_printf(seq, "%7s%15s%15s%15s%15s \n", "ChnId", "MaxStillQP", "MotionSensi", "MinPercent",
-			   "MinQpDelta");
-		seq_printf(seq, "%7d%15u%15u%15d%15u \n", chl_id, usr_cfg->max_still_quality, p->motion_sensitivity,
-			   p->min_still_percent, 0);
+		seq_printf(seq, "%7s|%15s|%15s|%15s|%15s \n",
+			   "ChnId", "MaxStillQP", "MotionSensi", "MinPercent", "MinQpDelta");
+		seq_printf(seq, "%7d|%15u|%15u|%15d|%15u \n",
+			   chl_id, usr_cfg->max_still_quality, p->motion_sensitivity, p->min_still_percent, 0);
 	} break;
 	default: {
 		;
@@ -1890,33 +1856,35 @@ void rc_model_v2_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 
 	seq_puts(seq,
 		 "\n--------RC HierarchicalQp INFO--------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%12s%12s%12s%12s%12s%12s%12s%12s\n", "ChnId", "bEnable", "FrameNum[0]",
-		   "FrameNum[1]",
-		   "FrameNum[2]", "FrameNum[3]", "QpDelta[0]", "QpDelta[1]", "QpDelta[2]", "QpDelta[3]");
-	seq_printf(seq, "%7d%10s%12d%12d%12d%12d%12d%12d%12d%12d\n", chl_id,
-		   strof_bool(usr_cfg->hier_qp_cfg.hier_qp_en),
+	seq_printf(seq, "%7s|%10s|%12s|%12s|%12s|%12s|%12s|%12s|%12s|%12s\n",
+		   "ChnId", "bEnable",
+		   "FrameNum[0]", "FrameNum[1]",
+		   "FrameNum[2]", "FrameNum[3]",
+		   "QpDelta[0]", "QpDelta[1]",
+		   "QpDelta[2]", "QpDelta[3]");
+	seq_printf(seq, "%7d|%10s|%12d|%12d|%12d|%12d|%12d|%12d|%12d|%12d\n",
+		   chl_id, strof_bool(usr_cfg->hier_qp_cfg.hier_qp_en),
 		   usr_cfg->hier_qp_cfg.hier_frame_num[0], usr_cfg->hier_qp_cfg.hier_frame_num[1],
-		   usr_cfg->hier_qp_cfg.hier_frame_num[2],
-		   usr_cfg->hier_qp_cfg.hier_frame_num[3], usr_cfg->hier_qp_cfg.hier_qp_delta[0],
-		   usr_cfg->hier_qp_cfg.hier_qp_delta[1],
+		   usr_cfg->hier_qp_cfg.hier_frame_num[2], usr_cfg->hier_qp_cfg.hier_frame_num[3],
+		   usr_cfg->hier_qp_cfg.hier_qp_delta[0], usr_cfg->hier_qp_cfg.hier_qp_delta[1],
 		   usr_cfg->hier_qp_cfg.hier_qp_delta[2], usr_cfg->hier_qp_cfg.hier_qp_delta[3]);
 
 	seq_puts(seq,
 		 "\n--------RC debreath_effect info-------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%18s\n", "ChnId", "bEnable", "Strength0", "DeBrthEfctCnt");
+	seq_printf(seq, "%7s|%10s|%10s|%18s\n",
+		   "ChnId", "bEnable", "Strength0", "DeBrthEfctCnt");
 	if (usr_cfg->debreath_cfg.enable)
-		seq_printf(seq, "%7d%10s%10d%18u\n", chl_id, strof_bool(usr_cfg->debreath_cfg.enable),
-			   usr_cfg->debreath_cfg.strength, 0);
+		seq_printf(seq, "%7d|%10s|%10d|%18u\n",
+			   chl_id, strof_bool(usr_cfg->debreath_cfg.enable), usr_cfg->debreath_cfg.strength, 0);
 	else
-		seq_printf(seq, "%7d%10s%10s%18u\n", chl_id, strof_bool(usr_cfg->debreath_cfg.enable), "N/A", 0);
+		seq_printf(seq, "%7d|%10s|%10s|%18u\n", chl_id, strof_bool(usr_cfg->debreath_cfg.enable), "N/A", 0);
 
 	seq_puts(seq,
 		 "\n--------RC run info1------------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%14s%8s%8s%12s%12s%10s%10s%8s%8s\n", "ChnId", "InsBr(kbps)", "InsFr", "WatL",
-		   "CfgBt(kb)", "RealBt(kb)", "IPRatio",
-		   "StartQp", "MinQp", "MaxQp");
-	seq_printf(seq, "%7d%14d%8u%8d%12u%12u%10d%10u%8u%8u\n", chl_id, p->ins_bps / 1000, 0, p->stat_watl,
-		   target_bps / 1000,
+	seq_printf(seq, "%7s|%14s|%8s|%8s|%12s|%12s|%10s|%10s|%8s|%8s\n",
+		   "ChnId", "InsBr(kbps)", "InsFr", "WatL", "CfgBt(kb)",
+		   "RealBt(kb)", "IPRatio", "StartQp", "MinQp", "MaxQp");
+	seq_printf(seq, "%7d|%14d|%8u|%8d|%12u|%12u|%10d|%10u|%8u|%8u\n",
+		   chl_id, p->ins_bps / 1000, 0, p->stat_watl, target_bps / 1000,
 		   p->last_inst_bps / 1000, usr_cfg->init_ip_ratio, p->qp, p->min_qp, p->max_qp);
 }
-

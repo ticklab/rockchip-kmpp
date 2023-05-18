@@ -2551,12 +2551,14 @@ static int mpp_chnl_add_req(struct mpp_session *session,  void *reqs)
 			}
 		}
 	} while (!mpp_msg_is_last(req));
+
 	return 0;
 }
 
 static u32 mpp_chnl_get_iova_addr(struct mpp_session *session,  struct dma_buf *buf, u32 reg_idx)
 {
 	struct mpp_dev *mpp = NULL;
+
 	if (!session) {
 		mpp_err("session is null");
 		return -1;
@@ -2569,6 +2571,7 @@ static u32 mpp_chnl_get_iova_addr(struct mpp_session *session,  struct dma_buf *
 static struct device *mpp_chnl_get_dev(struct mpp_session *session)
 {
 	struct mpp_dev *mpp = session->mpp;
+
 	return mpp->dev;
 }
 

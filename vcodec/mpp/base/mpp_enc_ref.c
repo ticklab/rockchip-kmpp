@@ -44,6 +44,7 @@ MPP_RET _check_is_mpp_enc_ref_cfg(const char *func, void *ref)
 MPP_RET mpp_enc_ref_cfg_init(MppEncRefCfg * ref)
 {
 	MppEncRefCfgImpl *p = NULL;
+
 	if (NULL == ref) {
 		mpp_err_f("invalid NULL input ref_cfg\n");
 		return MPP_ERR_NULL_PTR;
@@ -65,6 +66,7 @@ MPP_RET mpp_enc_ref_cfg_init(MppEncRefCfg * ref)
 MPP_RET mpp_enc_ref_cfg_deinit(MppEncRefCfg * ref)
 {
 	MppEncRefCfgImpl *p = NULL;
+
 	if (!ref || check_is_mpp_enc_ref_cfg(*ref)) {
 		mpp_err_f("input %p check failed\n", ref);
 		return MPP_ERR_VALUE;
@@ -81,6 +83,7 @@ MPP_RET mpp_enc_ref_cfg_deinit(MppEncRefCfg * ref)
 MPP_RET mpp_enc_ref_cfg_reset(MppEncRefCfg ref)
 {
 	MppEncRefCfgImpl *p = NULL;
+
 	if (check_is_mpp_enc_ref_cfg(ref))
 		return MPP_ERR_VALUE;
 
@@ -145,10 +148,9 @@ MPP_RET mpp_enc_ref_cfg_add_lt_cfg(MppEncRefCfg ref, RK_S32 cnt,
 	p = (MppEncRefCfgImpl *) ref;
 
 	if (p->debug)
-		mpp_log
-		("ref %p add lt %d cfg idx %d tid %d gap %d delay %d ref mode %x\n",
-		 ref, p->lt_cfg_cnt, frm->lt_idx, frm->temporal_id,
-		 frm->lt_gap, frm->lt_delay, frm->ref_mode);
+		mpp_log ("ref %p add lt %d cfg idx %d tid %d gap %d delay %d ref mode %x\n",
+			 ref, p->lt_cfg_cnt, frm->lt_idx, frm->temporal_id,
+			 frm->lt_gap, frm->lt_delay, frm->ref_mode);
 
 	memcpy(&p->lt_cfg[p->lt_cfg_cnt], frm, sizeof(*frm) * cnt);
 	p->lt_cfg_cnt += cnt;
@@ -160,6 +162,7 @@ MPP_RET mpp_enc_ref_cfg_add_st_cfg(MppEncRefCfg ref, RK_S32 cnt,
 				   MppEncRefStFrmCfg * frm)
 {
 	MppEncRefCfgImpl *p = NULL;
+
 	if (check_is_mpp_enc_ref_cfg(ref)) {
 		mpp_err_f("input %p check failed\n", ref);
 		return MPP_ERR_VALUE;
@@ -168,10 +171,9 @@ MPP_RET mpp_enc_ref_cfg_add_st_cfg(MppEncRefCfg ref, RK_S32 cnt,
 	p = (MppEncRefCfgImpl *) ref;
 
 	if (p->debug)
-		mpp_log
-		("ref %p add lt %d cfg non %d tid %d gap repeat %d ref mode %x arg %d\n",
-		 ref, p->st_cfg_cnt, frm->is_non_ref, frm->temporal_id,
-		 frm->repeat, frm->ref_mode, frm->ref_arg);
+		mpp_log("ref %p add lt %d cfg non %d tid %d gap repeat %d ref mode %x arg %d\n",
+			ref, p->st_cfg_cnt, frm->is_non_ref, frm->temporal_id,
+			frm->repeat, frm->ref_mode, frm->ref_arg);
 
 	memcpy(&p->st_cfg[p->st_cfg_cnt], frm, sizeof(*frm) * cnt);
 	p->st_cfg_cnt += cnt;
@@ -215,16 +217,14 @@ MPP_RET mpp_enc_ref_cfg_check(MppEncRefCfg ref)
 
 			/* check lt idx */
 			if (lt_idx >= MPP_ENC_MAX_LT_REF_NUM) {
-				mpp_err_f
-				("ref cfg %p lt cfg %d with invalid lt_idx %d larger than MPP_ENC_MAX_LT_REF_NUM\n",
-				 ref, pos, lt_idx);
+				mpp_err_f("ref cfg %p lt cfg %d with invalid lt_idx %d larger than MPP_ENC_MAX_LT_REF_NUM\n",
+					  ref, pos, lt_idx);
 				ready = 0;
 			}
 
 			if (lt_idx_used_mask & lt_idx_mask) {
-				mpp_err_f
-				("ref cfg %p lt cfg %d with redefined lt_idx %d config\n",
-				 ref, pos, lt_idx);
+				mpp_err_f("ref cfg %p lt cfg %d with redefined lt_idx %d config\n",
+					  ref, pos, lt_idx);
 				ready = 0;
 			}
 
@@ -238,18 +238,16 @@ MPP_RET mpp_enc_ref_cfg_check(MppEncRefCfg ref)
 
 			/* check temporal id */
 			if (temporal_id != 0) {
-				mpp_err_f
-				("ref cfg %p lt cfg %d with invalid temporal_id %d is non-zero\n",
-				 ref, pos, temporal_id);
+				mpp_err_f("ref cfg %p lt cfg %d with invalid temporal_id %d is non-zero\n",
+					  ref, pos, temporal_id);
 				ready = 0;
 			}
 
 			/* check gop mode */
 			if (!REF_MODE_IS_GLOBAL(ref_mode)
 			    && !REF_MODE_IS_LT_MODE(ref_mode)) {
-				mpp_err_f
-				("ref cfg %p lt cfg %d with invalid ref mode %x\n",
-				 ref, pos, ref_mode);
+				mpp_err_f("ref cfg %p lt cfg %d with invalid ref mode %x\n",
+					  ref, pos, ref_mode);
 				ready = 0;
 			}
 
@@ -275,41 +273,36 @@ MPP_RET mpp_enc_ref_cfg_check(MppEncRefCfg ref)
 
 			/* check temporal_id */
 			if (temporal_id > MPP_ENC_MAX_TEMPORAL_LAYER_NUM - 1) {
-				mpp_err_f
-				("ref cfg %p st cfg %d with invalid temporal_id %d larger than MPP_ENC_MAX_TEMPORAL_LAYER_NUM\n",
-				 ref, pos, temporal_id);
+				mpp_err_f("ref cfg %p st cfg %d with invalid temporal_id %d larger than MPP_ENC_MAX_TEMPORAL_LAYER_NUM\n",
+					  ref, pos, temporal_id);
 				ready = 0;
 			}
 
 			/* check gop mode */
 			if (!REF_MODE_IS_GLOBAL(ref_mode)
 			    && !REF_MODE_IS_ST_MODE(ref_mode)) {
-				mpp_err_f
-				("ref cfg %p st cfg %d with invalid ref mode %x\n",
-				 ref, pos, ref_mode);
+				mpp_err_f("ref cfg %p st cfg %d with invalid ref mode %x\n",
+					  ref, pos, ref_mode);
 				ready = 0;
 			}
 
 			if (cfg->repeat < 0) {
-				mpp_err_f
-				("ref cfg %p st cfg %d with negative repeat %d set to zero\n",
-				 ref, pos, cfg->repeat);
+				mpp_err_f("ref cfg %p st cfg %d with negative repeat %d set to zero\n",
+					  ref, pos, cfg->repeat);
 				cfg->repeat = 0;
 			}
 
 			/* constrain on head and tail frame */
 			if (pos == 0 || (pos == st_cfg_cnt - 1)) {
 				if (cfg->is_non_ref) {
-					mpp_err_f
-					("ref cfg %p st cfg %d with invalid non-ref frame on head/tail frame\n",
-					 ref, pos);
+					mpp_err_f("ref cfg %p st cfg %d with invalid non-ref frame on head/tail frame\n",
+						  ref, pos);
 					ready = 0;
 				}
 
 				if (temporal_id > 0) {
-					mpp_err_f
-					("ref cfg %p st cfg %d with invalid non-zero temporal id %d on head/tail frame\n",
-					 ref, pos, temporal_id);
+					mpp_err_f("ref cfg %p st cfg %d with invalid non-zero temporal id %d on head/tail frame\n",
+						  ref, pos, temporal_id);
 					ready = 0;
 				}
 			}

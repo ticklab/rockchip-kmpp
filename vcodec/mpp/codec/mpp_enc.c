@@ -57,8 +57,8 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 		mpp_err_f("could not init enc refs\n");
 		goto ERR_RET;
 	}
-	// H.264 encoder use mpp_enc_hal path
-	// create hal first
+
+	/* reate hal first */
 	enc_hal_cfg.coding = coding;
 	enc_hal_cfg.cfg = &p->cfg;
 	enc_hal_cfg.type = VPU_CLIENT_BUTT;
@@ -107,7 +107,6 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	p->impl = impl;
 	p->enc_hal = enc_hal;
 	p->dev = enc_hal_cfg.dev;
-	//    p->mpp      = cfg->mpp;
 	p->sei_mode = MPP_ENC_SEI_MODE_DISABLE;
 	p->version_info = VCODEC_VERSION;
 	p->version_length = strlen(p->version_info);
@@ -115,10 +114,10 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	p->rc_cfg_info = mpp_calloc_size(char, p->rc_cfg_size);
 
 	{
-		// create header packet storage
+		/* create header packet storage */
 		size_t size = SZ_1K;
-		p->hdr_buf = mpp_calloc_size(void, size);
 
+		p->hdr_buf = mpp_calloc_size(void, size);
 		ret = mpp_packet_init(&p->hdr_pkt, p->hdr_buf, size);
 		if (ret)
 			goto ERR_RET;
@@ -127,7 +126,6 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 
 	/* NOTE: setup configure coding for check */
 	p->cfg.codec.coding = coding;
-	//	p->cfg.plt_cfg.plt = &p->cfg.plt_data;
 	if ((ret = mpp_enc_ref_cfg_init(&p->cfg.ref_cfg)))
 		goto  ERR_RET;
 
@@ -152,6 +150,7 @@ MPP_RET mpp_enc_init(MppEnc * enc, MppEncInitCfg * cfg)
 	p->chan_id = cfg->chan_id;
 	p->ref_buf_shared = cfg->ref_buf_shared;
 	*enc = p;
+
 	return ret;
 ERR_RET:
 	mpp_enc_deinit(p);
@@ -287,10 +286,12 @@ MPP_RET mpp_enc_stop(MppEnc ctx)
 RK_S32 mpp_enc_check_pkt_pool(MppEnc ctx)
 {
 	MppEncImpl *enc = (MppEncImpl *) ctx;
-	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
 	RK_S32 num = 0;
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+
 	if (mpibuf_fn && mpibuf_fn->buf_pool_get_free_num)
-		num =  mpibuf_fn->buf_pool_get_free_num(enc->strm_pool);
+		num = mpibuf_fn->buf_pool_get_free_num(enc->strm_pool);
+
 	return num;
 }
 
@@ -321,6 +322,7 @@ MPP_RET mpp_enc_oneframe(MppEnc ctx, MppFrame frame, MppPacket * packet)
 	enc_dbg_func("%p in\n", enc);
 	//ret = mpp_enc_impl_oneframe(ctx, frame, packet);
 	enc_dbg_func("%p out\n", enc);
+
 	return ret;
 }
 
@@ -347,6 +349,7 @@ MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame)
 		RK_U32 mb_w = 0;
 		RK_U32 mb_h = 0;
 		RK_U32 i;
+
 		if (cfg->codec.coding == MPP_VIDEO_CodingAVC) {
 			mb_w = MPP_ALIGN(cfg->prep.max_width, 64) / 16;
 			mb_h = MPP_ALIGN(cfg->prep.max_height, 64) / 16;
@@ -368,6 +371,7 @@ MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame)
 	enc->enc_status = ENC_STATUS_CFG_DONE;
 	up(&enc->enc_sem);
 	enc_dbg_func("%p out\n", enc);
+
 	return ret;
 }
 
@@ -395,6 +399,7 @@ MPP_RET mpp_enc_hw_start(MppEnc ctx, MppEnc jpeg_ctx)
 		enc->hw_run = 1;
 	up(&enc->enc_sem);
 	enc_dbg_func("%p out\n", enc);
+
 	return ret;
 }
 
@@ -449,6 +454,7 @@ MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
 	enc->packet = NULL;
 	up(&enc->enc_sem);
 	enc_dbg_func("%p out\n", enc);
+
 	return ret;
 }
 

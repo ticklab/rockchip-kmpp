@@ -2218,6 +2218,7 @@ static MPP_RET hal_h265e_v540c_gen_regs(void *hal, HalEncTask *task)
 	ctx->frame_num++;
 
 	hal_h265e_leave();
+
 	return MPP_OK;
 }
 
@@ -2227,11 +2228,11 @@ static MPP_RET hal_h265e_v540c_start(void *hal, HalEncTask *enc_task)
 	H265eV540cHalContext *ctx = (H265eV540cHalContext *) hal;
 	RK_U32 *regs = (RK_U32 *) ctx->regs;
 	H265eV540cRegSet *hw_regs = ctx->regs;
-	H265eV540cStatusElem *reg_out =
-		(H265eV540cStatusElem *) ctx->reg_out[0];
+	H265eV540cStatusElem *reg_out = (H265eV540cStatusElem *) ctx->reg_out[0];
 	MppDevRegWrCfg cfg;
 	MppDevRegRdCfg cfg1;
 	RK_U32 i = 0;
+
 	hal_h265e_enter();
 
 	if (enc_task->flags.err) {
@@ -2370,6 +2371,7 @@ static MPP_RET hal_h265e_v540c_start(void *hal, HalEncTask *enc_task)
 	if (ret)
 		mpp_err_f("send cmd failed %d\n", ret);
 	hal_h265e_leave();
+
 	return ret;
 }
 
@@ -2430,6 +2432,7 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 		elem->st.st_madp_rt_num1.madp_th_rt_cnt3 +
 		elem->st.st_madp_lb_num1.madp_th_lb_cnt3 +
 		elem->st.st_madp_rb_num1.madp_th_rb_cnt3;
+
 	md_cnt = (24 * madp_th_cnt3 + 22 * madp_th_cnt2 + 17 * madp_th_cnt1) >> 2;
 	if (ctx->smart_en)
 		md_cnt = (12 * madp_th_cnt3 + 11 * madp_th_cnt2 + 8 * madp_th_cnt1) >> 2;
@@ -2525,8 +2528,6 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	if (madp_cnt)
 		fb->st_madp =  fb->st_madp  / madp_cnt;
 
-
-
 	fb->st_mb_num += elem->st.st_bnum_b16.num_b16;
 	//  fb->st_ctu_num += elem->st.st_bnum_cme.num_ctu;
 
@@ -2579,6 +2580,7 @@ static MPP_RET vepu540c_h265_set_feedback(H265eV540cHalContext *ctx,
 	hal_rc_ret->madi = fb->st_madi;
 	hal_rc_ret->madp = fb->st_madp;
 	hal_h265e_leave();
+
 	return MPP_OK;
 }
 
@@ -2589,6 +2591,7 @@ static MPP_RET hal_h265e_v540c_wait(void *hal, HalEncTask *task)
 	H265eV540cHalContext *ctx = (H265eV540cHalContext *) hal;
 	HalEncTask *enc_task = task;
 	H265eV540cStatusElem *elem = (H265eV540cStatusElem *) ctx->reg_out;
+
 	hal_h265e_enter();
 
 	if (enc_task->flags.err) {
@@ -2658,13 +2661,13 @@ static MPP_RET hal_h265e_v540c_wait(void *hal, HalEncTask *task)
 			  elem->hw_status);
 
 	hal_h265e_leave();
+
 	return ret;
 }
 
 static MPP_RET hal_h265e_v540c_get_task(void *hal, HalEncTask *task)
 {
 	H265eV540cHalContext *ctx = (H265eV540cHalContext *) hal;
-	//  MppFrame frame = task->frame;
 	EncFrmStatus *frm_status = &task->rc_task->frm;
 
 	hal_h265e_enter();
@@ -2716,6 +2719,7 @@ static MPP_RET hal_h265e_v540c_ret_task(void *hal, HalEncTask *task)
 	hal_h265e_dbg_detail("output stream size %d\n", fb->out_strm_size);
 
 	hal_h265e_leave();
+
 	return MPP_OK;
 }
 
@@ -2742,6 +2746,7 @@ static MPP_RET hal_h265e_v540c_comb_start(void *hal, HalEncTask *enc_task,
 		memcpy(&hw_regs->reg_osd_cfg.osd_jpeg_cfg, jpeg_enc_task->jpeg_osd_reg, sizeof(vepu540c_osd_reg));
 
 	hal_h265e_leave();
+
 	return hal_h265e_v540c_start(hal, enc_task);
 }
 
@@ -2753,7 +2758,6 @@ static MPP_RET hal_h265e_v540c_ret_comb_task(void *hal, HalEncTask *task, HalEnc
 	H265eV540cStatusElem *elem = (H265eV540cStatusElem *) ctx->reg_out[0];
 	vepu540c_h265_fbk *fb = &ctx->feedback;
 	EncRcTaskInfo *hal_rc_ret = (EncRcTaskInfo *) &jpeg_enc_task->rc_task->info;
-
 	MPP_RET ret = MPP_OK;
 
 	hal_h265e_enter();
@@ -2774,6 +2778,7 @@ static MPP_RET hal_h265e_v540c_ret_comb_task(void *hal, HalEncTask *task, HalEnc
 	hal_h265e_dbg_detail("output stream size %d\n", fb->out_strm_size);
 
 	hal_h265e_leave();
+
 	return ret;
 }
 

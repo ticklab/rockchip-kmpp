@@ -576,26 +576,31 @@ static void h265e_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 	MppEncCfgSet *cfg = p->cfg;
 	MppEncPrepCfg *prep = &cfg->prep;
 	MppEncH265Cfg *h265 = &cfg->codec.h265;
+
 	seq_puts(seq,
 		 "\n--------h265e chn attr----------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%10s\n", "ID", "Width", "Height", "profile");
-	seq_printf(seq, "%7d%10u%10u%10s\n", chl_id, prep->width, prep->height,
+	seq_printf(seq, "%7s|%10s|%10s|%10s\n", "ID", "Width", "Height", "profile");
+	seq_printf(seq, "%7d|%10u|%10u|%10s\n", chl_id, prep->width, prep->height,
 		   strof_profle(MPP_VIDEO_CodingHEVC, h265->profile));
 
 	seq_puts(seq,
 		 "\n--------Syntax INFO1-----------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%10s%10s%15s%15s%15s\n", "ID", "SlcspltEn", "SplitMode", "Slcsize",
+	seq_printf(seq, "%7s|%10s|%10s|%10s|%15s|%15s|%15s\n",
+		   "ID", "SlcspltEn", "SplitMode", "Slcsize",
 		   "IntraRefresh", "RefreshMode", "RefreshNum");
-	seq_printf(seq, "%7d%10s%10u%15u%15s%15u%15u\n", chl_id, strof_bool(cfg->split.split_mode),
-		   cfg->split.split_mode, cfg->split.split_arg,
+	seq_printf(seq, "%7d|%10s|%10u|%10u|%15s|%15u|%15u\n",
+		   chl_id, strof_bool(cfg->split.split_mode), cfg->split.split_mode, cfg->split.split_arg,
 		   strof_bool(0), 0, 0);
 
 	seq_puts(seq,
 		 "--------Syntax INFO2------------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%10s%8s%8s%10s%10s%15s\n", "ID", "DblkEn", "Tc", "Beta", "Saoluma", "Saochroma",
+	seq_printf(seq, "%7s|%10s|%8s|%8s|%10s|%10s|%15s\n",
+		   "ID", "DblkEn",
+		   "Tc", "Beta",
+		   "Saoluma", "Saochroma",
 		   "IntraSmoothing");
-	seq_printf(seq, "%7d%10s%7d%8d%10d%10d%12d\n", chl_id,
-		   strof_bool(1 - h265->dblk_cfg.slice_deblocking_filter_disabled_flag),
+	seq_printf(seq, "%7d|%10s|%8d|%8d|%10d|%10d|%12d\n",
+		   chl_id, strof_bool(1 - h265->dblk_cfg.slice_deblocking_filter_disabled_flag),
 		   h265->dblk_cfg.slice_tc_offset_div2, h265->dblk_cfg.slice_beta_offset_div2,
 		   h265->sao_cfg.slice_sao_luma_disable, h265->sao_cfg.slice_sao_chroma_disable,
 		   h265->pu_cfg.strg_intra_smth_disable);
@@ -603,8 +608,8 @@ static void h265e_proc_show(void *seq_file, void *ctx, RK_S32 chl_id)
 
 	seq_puts(seq,
 		 "------Trans INFO-----------------------------------------------------------------------------------\n");
-	seq_printf(seq, "%7s%12s%12s\n", "ID", "CbQpOffset", "CrQpOffset");
-	seq_printf(seq, "%7d%12d%12d\n", chl_id, h265->trans_cfg.cb_qp_offset,
+	seq_printf(seq, "%7s|%12s|%12s\n", "ID", "CbQpOffset", "CrQpOffset");
+	seq_printf(seq, "%7d|%12d|%12d\n", chl_id, h265->trans_cfg.cb_qp_offset,
 		   h265->trans_cfg.cr_qp_offset);
 }
 

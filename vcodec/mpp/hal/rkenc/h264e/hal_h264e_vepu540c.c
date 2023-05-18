@@ -1471,6 +1471,7 @@ static MPP_RET vepu540c_h264e_use_pass1_patch(HalVepu540cRegSet *regs, HalH264eV
 	regs->reg_base.adr_src2   = 0;
 
 	hal_h264e_dbg_func("leave\n");
+
 	return MPP_OK;
 }
 
@@ -2590,10 +2591,6 @@ static MPP_RET hal_h264e_vepu540c_status_check(void *hal)
 	return MPP_OK;
 }
 
-
-
-
-
 static MPP_RET hal_h264e_vepu540c_wait(void *hal, HalEncTask *task)
 {
 	MPP_RET ret = MPP_OK;
@@ -2663,6 +2660,7 @@ static MPP_RET hal_h264e_vepu540c_ret_task(void *hal, HalEncTask *task)
 		reg_st->st_madp_lb_num1.madp_th_lb_cnt3 +
 		reg_st->st_madp_rb_num1.madp_th_rb_cnt3;
 	RK_U32 md_cnt = (24 * madp_th_cnt3 + 22 * madp_th_cnt2 + 17 * madp_th_cnt1) >> 2;
+
 	if (ctx->smart_en)
 		md_cnt = (12 * madp_th_cnt3 + 11 * madp_th_cnt2 + 8 * madp_th_cnt1) >> 2;
 	madi_cnt = (6 * madi_th_cnt3 + 5 * madi_th_cnt2 + 4 * madi_th_cnt1) >> 2;
@@ -2758,6 +2756,7 @@ static MPP_RET hal_h264e_vepu540c_comb_start(void *hal, HalEncTask *task, HalEnc
 	VepuFmtCfg cfg;
 	MppEncPrepCfg *prep = &ctx->cfg->prep;
 	MppFrameFormat fmt = prep->format;
+
 	hal_h264e_dbg_func("enter %p\n", hal);
 
 	regs->reg_ctl.dtrns_map.jpeg_bus_edin = 7;
@@ -2775,6 +2774,7 @@ static MPP_RET hal_h264e_vepu540c_comb_start(void *hal, HalEncTask *task, HalEnc
 	if (jpeg_task->jpeg_osd_reg)
 		memcpy(&regs->reg_osd_cfg.osd_jpeg_cfg, jpeg_task->jpeg_osd_reg, sizeof(vepu540c_osd_reg));
 	hal_h264e_dbg_func("leave %p\n", hal);
+
 	return hal_h264e_vepu540c_start(hal, task);
 }
 
