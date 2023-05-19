@@ -42,6 +42,7 @@ struct vcodec_mpibuf_fn {
 	void (*buf_ref)(struct mpi_buf *buf);
 	void (*buf_unref)(struct mpi_buf *buf);
 	struct dma_buf *(*buf_get_dmabuf)(struct mpi_buf *buf);
+	int (*buf_get_paddr)(struct mpi_buf *buf);
 	struct mpi_queue *(*buf_queue_create)(int cnt);
 	int (*buf_queue_destroy)( struct mpi_queue *queue);
 	int (*buf_queue_push)(struct mpi_queue *queue, struct mpi_buf *buf);
