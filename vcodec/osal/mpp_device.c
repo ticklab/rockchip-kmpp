@@ -17,6 +17,7 @@
 #include "mpp_buffer.h"
 //#include "mpp_device_debug.h"
 #include "mpp_service_api.h"
+#include "rk_export_func.h"
 
 typedef struct MppDevImpl_t {
 	MppClientType type;
@@ -190,15 +191,24 @@ RK_U32 mpp_dev_get_mpi_ioaddress(MppDev ctx, MpiBuf mpi_buf, RK_U32 offset)
 	const MppDevApi *api = p->api;
 	void *impl_ctx = p->ctx;
 	struct dma_buf *dma_buf = NULL;
+	RK_S32 phy_addr = -1;
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+
 	if (!mpi_buf) {
 		mpp_err_f("input NULL");
 		return -EINVAL;
 	}
-	dma_buf = mpi_buf_get_dma(mpi_buf);
-	mpp_assert(dma_buf);
-	if (api->get_address)
-		return api->get_address(impl_ctx, dma_buf, offset);
-	return -EINVAL;
+
+	if (mpibuf_fn && mpibuf_fn->buf_get_paddr)
+		phy_addr = mpibuf_fn->buf_get_paddr(mpi_buf);
+	if (phy_addr == -1) {
+		dma_buf = mpi_buf_get_dma(mpi_buf);
+		mpp_assert(dma_buf);
+		if (api->get_address)
+			return api->get_address(impl_ctx, dma_buf, offset);
+	}
+
+	return (RK_U32)phy_addr;
 }
 
 void mpp_dev_chnl_register(MppDev ctx, void *func, RK_S32 chan_id)

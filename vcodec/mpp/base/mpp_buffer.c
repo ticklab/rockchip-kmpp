@@ -255,7 +255,10 @@ void * mpp_buffer_map_ring_ptr(struct MppBufferImpl *p)
 	RK_S32 i = 0;
 	struct page **pages;
 	RK_S32 page_count;
-	RK_U32 phy_addr = mpp_srv_get_phy(p->dmabuf);
+	RK_S32 phy_addr = mpp_buffer_get_phy(p);
+
+	if (phy_addr == -1)
+		phy_addr = mpp_srv_get_phy(p->dmabuf);
 
 	end = phy_addr + p->info.size;
 	start = phy_addr;
@@ -600,14 +603,30 @@ void mpp_buffer_set_phy_caller(MppBuffer buffer, RK_U32 phy_addr, const char *ca
 RK_S32 mpp_buffer_get_phy_caller(MppBuffer buffer, const char *caller)
 {
 	struct MppBufferImpl *p = (struct MppBufferImpl *)buffer;
+	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+	RK_S32 phy_addr = -1;
 
 	if (NULL == p) {
 		mpp_err("mpp_buffer_get_offset invalid NULL input from %s\n",
 			caller);
 		return -1;
 	}
+
+	if (!mpibuf_fn) {
+		mpp_err_f("mpibuf_ops get fail");
+		return -1;
+	}
+
 	if (p->info.phy_flg)
-		return (RK_S32)p->info.phy_addr;
-	return -1;
+		phy_addr = (RK_S32)p->info.phy_addr;
+	else if (mpibuf_fn->buf_get_paddr) {
+		phy_addr = mpibuf_fn->buf_get_paddr(p->mpi_buf);
+		if (phy_addr != -1) {
+			p->info.phy_addr = phy_addr;
+			p->info.phy_flg = 1;
+		}
+	}
+
+	return phy_addr;
 }
 
