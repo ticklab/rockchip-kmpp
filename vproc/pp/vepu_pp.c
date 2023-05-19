@@ -55,7 +55,10 @@ static struct pp_buffer_t * pp_malloc_buffer(struct pp_chn_info_t *info, u32 siz
 		if (pp_buf->buf) {
 			if (func->buf_get_dmabuf) {
 				pp_buf->buf_dma = func->buf_get_dmabuf(pp_buf->buf);
-				if (pp_buf->buf_dma)
+				if (func->buf_get_paddr)
+					pp_buf->iova = func->buf_get_paddr(pp_buf->buf);
+
+				if (pp_buf->iova == -1)
 					pp_buf->iova = info->api->get_address(info->dev_srv,
 									      pp_buf->buf_dma, 0);
 			}
@@ -223,8 +226,10 @@ static void pp_set_src_addr(struct pp_chn_info_t *info, struct pp_com_cfg *cfg)
 	struct pp_param_t *p = &info->param;
 	u32 adr_src0, adr_src1, adr_src2;
 	u32 width = info->width, height = info->height;
+	struct vcodec_mpibuf_fn *func = get_vmpibuf_func();
 
-	adr_src0 = info->api->get_address(info->dev_srv, cfg->src_buf, 0);
+	if (func->buf_get_paddr)
+		adr_src0 = func->buf_get_paddr(cfg->src_buf);
 
 	switch (cfg->fmt) {
 	case RKVENC_F_YCbCr_420_P: {
@@ -324,6 +329,8 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 	}
 	case PP_CMD_SET_MD_CFG: {
 		struct pp_md_cfg *cfg = (struct pp_md_cfg *)param;
+		struct vcodec_mpibuf_fn *func = get_vmpibuf_func();
+
 		p->md_con_base.switch_sad = cfg->switch_sad;
 		p->md_con_base.thres_sad = cfg->thres_sad;
 		p->md_con_base.thres_move = cfg->thres_move;
@@ -337,7 +344,9 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 
 		p->adr_rfmw = info->buf_rfmwr->iova;
 		p->adr_rfmr = info->buf_rfmwr->iova;
-		p->adr_md_base = info->api->get_address(info->dev_srv, cfg->mdw_buf, 0);
+
+		if (func->buf_get_paddr)
+			p->adr_md_base = func->buf_get_paddr(cfg->mdw_buf);
 		break;
 	}
 	case PP_CMD_SET_OD_CFG: {
@@ -350,7 +359,10 @@ static void vepu_pp_set_param(struct pp_chn_info_t *info, enum pp_cmd cmd, void 
 	}
 	case PP_CMD_SET_SMEAR_CFG: {
 		struct pp_smear_cfg *cfg = (struct pp_smear_cfg *)param;
-		p->adr_smr_base = info->api->get_address(info->dev_srv, cfg->smrw_buf, 0);
+		struct vcodec_mpibuf_fn *func = get_vmpibuf_func();
+
+		if (func->buf_get_paddr)
+			p->adr_smr_base = func->buf_get_paddr(cfg->smrw_buf);
 		p->adr_rfsw = info->buf_rfswr->iova;
 		p->adr_rfsr = info->buf_rfswr->iova;
 		p->smr_resi_thd0 = 0x080b080b;

@@ -9,20 +9,12 @@
 #include <linux/string.h>
 
 #include "vepu_pp_common.h"
+#include "rk_type.h"
+#include "rk_export_func.h"
 
 #define PP_MAX_REQ_NUM  (16)
 
 struct dma_buf;
-
-struct vcodec_mppdev_svr_fn {
-	struct mpp_session *(*chnl_open)(int client_type);
-	int (*chnl_register)(struct mpp_session *session, void *fun, unsigned int chn_id);
-	int (*chnl_release)(struct mpp_session *session);
-	int (*chnl_add_req)(struct mpp_session *session,  void *reqs);
-	unsigned int (*chnl_get_iova_addr)(struct mpp_session *session,  struct dma_buf *buf,
-					   unsigned int offset);
-	void (*chnl_release_iova_addr)(struct mpp_session *session,  struct dma_buf *buf);
-};
 
 struct mpp_req_t {
 	u32 cmd;

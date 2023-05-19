@@ -10,6 +10,7 @@
 #define __VEPU_PP_API_H__
 
 struct dma_buf;
+struct mpi_buf;
 struct mpp_frame_infos;
 
 enum pp_fmt {
@@ -51,14 +52,14 @@ struct pp_com_cfg {
 	int md_interval;
 	int od_interval;
 
-	struct dma_buf *src_buf;
+	struct mpi_buf *src_buf;
 	int stride0;
 	int stride1;
 	int reserved[8];
 };
 
 struct pp_md_cfg {
-	struct dma_buf *mdw_buf;
+	struct mpi_buf *mdw_buf;
 	int switch_sad;
 	int thres_sad;
 	int thres_move;
@@ -75,7 +76,7 @@ struct pp_od_cfg {
 };
 
 struct pp_smear_cfg {
-	struct dma_buf *smrw_buf; /* 0x200: smear write */
+	struct mpi_buf *smrw_buf; /* 0x200: smear write */
 	int reserved[32];
 };
 
