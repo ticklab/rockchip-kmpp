@@ -39,6 +39,7 @@ struct mpi_dev;
 struct mpp_chan {
 	RK_S32 chan_id;
 	RK_S32 binder_chan_id;
+	RK_S32 master_chan_id;
 	RK_S32 coding_type;
 	MppCtxType type;
 	struct chan_cfg cfg;

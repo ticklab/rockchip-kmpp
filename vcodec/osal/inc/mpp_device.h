@@ -84,8 +84,9 @@ typedef struct MppDevApi_t {
 	RK_U32(*get_address) (void *ctx, struct dma_buf * buf, RK_U32 offset);
 	void (*chnl_register) (void *ctx, void *func, RK_S32 chan_id);
 	struct device *(*chnl_get_dev)(void *ctx);
-	int(*run_task)(void *ctx);
-	int(*chnl_check_running)(void *ctx);
+	RK_S32 (*run_task)(void *ctx);
+	RK_S32 (*chnl_check_running)(void *ctx);
+	RK_S32 (*control)(void *ctx, RK_U32 cmd, void *param);
 } MppDevApi;
 
 typedef void *MppDev;
@@ -116,6 +117,7 @@ void mpp_dev_chnl_register(MppDev ctx, void *func, RK_S32 chan_id);
 struct device * mpp_get_dev(MppDev ctx);
 
 RK_S32 mpp_dev_chnl_check_running(MppDev ctx);
+RK_S32 mpp_dev_chnl_unbind_jpeg_task(MppDev ctx);
 
 
 #ifdef __cplusplus

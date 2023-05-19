@@ -495,6 +495,20 @@ RK_S32 mpp_service_chnl_check_running(void *ctx)
 	return 0;
 }
 
+RK_S32 mpp_service_chnl_control(void *ctx, RK_U32 cmd, void *param)
+{
+	MppDevMppService *p = (MppDevMppService *) ctx;
+	MppReqV1 req;
+
+	req.cmd = cmd;
+	req.flag = MPP_FLAGS_LAST_MSG;
+	req.data_ptr = REQ_DATA_PTR(param);
+	if (p->mppdev_ops->chnl_add_req)
+		return p->mppdev_ops->chnl_add_req(p->chnl, &req);
+
+	return 0;
+}
+
 const MppDevApi mpp_service_api = {
 	.name			= "mpp_service",
 	.ctx_size		= sizeof(MppDevMppService),
@@ -512,4 +526,5 @@ const MppDevApi mpp_service_api = {
 	.chnl_get_dev		= mpp_service_get_dev,
 	.run_task		= mpp_service_run_task,
 	.chnl_check_running 	= mpp_service_chnl_check_running,
+	.control		= mpp_service_chnl_control,
 };

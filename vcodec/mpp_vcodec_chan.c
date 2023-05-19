@@ -114,6 +114,34 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 	return 0;
 }
 
+int mpp_vcodec_chan_unbind(struct mpp_chan* chan)
+{
+	RK_S32 chan_id = chan->binder_chan_id != -1 ? chan->binder_chan_id : chan->master_chan_id;
+	struct mpp_chan *bind_chan;
+
+	if (chan_id == -1)
+		return 0;
+
+	bind_chan = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
+	mpp_assert(bind_chan);
+	if (chan->binder_chan_id != -1) {
+		/* bind chan is slave */
+		atomic_set(&chan->cfg.comb_runing, 0);
+		atomic_set(&bind_chan->runing, 0);
+		mpp_enc_deinit_frame(bind_chan->handle);
+		chan->binder_chan_id = -1;
+		bind_chan->master_chan_id = -1;
+	} else {
+		/* bind_chan is master */
+		atomic_set(&bind_chan->cfg.comb_runing, 0);
+		atomic_set(&chan->runing, 0);
+		chan->master_chan_id = -1;
+		bind_chan->binder_chan_id = -1;
+	}
+
+	return 0;
+}
+
 #define VCODEC_WAIT_TIMEOUT_DELAY		(2200)
 
 int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
@@ -128,36 +156,42 @@ int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 	case MPP_CTX_DEC: {
 	} break;
 	case MPP_CTX_ENC: {
-		RK_S32 bind_chan_id = chan_entry->binder_chan_id;
+		bool wait = true;
 
+		mpp_log("destroy chan %d hnd %p online %d combo %d mst %d\n",
+			chan_id, chan_entry->handle, chan_entry->cfg.online,
+			chan_entry->binder_chan_id, chan_entry->master_chan_id);
 
-		mpp_log("destroy channel %d handle %p online %d\n",
-			chan_id, chan_entry->handle, chan_entry->cfg.online);
 		ret = mpp_vcodec_chan_stop(chan_id, type);
-		if (!(chan_entry->cfg.online && !mpp_enc_check_hw_running(chan_entry->handle)))
+		if (chan_entry->cfg.online) {
+			struct mpp_chan *chan_tmp = chan_entry;
+
+			if (chan_entry->master_chan_id != -1) {
+				chan_tmp = mpp_vcodec_get_chan_entry(chan_entry->master_chan_id, type);
+				mpp_enc_unbind_jpeg_task(chan_tmp->handle);
+			}
+			if (!mpp_enc_check_hw_running(chan_tmp->handle))
+				wait = false;
+		}
+
+		if (wait)
 			ret = wait_event_timeout(chan_entry->stop_wait,
 						 !atomic_read(&chan_entry->runing),
-						 msecs_to_jiffies
-						 (VCODEC_WAIT_TIMEOUT_DELAY));
+						 msecs_to_jiffies(VCODEC_WAIT_TIMEOUT_DELAY));
 
-		if (chan_entry->cfg.online && bind_chan_id > 0) {
-			struct mpp_chan *comb_chan = mpp_vcodec_get_chan_entry(bind_chan_id,
-									       MPP_CTX_ENC);
-
-			atomic_dec(&chan_entry->cfg.comb_runing);
-			atomic_dec(&comb_chan->runing);
-			if (comb_chan && comb_chan->handle)
-				mpp_enc_deinit_frame(comb_chan->handle);
-		}
+		if (chan_entry->cfg.online)
+			mpp_vcodec_chan_unbind(chan_entry);
 		mpp_enc_deinit(chan_entry->handle);
 		mpp_vcodec_stream_clear(chan_entry);
 		mpp_vcodec_dec_chan_num(type);
 		mpp_vcodec_chan_entry_deinit(chan_entry);
+		mpp_log("destroy chan %d done\n", chan_id);
 	} break;
 	default: {
 		mpp_err("create chan error type %d\n", type);
 	} break;
 	}
+
 	return 0;
 }
 
@@ -166,6 +200,9 @@ int mpp_vcodec_chan_start(int chan_id, MppCtxType type)
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 
 	mpp_assert(chan_entry->handle != NULL);
+	if (!chan_entry->handle)
+		return MPP_NOK;
+
 	switch (type) {
 	case MPP_CTX_DEC: {
 
@@ -184,6 +221,7 @@ int mpp_vcodec_chan_start(int chan_id, MppCtxType type)
 		mpp_err("create chan error type %d\n", type);
 	} break;
 	}
+
 	return 0;
 }
 
@@ -199,6 +237,7 @@ int mpp_vcodec_chan_stop(int chan_id, MppCtxType type)
 	} break;
 	case MPP_CTX_ENC: {
 		unsigned long lock_flag;
+
 		ret = mpp_enc_stop(chan_entry->handle);
 		spin_lock_irqsave(&chan_entry->chan_lock, lock_flag);
 		if (chan_entry->state != CHAN_STATE_RUN) {
@@ -358,7 +397,7 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 	struct mpp_chan *entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
 	int ret;
 	MppEncCfgImpl *cfg = mpp_malloc(MppEncCfgImpl, 1);
-	RK_S32 bind_chan_id = entry->binder_chan_id;
+	bool wait = true;
 
 	if (!cfg) {
 		mpp_err("change_coding_type malloc fail");
@@ -370,21 +409,24 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 	mpp_assert(chan_id == attr->chan_id);
 
 	ret = mpp_vcodec_chan_stop(chan_id, MPP_CTX_ENC);
-	if (!(entry->cfg.online && !mpp_enc_check_hw_running(entry->handle)))
+	if (entry->cfg.online) {
+		struct mpp_chan *chan_tmp = entry;
+
+		if (entry->master_chan_id != -1) {
+			chan_tmp = mpp_vcodec_get_chan_entry(entry->master_chan_id, MPP_CTX_ENC);
+			mpp_enc_unbind_jpeg_task(chan_tmp->handle);
+		}
+		if (!mpp_enc_check_hw_running(chan_tmp->handle))
+			wait = false;
+	}
+
+	if (wait)
 		ret = wait_event_timeout(entry->stop_wait,
 					 !atomic_read(&entry->runing),
-					 msecs_to_jiffies
-					 (VCODEC_WAIT_TIMEOUT_DELAY));
+					 msecs_to_jiffies(VCODEC_WAIT_TIMEOUT_DELAY));
 
-	if (entry->cfg.online && bind_chan_id > 0) {
-		struct mpp_chan *comb_chan = mpp_vcodec_get_chan_entry(bind_chan_id,
-								       MPP_CTX_ENC);
-
-		atomic_dec(&entry->cfg.comb_runing);
-		atomic_dec(&comb_chan->runing);
-		if (comb_chan && comb_chan->handle)
-			mpp_enc_deinit_frame(comb_chan->handle);
-	}
+	if (entry->cfg.online)
+		mpp_vcodec_chan_unbind(entry);
 	mpp_enc_deinit(entry->handle);
 	mpp_vcodec_stream_clear(entry);
 	mpp_vcodec_dec_chan_num(MPP_CTX_ENC);
@@ -392,6 +434,7 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 	entry->state = CHAN_STATE_NULL;
 	entry->reenc = 0;
 	entry->binder_chan_id = -1;
+	entry->master_chan_id = -1;
 	mpp_vcodec_chan_create(attr);
 	entry = mpp_vcodec_get_chan_entry(chan_id, MPP_CTX_ENC);
 

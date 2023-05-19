@@ -18,6 +18,7 @@
 //#include "mpp_device_debug.h"
 #include "mpp_service_api.h"
 #include "rk_export_func.h"
+#include "mpp_service.h"
 
 typedef struct MppDevImpl_t {
 	MppClientType type;
@@ -241,6 +242,18 @@ RK_S32 mpp_dev_chnl_check_running(MppDev ctx)
 
 	if (api->chnl_check_running)
 		return api->chnl_check_running(impl_ctx);
+
+	return 0;
+}
+
+RK_S32 mpp_dev_chnl_unbind_jpeg_task(MppDev ctx)
+{
+	MppDevImpl *p = (MppDevImpl *) ctx;
+	const MppDevApi *api = p->api;
+	void *impl_ctx = p->ctx;
+
+	if (api->control)
+		return api->control(impl_ctx, MPP_CMD_UNBIND_JPEG_TASK, NULL);
 
 	return 0;
 }

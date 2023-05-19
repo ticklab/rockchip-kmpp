@@ -893,6 +893,7 @@ static void *rkvenc_alloc_task(struct mpp_session *session,
 	mpp_task_init(session, mpp_task);
 	mpp_task->hw_info = mpp->var->hw_info;
 	mpp_task->clbk_en = 1;
+	mpp_task->disable_jpeg = 0;
 	task->hw_info = to_rkvenc_info(mpp_task->hw_info);
 	/* extract reqs for current task */
 	ret = rkvenc_extract_task_msg(session, task, msgs, session->k_space);
@@ -1154,18 +1155,22 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 					enc->video_wr_addr = regs[j];
 				if (off == RKVENC_JPEG_BSBS)
 					enc->jpeg_wr_addr = regs[j];
-				if (off == hw->dvbm_cfg)
+				if (off == hw->dvbm_cfg) {
 					dvbm_en = regs[j];
-				else
-					mpp_write_relaxed(mpp, off, regs[j]);
+					continue;
+				}
+				if (mpp_task->disable_jpeg && off == 0x47c)
+					regs[j] &= (~BIT(31));
+				mpp_write_relaxed(mpp, off, regs[j]);
 			}
 		}
 
 		/* init current task */
 		mpp->cur_task = mpp_task;
 
-		mpp_debug(DEBUG_RUN, "%s session %d task %d enc_pic %d jpeg_cfg %08x dvbm_en %d\n",
-			  __func__, mpp_task->session->index, mpp_task->task_index, task->fmt, mpp_read(mpp, 0x47c), dvbm_en);
+		mpp_debug(DEBUG_RUN, "%s session %d task %d fmt %d jpeg_en %08x dvbm_en %d\n",
+			  __func__, mpp_task->session->index, mpp_task->task_index, task->fmt,
+			  mpp_read(mpp, 0x47c) >> 31, dvbm_en);
 
 		/* check enc status before start */
 		st_ppl = mpp_read(mpp, 0x5004);
@@ -1649,6 +1654,30 @@ static int rkvenc_free_task(struct mpp_session *session, struct mpp_task *mpp_ta
 	return 0;
 }
 
+static int rkvenc_unbind_jpeg_task(struct mpp_session *session)
+{
+	struct mpp_dev *mpp = session->mpp;
+	struct mpp_taskqueue *queue = mpp->queue;
+	struct mpp_task *task, *n;
+	unsigned long flags, flags1;
+
+	spin_lock_irqsave(&queue->dev_lock, flags1);
+	spin_lock_irqsave(&session->pending_lock, flags);
+
+	list_for_each_entry_safe(task, n, &session->pending_list, pending_link) {
+		if (test_bit(TASK_STATE_RUNNING, &task->state))
+			continue;
+
+		pr_err("task %d disable_jpeg\n", task->task_index);
+		task->disable_jpeg = 1;
+	}
+
+	spin_unlock_irqrestore(&session->pending_lock, flags);
+	spin_unlock_irqrestore(&queue->dev_lock, flags1);
+
+	return 0;
+}
+
 static int rkvenc_control(struct mpp_session *session, struct mpp_request *req)
 {
 	switch (req->cmd) {
@@ -1683,6 +1712,9 @@ static int rkvenc_control(struct mpp_session *session, struct mpp_request *req)
 			}
 		}
 	} break;
+	case MPP_CMD_UNBIND_JPEG_TASK: {
+		return rkvenc_unbind_jpeg_task(session);
+	} break;;
 	default: {
 		mpp_err("unknown mpp ioctl cmd %x\n", req->cmd);
 	} break;

@@ -127,6 +127,7 @@ enum MPP_DEV_COMMAND_TYPE {
 	MPP_CMD_TRANS_FD_TO_IOVA	= MPP_CMD_CONTROL_BASE + 1,
 	MPP_CMD_RELEASE_FD		= MPP_CMD_CONTROL_BASE + 2,
 	MPP_CMD_SEND_CODEC_INFO		= MPP_CMD_CONTROL_BASE + 3,
+	MPP_CMD_UNBIND_JPEG_TASK	= MPP_CMD_CONTROL_BASE + 4,
 	MPP_CMD_CONTROL_BUTT,
 
 	MPP_CMD_BUTT,
@@ -475,6 +476,7 @@ struct mpp_task {
 	u32 dvbm_en;
 	u32 task_no;
 	u32 clbk_en;
+	u32 disable_jpeg;
 };
 
 struct mpp_taskqueue {

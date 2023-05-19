@@ -175,6 +175,7 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 	MppEncImpl *enc = (MppEncImpl *) ctx;
 	MPP_RET ret = MPP_OK;
 	struct vcodec_mpibuf_fn *mpibuf_fn = get_mpibuf_ops();
+
 	down(&enc->enc_sem);
 	if (NULL == enc) {
 		mpp_err_f("found NULL input\n");
@@ -247,6 +248,7 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 		enc->strm_pool = NULL;
 	}
 	mpp_free(enc);
+
 	return ret;
 }
 
@@ -426,6 +428,18 @@ RK_S32 mpp_enc_check_hw_running(MppEnc ctx)
 	}
 
 	return mpp_dev_chnl_check_running(enc->dev);
+}
+
+RK_S32 mpp_enc_unbind_jpeg_task(MppEnc ctx)
+{
+	MppEncImpl *enc = (MppEncImpl *) ctx;
+
+	if (NULL == enc) {
+		mpp_err_f("found NULL input enc\n");
+		return MPP_ERR_NULL_PTR;
+	}
+
+	return mpp_dev_chnl_unbind_jpeg_task(enc->dev);
 }
 
 MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,

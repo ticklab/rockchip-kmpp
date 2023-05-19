@@ -484,6 +484,8 @@ int mpp_vcodec_chan_entry_init(struct mpp_chan *entry, MppCtxType type,
 	entry->handle = handle;
 	entry->coding_type = coding;
 	entry->type = type;
+	entry->binder_chan_id = -1;
+	entry->master_chan_id = -1;
 	atomic_set(&entry->stream_count, 0);
 	atomic_set(&entry->str_out_cnt, 0);
 
@@ -522,6 +524,7 @@ int mpp_vcodec_chan_entry_deinit(struct mpp_chan *entry)
 	entry->state = CHAN_STATE_NULL;
 	entry->reenc = 0;
 	entry->binder_chan_id = -1;
+	entry->master_chan_id = -1;
 	if (mpibuf_fn->buf_queue_destroy) {
 		mpibuf_fn->buf_queue_destroy(entry->yuv_queue);
 		entry->yuv_queue = NULL;

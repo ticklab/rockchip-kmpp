@@ -145,15 +145,17 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 		mpp_buffer_import(&frm_buf, &info);
 		mpp_vcodec_jpegcomb("attach jpeg id %d\n", frm_info.jpeg_chan_id);
 		if (frm_info.jpeg_chan_id > 0) {
-			chan_entry->combo_gap_time = (RK_S32)(mpp_time() - chan_entry->last_jeg_combo_start);
-			chan_entry->last_jeg_combo_start = mpp_time();
-			chan_entry->binder_chan_id = frm_info.jpeg_chan_id;
-
 			comb_chan = mpp_vcodec_get_chan_entry(frm_info.jpeg_chan_id, MPP_CTX_ENC);
 			if (comb_chan->state != CHAN_STATE_RUN)
 				comb_chan = NULL;
+
 			if (comb_chan && comb_chan->handle) {
 				atomic_inc(&comb_chan->runing);
+
+				chan_entry->combo_gap_time = (RK_S32)(mpp_time() - chan_entry->last_jeg_combo_start);
+				chan_entry->last_jeg_combo_start = mpp_time();
+				chan_entry->binder_chan_id = frm_info.jpeg_chan_id;
+
 				mpp_frame_init(&comb_frame);
 				mpp_frame_copy(comb_frame, frame);
 				if (frm_info.jpg_combo_osd_buf)
@@ -190,7 +192,9 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 						atomic_dec(&chan_entry->cfg.comb_runing);
 						atomic_dec(&comb_chan->runing);
 						wake_up(&comb_chan->stop_wait);
-					}
+					} else
+						comb_chan->master_chan_id = chan_entry->chan_id;
+
 				} else {
 					struct vcodec_mpidev_fn *mpidev_fn = get_mpidev_ops();
 
@@ -285,6 +289,7 @@ void mpp_vcodec_enc_int_handle(int chan_id)
 		atomic_dec(&comb_entry->runing);
 		wake_up(&comb_entry->stop_wait);
 		chan_entry->binder_chan_id = -1;
+		comb_entry->master_chan_id = -1;
 	} else {
 		ret = mpp_enc_int_process((MppEnc)chan_entry->handle, NULL,
 					  &packet, &jpeg_packet);
