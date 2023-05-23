@@ -1924,11 +1924,9 @@ MPP_RET vepu540c_set_jpeg_reg(Vepu540cJpegCfg * cfg);
 MPP_RET vepu540c_set_roi(void *roi_reg_base, MppEncROICfg * roi,
 			 RK_S32 w, RK_S32 h);
 MPP_RET vepu540c_set_qpmap_smart(void *roi_reg_base, MppBuffer mv_info, MppBuffer qpmap,
-				 RK_U8 *mv_flag[3], RK_U8 *mv_index, RK_U32 qp_out,
-				 RK_S32 w, RK_S32 h, RK_S32 is_hevc, RK_S32 is_idr);
+				 RK_U8 *mv_flag, RK_U32 qp_out, RK_S32 w, RK_S32 h, RK_S32 is_hevc, RK_S32 is_idr);
 MPP_RET vepu540c_set_qpmap_normal(void *roi_reg_base, MppBuffer mv_info, MppBuffer qpmap,
-				  RK_U8 *mv_flag[3], RK_U8 *mv_index, RK_U32 qp_out,
-				  RK_S32 w, RK_S32 h, RK_S32 is_hevc, RK_S32 is_idr);
+				  RK_U8 *mv_flag, RK_U32 qp_out, RK_S32 w, RK_S32 h, RK_S32 is_hevc, RK_S32 is_idr);
 MPP_RET vepu540c_set_osd(Vepu540cOsdCfg * cfg);
 MPP_RET vepu540c_osd_put_dma_buf(Vepu540cOsdCfg * cfg);
 void vepu540c_set_dvbm(vepu540c_online *online_addr);

@@ -130,8 +130,7 @@ typedef struct MppEncImpl_t {
 	struct hal_shared_buf *shared_buf;
 	MppBuffer mv_info;
 	MppBuffer qpmap;
-	RK_U8 mv_index;
-	RK_U8 *mv_flag[3];
+	RK_U8 *mv_flag;
 	RK_U32 qp_out;
 	RK_U32		chan_id;
 	RK_U32 motion_static_switch_en;

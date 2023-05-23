@@ -228,15 +228,12 @@ MPP_RET mpp_enc_deinit(MppEnc ctx)
 	mpp_enc_unref_osd_buf(&enc->cur_osd);
 
 	if (enc->qpmap_en) {
-		RK_U32 i;
 		if (enc->mv_info)
 			mpp_buffer_put(enc->mv_info);
 		if (enc->qpmap)
 			mpp_buffer_put(enc->qpmap);
-		for (i = 0; i < 3; i++) {
-			if (enc->mv_flag[i])
-				mpp_free(enc->mv_flag[i]);
-		}
+		if (enc->mv_flag)
+			mpp_free(enc->mv_flag);
 	}
 
 	MPP_FREE(enc->rc_cfg_info);
@@ -348,7 +345,6 @@ MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame)
 	if (enc->qpmap_en && !enc->mv_info) {
 		RK_U32 mb_w = 0;
 		RK_U32 mb_h = 0;
-		RK_U32 i;
 
 		if (cfg->codec.coding == MPP_VIDEO_CodingAVC) {
 			mb_w = MPP_ALIGN(cfg->prep.max_width, 64) / 16;
@@ -361,11 +357,9 @@ MPP_RET mpp_enc_cfg_reg(MppEnc ctx, MppFrame frame)
 			mpp_buffer_get(NULL, &enc->mv_info, mb_w * mb_h * 4);
 		if (!enc->qpmap)
 			mpp_buffer_get(NULL, &enc->qpmap, mb_w * mb_h * 4);
-		for (i = 0; i < 3; i++) {
-			enc->mv_flag[i] = (RK_U8 *)mpp_calloc(RK_U8, mb_w * mb_h);
-			if (!enc->mv_flag[i])
-				mpp_log("alloc mv_flag failed!\n");
-		}
+		enc->mv_flag = (RK_U8 *)mpp_calloc(RK_U8, mb_w * mb_h);
+		if (!enc->mv_flag)
+			mpp_log("alloc mv_flag failed!\n");
 	}
 	ret = mpp_enc_impl_reg_cfg(ctx, frame);
 	enc->enc_status = ENC_STATUS_CFG_DONE;

@@ -1376,12 +1376,9 @@ static MPP_RET mpp_enc_normal_cfg(MppEncImpl *enc, EncTask *task)
 	MPP_RET ret = MPP_OK;
 
 	if (enc->qpmap_en) {
-		RK_U32 i;
 		hal_task->mv_info = enc->mv_info;
 		hal_task->qpmap = enc->qpmap;
-		for (i = 0; i < 3; i++)
-			hal_task->mv_flag[i] = enc->mv_flag[i];
-		hal_task->mv_index = &enc->mv_index;
+		hal_task->mv_flag = enc->mv_flag;
 		hal_task->qp_out = enc->qp_out;
 	}
 	if (!enc->online && enc->cfg.rc.debreath_en && !enc->ref_buf_shared) {
