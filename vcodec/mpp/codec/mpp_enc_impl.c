@@ -1995,6 +1995,7 @@ TASK_DONE:
 			mpp_err_f("ring_buf_put_used fail \n");
 	}
 	*packet = enc->packet;
+	enc->packet = NULL;
 	/*
 	 * First return output packet.
 	 * Then enqueue task back to input port.

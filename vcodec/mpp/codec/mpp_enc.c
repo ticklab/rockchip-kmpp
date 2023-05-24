@@ -451,7 +451,6 @@ MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
 	enc->enc_status = ENC_STATUS_INT_DONE;
 	down(&enc->enc_sem);
 	enc->hw_run = 0;
-	enc->packet = NULL;
 	up(&enc->enc_sem);
 	enc_dbg_func("%p out\n", enc);
 
