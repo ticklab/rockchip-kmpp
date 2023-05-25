@@ -22,8 +22,9 @@
 #include "mpp_buffer.h"
 #include "rk_export_func.h"
 #include "mpp_frame.h"
+#include "mpp_mem_pool.h"
 
-
+static const char *module_name = MODULE_TAG;
 struct MppBufferImpl {
 	MppBufferInfo info;
 	struct mpi_buf *mpi_buf;
@@ -32,6 +33,34 @@ struct MppBufferImpl {
 	RK_U32 cir_flag;
 	RK_S32 ref_count;
 };
+
+static MppMemPool g_mppbuf_pool = NULL;
+
+MPP_RET mpp_buffer_pool_init(RK_U32 max_cnt)
+{
+	if (g_mppbuf_pool)
+		return MPP_OK;
+
+	g_mppbuf_pool = mpp_mem_pool_init(module_name, sizeof(struct MppBufferImpl), max_cnt);
+
+	return MPP_OK;
+}
+
+MPP_RET mpp_buffer_pool_deinit(void)
+{
+	if (!g_mppbuf_pool)
+		return MPP_OK;
+
+	mpp_mem_pool_deinit(g_mppbuf_pool);
+	g_mppbuf_pool = NULL;
+
+	return MPP_OK;
+}
+
+void mpp_buf_pool_info_show(void *seq_file)
+{
+	mpp_mem_pool_info_show(seq_file, g_mppbuf_pool);
+}
 
 MPP_RET mpp_buffer_import_with_tag(MppBufferGroup group, MppBufferInfo *info,
 				   MppBuffer *buffer, const char *tag,
@@ -52,7 +81,8 @@ MPP_RET mpp_buffer_import_with_tag(MppBufferGroup group, MppBufferInfo *info,
 	}
 	if (buffer) {
 		struct MppBufferImpl *buf = NULL;
-		buf = mpp_calloc(struct MppBufferImpl, 1);
+
+		buf = mpp_mem_pool_get(g_mppbuf_pool);
 		if (!buf) {
 			mpp_err("mpp_buffer_import fail %s\n", caller);
 			return MPP_ERR_NULL_PTR;
@@ -154,7 +184,7 @@ MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer *buffer,
 		mpp_err_f("mpibuf_ops get fail");
 		return MPP_NOK;
 	}
-	buf_impl = mpp_calloc(struct MppBufferImpl, 1);
+	buf_impl = mpp_mem_pool_get(g_mppbuf_pool);
 	if (NULL == buf_impl) {
 		mpp_err("buf impl malloc fail : group %p buffer %p size %u from %s\n",
 			group, buffer, (RK_U32)size, caller);
@@ -167,7 +197,7 @@ MPP_RET mpp_buffer_get_with_tag(MppBufferGroup group, MppBuffer *buffer,
 	if (NULL == mpi_buf || 0 == size) {
 		mpp_err("mpp_buffer_get invalid input: group %p buffer %p size %u from %s\n",
 			group, buffer, (RK_U32)size, caller);
-		mpp_free(buf_impl);
+		mpp_mem_pool_put(g_mppbuf_pool, buf_impl);
 		return MPP_ERR_UNKNOW;
 	}
 	if (mpibuf_fn->buf_get_dmabuf)
@@ -194,7 +224,7 @@ MPP_RET mpp_ring_buffer_get_with_tag(MppBufferGroup group, MppBuffer *buffer,
 		mpp_err_f("mpibuf_ops get fail");
 		return MPP_NOK;
 	}
-	buf_impl = mpp_calloc(struct MppBufferImpl, 1);
+	buf_impl = mpp_mem_pool_get(g_mppbuf_pool);
 	if (NULL == buf_impl) {
 		mpp_err("buf impl malloc fail : group %p buffer %p size %u from %s\n",
 			group, buffer, (RK_U32)size, caller);
@@ -207,7 +237,7 @@ MPP_RET mpp_ring_buffer_get_with_tag(MppBufferGroup group, MppBuffer *buffer,
 	if (NULL == mpi_buf || 0 == size) {
 		mpp_err("mpp_buffer_get invalid input: group %p buffer %p size %u from %s\n",
 			group, buffer, (RK_U32)size, caller);
-		mpp_free(buf_impl);
+		mpp_mem_pool_put(g_mppbuf_pool, buf_impl);
 		return MPP_ERR_UNKNOW;
 	}
 	if (mpibuf_fn->buf_get_dmabuf)
@@ -252,7 +282,7 @@ MPP_RET mpp_buffer_put_with_caller(MppBuffer buffer, const char *caller)
 		if (mpibuf_fn->buf_unref)
 			mpibuf_fn->buf_unref(buf_impl->mpi_buf);
 
-		mpp_free(buf_impl);
+		mpp_mem_pool_put(g_mppbuf_pool, buf_impl);
 	}
 
 	return MPP_OK;

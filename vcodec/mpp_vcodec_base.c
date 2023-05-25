@@ -175,6 +175,7 @@ static int mpp_enc_module_init(void)
 	vcodec_thread_set_count(thds, 1);
 	vcodec_thread_set_callback(thds, mpp_vcodec_enc_routine, (void*)venc);
 	mpp_packet_pool_init(max_stream_cnt);
+	mpp_buffer_pool_init(max_stream_cnt);
 	vcodec_thread_start(thds);
 
 	venc->check = &venc;
@@ -719,6 +720,7 @@ int mpp_vcodec_deinit(void)
 		venc->thd = NULL;
 	}
 	mpp_packet_pool_deinit();
+	mpp_buffer_pool_deinit();
 
 	return 0;
 }

@@ -349,6 +349,10 @@ MPP_RET mpi_buf_unref_with_tag(struct mpi_buf *buf, const char *tag, const char 
 void mpp_buffer_set_phy_caller(MppBuffer buffer, RK_U32 phy_addr, const char *caller);
 RK_S32 mpp_buffer_get_phy_caller(MppBuffer buffer, const char *caller);
 
+/* mpp buffer pool */
+MPP_RET mpp_buffer_pool_init(RK_U32 max_cnt);
+MPP_RET mpp_buffer_pool_deinit(void);
+void mpp_buf_pool_info_show(void *seq_file);
 
 /*
  * size  : 0 - no limit, other - max buffer size
