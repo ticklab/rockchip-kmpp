@@ -150,7 +150,6 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 				comb_chan = NULL;
 
 			if (comb_chan && comb_chan->handle) {
-				atomic_inc(&comb_chan->runing);
 
 				chan_entry->combo_gap_time = (RK_S32)(mpp_time() - chan_entry->last_jeg_combo_start);
 				chan_entry->last_jeg_combo_start = mpp_time();
@@ -182,6 +181,7 @@ static MPP_RET enc_chan_process_single_chan(RK_U32 chan_id)
 
 		if (MPP_OK == ret) {
 			if (comb_chan && comb_chan->handle) {
+				atomic_inc(&comb_chan->runing);
 				atomic_inc(&chan_entry->cfg.comb_runing);
 				ret = mpp_enc_cfg_reg((MppEnc)comb_chan->handle, comb_frame);
 				if (MPP_OK == ret) {

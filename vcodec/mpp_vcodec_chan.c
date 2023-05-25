@@ -170,7 +170,8 @@ int mpp_vcodec_chan_destory(int chan_id, MppCtxType type)
 				chan_tmp = mpp_vcodec_get_chan_entry(chan_entry->master_chan_id, type);
 				mpp_enc_unbind_jpeg_task(chan_tmp->handle);
 			}
-			if (!mpp_enc_check_hw_running(chan_tmp->handle))
+			if (!mpp_enc_check_hw_running(chan_tmp->handle) &&
+			    !mpp_enc_check_is_int_process(chan_tmp->handle))
 				wait = false;
 		}
 
@@ -416,7 +417,8 @@ static int mpp_vcodec_chan_change_coding_type(int chan_id, void *arg)
 			chan_tmp = mpp_vcodec_get_chan_entry(entry->master_chan_id, MPP_CTX_ENC);
 			mpp_enc_unbind_jpeg_task(chan_tmp->handle);
 		}
-		if (!mpp_enc_check_hw_running(chan_tmp->handle))
+		if (!mpp_enc_check_hw_running(chan_tmp->handle) &&
+		    !mpp_enc_check_is_int_process(chan_tmp->handle))
 			wait = false;
 	}
 

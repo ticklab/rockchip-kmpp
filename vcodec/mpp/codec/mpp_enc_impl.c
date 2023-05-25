@@ -1893,6 +1893,7 @@ TASK_DONE:
 	}
 
 	*packet = enc->packet;
+	enc->packet = NULL;
 
 	/*
 	 * First return output packet.

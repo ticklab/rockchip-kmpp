@@ -272,12 +272,14 @@ MPP_RET mpp_enc_stop(MppEnc ctx)
 {
 	MPP_RET ret = MPP_OK;
 	MppEncImpl *enc = (MppEncImpl *) ctx;
+
 	down(&enc->enc_sem);
 	enc_dbg_func("%p in\n", enc);
 	enc->stop_flag = 1;
 	ret = enc->hw_run;
 	enc_dbg_func("%p out\n", enc);
 	up(&enc->enc_sem);
+
 	return ret;
 
 }
@@ -440,6 +442,24 @@ RK_S32 mpp_enc_unbind_jpeg_task(MppEnc ctx)
 	}
 
 	return mpp_dev_chnl_unbind_jpeg_task(enc->dev);
+}
+
+bool mpp_enc_check_is_int_process(MppEnc ctx)
+{
+	MppEncImpl *enc = (MppEncImpl *) ctx;
+	bool ret = false;
+
+	if (NULL == enc) {
+		mpp_err_f("found NULL input enc\n");
+		return false;
+	}
+
+	down(&enc->enc_sem);
+	if (enc->enc_status == ENC_STATUS_INT_IN)
+		ret = true;
+	up(&enc->enc_sem);
+
+	return ret;
 }
 
 MPP_RET mpp_enc_int_process(MppEnc ctx, MppEnc jpeg_ctx, MppPacket * packet,
