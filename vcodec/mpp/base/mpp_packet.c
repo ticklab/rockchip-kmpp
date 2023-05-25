@@ -21,14 +21,40 @@
 #include "mpp_packet_impl.h"
 #include "mpp_buffer.h"
 #include "mpp_maths.h"
-#include "mpp_packet_pool.h"
 #include "rk_export_func.h"
+#include "mpp_mem_pool.h"
 
 static const char *module_name = MODULE_TAG;
-//static MppMemPool mpp_packet_pool = mpp_mem_pool_init(sizeof(MppPacketImpl));
 
 #define setup_mpp_packet_name(packet) \
     ((MppPacketImpl*)packet)->name = module_name;
+
+static MppMemPool g_packet_pool = NULL;
+MPP_RET mpp_packet_pool_init(RK_U32 max_cnt)
+{
+	if (g_packet_pool)
+		return MPP_OK;
+
+	g_packet_pool = mpp_mem_pool_init(module_name, sizeof(MppPacketImpl), max_cnt);
+
+	return MPP_OK;
+}
+
+MPP_RET mpp_packet_pool_deinit(void)
+{
+	if (!g_packet_pool)
+		return MPP_OK;
+
+	mpp_mem_pool_deinit(g_packet_pool);
+	g_packet_pool = NULL;
+
+	return MPP_OK;
+}
+
+void mpp_packet_pool_info_show(void *seq_file)
+{
+	mpp_mem_pool_info_show(seq_file, g_packet_pool);
+}
 
 MPP_RET check_is_mpp_packet(void *packet)
 {
@@ -49,7 +75,7 @@ MPP_RET mpp_packet_new(MppPacket * packet)
 		return MPP_ERR_NULL_PTR;
 	}
 
-	p = mpp_packet_mem_alloc();
+	p = mpp_mem_pool_get(g_packet_pool);
 	if (NULL == p) {
 		mpp_err_f("malloc failed\n");
 		return MPP_ERR_NULL_PTR;
@@ -157,7 +183,7 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 		return MPP_ERR_NULL_PTR;
 	}
 
-	p = mpp_packet_mem_alloc();
+	p = mpp_mem_pool_get(g_packet_pool);
 
 	if (NULL == p)
 		return MPP_ERR_NULL_PTR;
@@ -170,12 +196,12 @@ MPP_RET mpp_packet_new_ring_buf(MppPacket *packet, ring_buf_pool *pool, size_t m
 
 	if (pool) {
 		if (ring_buf_get_free(pool, &p->buf, 128, min_size, 1)) {
-			mpp_packet_mem_free(p);
+			mpp_mem_pool_put(g_packet_pool, p);
 			return MPP_ERR_MALLOC;
 		}
 	} else {
 		if (mpp_packet_vsm_buf_alloc(p, type, chan_id)) {
-			mpp_packet_mem_free(p);
+			mpp_mem_pool_put(g_packet_pool, p);
 			return MPP_ERR_MALLOC;
 		}
 	}
@@ -290,7 +316,7 @@ MPP_RET mpp_packet_deinit(MppPacket * packet)
 	if (p->flag & MPP_PACKET_FLAG_EXTERNAL)
 		vunmap(p->buf.buf_start);
 
-	mpp_packet_mem_free(p);
+	mpp_mem_pool_put(g_packet_pool, p);
 
 	*packet = NULL;
 	return MPP_OK;

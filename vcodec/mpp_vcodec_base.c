@@ -24,7 +24,7 @@
 #include "mpp_buffer.h"
 #include "rk_export_func.h"
 #include "mpp_packet_impl.h"
-#include "mpp_packet_pool.h"
+#include "mpp_mem_pool.h"
 #include "hal_bufs.h"
 #include "mpp_maths.h"
 

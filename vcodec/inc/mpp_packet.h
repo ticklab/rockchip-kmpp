@@ -17,6 +17,9 @@
 extern "C" {
 #endif
 
+MPP_RET mpp_packet_pool_init(RK_U32 max_cnt);
+MPP_RET mpp_packet_pool_deinit(void);
+void mpp_packet_pool_info_show(void *seq_file);
 /*
  * MppPacket interface
  *
