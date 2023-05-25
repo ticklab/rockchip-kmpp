@@ -486,11 +486,14 @@ void mpp_session_clean_detach(struct mpp_taskqueue *queue)
 		session = list_first_entry_or_null(&queue->session_detach, struct mpp_session,
 						   session_link);
 
+		if (!session)
+			break;
+
 		if (session->online)
 			mpp_session_clear_online_task(session->mpp, session);
 
 		if (atomic_read(&session->task_count))
-			return;
+			break;
 
 		if (session) {
 			list_del_init(&session->session_link);
