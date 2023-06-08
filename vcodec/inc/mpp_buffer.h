@@ -278,6 +278,9 @@ typedef struct MppBufferInfo_t {
 #define mpp_buffer_flush_for_cpu(buffer) \
         mpp_buffer_flush_for_cpu_with_caller(buffer, __FUNCTION__)
 
+#define mpp_buffer_flush_for_device(buffer) \
+        mpp_buffer_flush_for_device_with_caller(buffer, __FUNCTION__)
+
 #define mpp_buffer_get_mpi_buf_id(buffer) \
         mpp_buffer_get_mpi_buf_id_with_caller(buffer, __FUNCTION__)
 
@@ -340,6 +343,7 @@ struct mpi_buf *mpi_buf_alloc_with_tag(size_t size, const char *tag, const char 
 struct dma_buf *mpp_buffer_get_dma_with_caller(MppBuffer buffer, const char *caller);
 struct dma_buf *mpi_buf_get_dma_with_caller(MpiBuf buffer, const char *caller);
 MPP_RET mpp_buffer_flush_for_cpu_with_caller(ring_buf *buf, const char *caller);
+MPP_RET mpp_buffer_flush_for_device_with_caller(ring_buf *buf, const char *caller);
 RK_S32 mpp_buffer_get_mpi_buf_id_with_caller(MppBuffer buffer, const char *caller);
 
 

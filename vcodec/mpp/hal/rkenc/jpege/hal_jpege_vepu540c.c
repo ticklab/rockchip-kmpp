@@ -292,10 +292,10 @@ MPP_RET hal_jpege_v540c_gen_regs(void *hal, HalEncTask * task)
 	task->length = (bitpos + 7) >> 3;
 	mpp_packet_set_length(task->packet, task->length);
 
-	if (task->output->buf)
-		dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),
-					       DMA_TO_DEVICE, task->output->start_offset, task->length);
-	else {
+	if (task->output->buf) {
+		task->output->use_len = task->length;
+		mpp_buffer_flush_for_device(task->output);
+	} else {
 		struct device *dev = mpp_get_dev(ctx->dev);
 		dma_sync_single_for_device(dev, task->output->mpi_buf_id, task->length, DMA_TO_DEVICE);
 	}

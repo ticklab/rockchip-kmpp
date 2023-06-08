@@ -1861,8 +1861,8 @@ void vepu540c_h265_set_hw_address(H265eV540cHalContext *ctx,
 	}
 
 	if (len && task->output->buf) {
-		dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),
-					       DMA_TO_DEVICE, task->output->start_offset, len);
+		task->output->use_len = len;
+		mpp_buffer_flush_for_device(task->output);
 	} else if (len && enc_task->output->mpi_buf_id) {
 		struct device *dev = mpp_get_dev(ctx->dev);
 		dma_sync_single_for_device(dev, enc_task->output->mpi_buf_id, len, DMA_TO_DEVICE);

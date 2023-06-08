@@ -1686,8 +1686,8 @@ static void setup_vepu540c_io_buf(HalH264eVepu540cCtx *ctx,
 	}
 
 	if (off_out && task->output->buf) {
-		dma_buf_end_cpu_access_partial(mpp_buffer_get_dma(task->output->buf),
-					       DMA_TO_DEVICE, task->output->start_offset, off_out);
+		task->output->use_len = off_out;
+		mpp_buffer_flush_for_device(task->output);
 	} else if (off_out && task->output->mpi_buf_id) {
 		struct device *dev = mpp_get_dev(ctx->dev);
 		dma_sync_single_for_device(dev, task->output->mpi_buf_id, off_out, DMA_TO_DEVICE);
