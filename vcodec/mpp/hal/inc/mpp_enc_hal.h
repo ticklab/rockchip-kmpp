@@ -23,7 +23,6 @@ typedef struct MppEncHalCfg_t {
 	RK_U32  ref_buf_shared;
 	RK_S32	qpmap_en;
 	RK_S32	smart_en;
-	RK_S32	motion_static_switch_en;
 	RK_U32  only_smartp;
 
 	// output from enc_impl

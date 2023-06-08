@@ -77,7 +77,6 @@ int mpp_vcodec_chan_create(struct vcodec_attr *attr)
 			&chan_entry->shared_buf,
 			attr->smart_en ? 1 : attr->qpmap_en,
 			chan_id,
-			attr->motion_static_switch_en,
 			attr->only_smartp,
 		};
 

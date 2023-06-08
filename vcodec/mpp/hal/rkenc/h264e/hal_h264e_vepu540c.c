@@ -107,7 +107,6 @@ typedef struct HalH264eVepu540cCtx_t {
 	RK_S32	qpmap_en;
 	RK_S32	smart_en;
 	RK_U32  is_gray;
-	RK_S32	motion_static_switch_en;
 	RK_U32  only_smartp;
 } HalH264eVepu540cCtx;
 
@@ -225,7 +224,6 @@ static MPP_RET hal_h264e_vepu540c_init(void *hal, MppEncHalCfg *cfg)
 	p->shared_buf = cfg->shared_buf;
 	p->qpmap_en = cfg->qpmap_en;
 	p->smart_en = cfg->smart_en;
-	p->motion_static_switch_en = cfg->motion_static_switch_en;
 	p->only_smartp = cfg->only_smartp;
 	/* update output to MppEnc */
 	cfg->type = VPU_CLIENT_RKVENC;
@@ -1990,7 +1988,7 @@ static void setup_vepu540c_l2(HalH264eVepu540cCtx *ctx, H264eSlice *slice,
 	regs->reg_s3.RDO_QUANT.quant_f_bias_P = 341;
 	if (ctx->cfg->tune.scene_mode == MPP_ENC_SCENE_MODE_IPC) {
 		if (ctx->smart_en) {
-			if (ctx->motion_static_switch_en)
+			if (ctx->cfg->tune.motion_static_switch_enable)
 				regs->reg_s3.RDO_QUANT.quant_f_bias_I = 341;
 			else
 				regs->reg_s3.RDO_QUANT.quant_f_bias_I = 500;

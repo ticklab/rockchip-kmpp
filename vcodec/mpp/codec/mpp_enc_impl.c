@@ -730,6 +730,14 @@ MPP_RET mpp_enc_proc_tune_cfg(MppEncFineTuneCfg *dst, MppEncFineTuneCfg *src)
 			ret = MPP_ERR_VALUE;
 		}
 
+		if (change & MPP_ENC_TUNE_CFG_CHANGE_MOTION_STATIC_SWITCH_ENABLE)
+			dst->motion_static_switch_enable = src->motion_static_switch_enable;
+
+		if (dst->motion_static_switch_enable < 0 || dst->motion_static_switch_enable > 1) {
+			mpp_err("invalid motion static switch enable not in range [%d : %d]\n", 0, 1);
+			ret = MPP_ERR_VALUE;
+		}
+
 		dst->change |= change;
 
 		if (ret) {
@@ -985,6 +993,8 @@ static void set_rc_cfg(RcCfg *cfg, MppEncCfgSet *cfg_set)
 	cfg->bps_target = rc->bps_target;
 	cfg->bps_max = rc->bps_max;
 	cfg->bps_min = rc->bps_min;
+	cfg->scene_mode = cfg_set->tune.scene_mode;
+	cfg->motion_static_switch_enable = cfg_set->tune.motion_static_switch_enable;
 
 	cfg->hier_qp_cfg.hier_qp_en = rc->hier_qp_en;
 	memcpy(cfg->hier_qp_cfg.hier_frame_num, rc->hier_frame_num,
@@ -1081,8 +1091,6 @@ MPP_RET mpp_enc_proc_rc_update(MppEncImpl *enc)
 
 		if (enc->online || enc->ref_buf_shared)
 			usr_cfg.shared_buf_en = 1;
-		if (enc->motion_static_switch_en)
-			usr_cfg.motion_static_switch_en = 1;
 
 		ret = rc_update_usr_cfg(enc->rc_ctx, &usr_cfg);
 		rc_cfg->change = 0;

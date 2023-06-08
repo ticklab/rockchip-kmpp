@@ -117,7 +117,6 @@ typedef struct H265eV540cHalContext_t {
 	RK_U32 recn_ref_wrap;
 	RK_S32 qpmap_en;
 	RK_S32 smart_en;
-	RK_S32 motion_static_switch_en;
 	MppBuffer recn_ref_buf;
 	WrapBufInfo wrap_infos;
 	struct hal_shared_buf *shared_buf;
@@ -988,7 +987,7 @@ static void vepu540c_h265_global_cfg_set(H265eV540cHalContext *ctx,
 	}
 	reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 171;
 	if (ctx->smart_en) {
-		if (ctx->motion_static_switch_en)
+		if (ctx->cfg->tune.motion_static_switch_enable)
 			reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 85;
 		else
 			reg_wgt->reg1484_qnt_bias_comb.qnt_bias_i = 128;
@@ -1094,7 +1093,6 @@ MPP_RET hal_h265e_v540c_init(void *hal, MppEncHalCfg *cfg)
 	ctx->shared_buf = cfg->shared_buf;
 	ctx->qpmap_en = cfg->qpmap_en;
 	ctx->smart_en = cfg->smart_en;
-	ctx->motion_static_switch_en = cfg->motion_static_switch_en;
 	ctx->only_smartp = cfg->only_smartp;
 
 	//hal_bufs_init(&ctx->dpb_bufs);

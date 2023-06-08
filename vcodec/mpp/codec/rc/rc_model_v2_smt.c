@@ -910,7 +910,7 @@ MPP_RET rc_model_v2_smt_start(void *ctx, EncRcTask * task)
 		}
 	}
 
-	if (0 == mpp_data_sum_v2(p->motion_level) && p->usr_cfg.motion_static_switch_en) {
+	if (0 == mpp_data_sum_v2(p->motion_level) && p->usr_cfg.motion_static_switch_enable) {
 		fm_lv_min_i_quality = 32;
 		fm_lv_min_quality = 32;
 	}
