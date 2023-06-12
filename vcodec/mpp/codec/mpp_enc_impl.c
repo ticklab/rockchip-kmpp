@@ -2066,17 +2066,19 @@ void mpp_enc_impl_poc_debug_info(void *seq_file, MppEnc ctx, RK_U32 chl_id)
 		   strof_pixel_fmt(cfg->prep.format), enc->real_fps, strof_rotation(cfg->prep.rotation),
 		   strof_bool(cfg->prep.mirroring));
 
-	seq_puts(seq,
-		 "\n--------ring buf status---------------------------------------------------------------------------\n");
+	if (enc->ring_pool) {
+		seq_puts(seq,
+			 "\n--------ring buf status---------------------------------------------------------------------------\n");
 
-	seq_printf(seq, "%8s|%8s|%8s|%8s|%10s|%10s|%10s|%10s\n",
-		   "ID", "w_pos", "r_pos",
-		   "usd_len", "total_len", "min_size",
-		   "l_w_pos", "l_r_pos");
-	seq_printf(seq, "%8d|%8d|%8d|%8d|%10d|%10d|%10d|%10d\n",
-		   chl_id, enc->ring_pool->w_pos, enc->ring_pool->r_pos,
-		   enc->ring_pool->use_len, enc->ring_pool->len, enc->ring_pool->min_buf_size,
-		   enc->ring_pool->l_w_pos, enc->ring_pool->l_r_pos);
+		seq_printf(seq, "%8s|%8s|%8s|%8s|%10s|%10s|%10s|%10s\n",
+			   "ID", "w_pos", "r_pos",
+			   "usd_len", "total_len", "min_size",
+			   "l_w_pos", "l_r_pos");
+		seq_printf(seq, "%8d|%8d|%8d|%8d|%10d|%10d|%10d|%10d\n",
+			   chl_id, enc->ring_pool->w_pos, enc->ring_pool->r_pos,
+			   enc->ring_pool->use_len, enc->ring_pool->len, enc->ring_pool->min_buf_size,
+			   enc->ring_pool->l_w_pos, enc->ring_pool->l_r_pos);
+	}
 
 	seq_puts(seq,
 		 "\n--------hw status---------------------------------------------------------------------------------\n");
