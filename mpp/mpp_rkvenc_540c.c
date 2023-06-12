@@ -1239,15 +1239,20 @@ static int rkvenc_run(struct mpp_dev *mpp, struct mpp_task *mpp_task)
 
 static int rkvenc_check_bs_overflow(struct mpp_dev *mpp)
 {
-	u32 r_adr, top_adr;
+	u32 r_adr, top_adr, bot_adr;
 	int ret = 0;
 	struct rkvenc_dev *enc = to_rkvenc_dev(mpp);
+	struct mpp_task *task = mpp->cur_task;
 
 	if (!(mpp->irq_status & RKVENC_ENC_DONE_STATUS)) {
 		if (mpp->irq_status & RKVENC_JPEG_OVERFLOW) {
 			/* the w/r address need to be read in reversed*/
 			r_adr = mpp_read(mpp, RKVENC_JPEG_BSBS);
 			top_adr = mpp_read(mpp, RKVENC_JPEG_BSBT);
+			bot_adr = mpp_read(mpp, RKVENC_JPEG_BSBB);
+
+			pr_err("task %d jpeg bs overflow, buf[t:%d b:%d w:%d r:%d]\n",
+			       task->task_index, top_adr, bot_adr, enc->jpeg_wr_addr, r_adr);
 			if (enc->jpeg_wr_addr == r_adr)
 				enc->jpeg_wr_addr += 1;
 			if (enc->jpeg_wr_addr >= top_adr)
@@ -1255,12 +1260,15 @@ static int rkvenc_check_bs_overflow(struct mpp_dev *mpp)
 			mpp_write(mpp, RKVENC_JPEG_BSBS, enc->jpeg_wr_addr);
 			mpp_write(mpp, RKVENC_JPEG_BSBR, r_adr + 0xc);
 			mpp->overflow_status = mpp->irq_status;
-			pr_err("jpeg overflow\n");
 			ret = 1;
 		}
 		if (mpp->irq_status & RKVENC_VIDEO_OVERFLOW) {
 			r_adr = mpp_read(mpp, RKVENC_VIDEO_BSBR);
 			top_adr = mpp_read(mpp, RKVENC_VIDEO_BSBT);
+			bot_adr = mpp_read(mpp, RKVENC_VIDEO_BSBB);
+
+			pr_err("task %d video bs overflow, buf[t:%d b:%d w:%d r:%d]\n",
+			       task->task_index, top_adr, bot_adr, enc->video_wr_addr, r_adr);
 			if (enc->video_wr_addr == r_adr)
 				enc->video_wr_addr += 1;
 			if (enc->video_wr_addr >= top_adr)
@@ -1268,7 +1276,6 @@ static int rkvenc_check_bs_overflow(struct mpp_dev *mpp)
 			mpp_write(mpp, RKVENC_VIDEO_BSBS, enc->video_wr_addr);
 			mpp_write(mpp, RKVENC_VIDEO_BSBR, r_adr + 0xc);
 			mpp->overflow_status = mpp->irq_status;
-			pr_err("video overflow\n");
 			ret = 1;
 		}
 	}
