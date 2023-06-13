@@ -52,8 +52,7 @@ struct mpp_chan {
 	struct mpi_queue *yuv_queue;
 	wait_queue_head_t wait;
 	wait_queue_head_t stop_wait;
-	struct mutex stream_done_lock;
-	struct mutex stream_remove_lock;
+	spinlock_t stream_list_lock;
 	struct list_head stream_done;
 	struct list_head stream_remove;
 	atomic_t stream_count;

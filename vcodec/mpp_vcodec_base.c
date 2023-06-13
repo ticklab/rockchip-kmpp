@@ -496,8 +496,7 @@ int mpp_vcodec_chan_entry_init(struct mpp_chan *entry, MppCtxType type,
 	atomic_set(&entry->cfg.comb_runing, 0);
 	INIT_LIST_HEAD(&entry->stream_done);
 	INIT_LIST_HEAD(&entry->stream_remove);
-	mutex_init(&entry->stream_done_lock);
-	mutex_init(&entry->stream_remove_lock);
+	spin_lock_init(&entry->stream_list_lock);
 	init_waitqueue_head(&entry->wait);
 	init_waitqueue_head(&entry->stop_wait);
 
@@ -562,22 +561,20 @@ void stream_packet_free(struct kref *ref)
 void mpp_vcodec_stream_clear(struct mpp_chan *entry)
 {
 	MppPacketImpl *packet = NULL, *n;
+	unsigned long flags;
 
-	mutex_lock(&entry->stream_done_lock);
+	spin_lock_irqsave(&entry->stream_list_lock, flags);
 	list_for_each_entry_safe(packet, n, &entry->stream_done, list) {
 		list_del_init(&packet->list);
 		kref_put(&packet->ref, stream_packet_free);
 		atomic_dec(&entry->stream_count);
 	}
-	mutex_unlock(&entry->stream_done_lock);
-
-	mutex_lock(&entry->stream_remove_lock);
 	list_for_each_entry_safe(packet, n, &entry->stream_remove, list) {
 		list_del_init(&packet->list);
 		kref_put(&packet->ref, stream_packet_free);
 		atomic_dec(&entry->str_out_cnt);
 	}
-	mutex_unlock(&entry->stream_remove_lock);
+	spin_unlock_irqrestore(&entry->stream_list_lock, flags);
 
 	return;
 }

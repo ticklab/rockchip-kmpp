@@ -241,13 +241,14 @@ void mpp_vcodec_enc_add_packet_list(struct mpp_chan *chan_entry,
 				    MppPacket packet)
 {
 	MppPacketImpl *p = (MppPacketImpl *) packet;
+	unsigned long flags;
 
 	mpp_vcodec_detail("packet size %zu\n", mpp_packet_get_length(packet));
 	if (!get_vsm_ops()) {
-		mutex_lock(&chan_entry->stream_done_lock);
+		spin_lock_irqsave(&chan_entry->stream_list_lock, flags);
 		list_add_tail(&p->list, &chan_entry->stream_done);
 		atomic_inc(&chan_entry->stream_count);
-		mutex_unlock(&chan_entry->stream_done_lock);
+		spin_unlock_irqrestore(&chan_entry->stream_list_lock, flags);
 		wake_up(&chan_entry->wait);
 	} else
 		mpp_packet_deinit(&packet);

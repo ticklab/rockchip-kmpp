@@ -275,6 +275,7 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 	struct mpp_chan *chan_entry = mpp_vcodec_get_chan_entry(chan_id, type);
 	RK_U32 count = atomic_read(&chan_entry->stream_count);
 	MppPacketImpl *packet = NULL;
+	unsigned long flags;
 
 	if (!count) {
 		mpp_err("no stream count found in list \n");
@@ -283,9 +284,11 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 		return MPP_NOK;
 	}
 
-	mutex_lock(&chan_entry->stream_done_lock);
+	spin_lock_irqsave(&chan_entry->stream_list_lock, flags);
 	packet = list_first_entry_or_null(&chan_entry->stream_done, MppPacketImpl, list);
-	mutex_unlock(&chan_entry->stream_done_lock);
+	list_move_tail(&packet->list, &chan_entry->stream_remove);
+	spin_unlock_irqrestore(&chan_entry->stream_list_lock, flags);
+
 	atomic_dec(&chan_entry->stream_count);
 
 	enc_packet->flag = mpp_packet_get_flag(packet);
@@ -299,12 +302,6 @@ int mpp_vcodec_chan_get_stream(int chan_id, MppCtxType type,
 	enc_packet->u64packet_addr = (uintptr_t )packet;
 	enc_packet->buf_size = mpp_buffer_get_size(packet->buf.buf);
 
-	mutex_lock(&chan_entry->stream_done_lock);
-	list_del_init(&packet->list);
-	mutex_lock(&chan_entry->stream_remove_lock);
-	list_move_tail(&packet->list, &chan_entry->stream_remove);
-	mutex_unlock(&chan_entry->stream_remove_lock);
-	mutex_unlock(&chan_entry->stream_done_lock);
 	atomic_inc(&chan_entry->str_out_cnt);
 
 	return MPP_OK;
@@ -317,8 +314,9 @@ int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 	MppPacketImpl *packet = NULL, *n;
 	struct venc_module *venc =  NULL;
 	RK_U32 found = 0;
+	unsigned long flags;
 
-	mutex_lock(&chan_entry->stream_remove_lock);
+	spin_lock_irqsave(&chan_entry->stream_list_lock, flags);
 	list_for_each_entry_safe(packet, n, &chan_entry->stream_remove, list) {
 		if ((uintptr_t)packet == enc_packet->u64packet_addr) {
 			list_del_init(&packet->list);
@@ -340,7 +338,7 @@ int mpp_vcodec_chan_put_stream(int chan_id, MppCtxType type,
 		}
 		mpp_assert(found);
 	}
-	mutex_unlock(&chan_entry->stream_remove_lock);
+	spin_unlock_irqrestore(&chan_entry->stream_list_lock, flags);
 
 	return 0;
 }
