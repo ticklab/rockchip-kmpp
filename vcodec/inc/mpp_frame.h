@@ -268,6 +268,10 @@ typedef enum {
 extern "C" {
 #endif
 
+/* MppFrame pool */
+MPP_RET mpp_frame_pool_init(RK_U32 max_cnt);
+MPP_RET mpp_frame_pool_deinit(void);
+void mpp_frame_pool_info_show(void *seq_file);
 /*
  * MppFrame interface
  */

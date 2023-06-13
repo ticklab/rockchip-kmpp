@@ -14,8 +14,36 @@
 #include "mpp_mem.h"
 #include "mpp_maths.h"
 #include "mpp_frame_impl.h"
+#include "mpp_mem_pool.h"
 
 static const char *module_name = MODULE_TAG;
+
+static MppMemPool g_frame_pool = NULL;
+MPP_RET mpp_frame_pool_init(RK_U32 max_cnt)
+{
+	if (g_frame_pool)
+		return MPP_OK;
+
+	g_frame_pool = mpp_mem_pool_init(module_name, sizeof(MppFrameImpl), max_cnt);
+
+	return MPP_OK;
+}
+
+MPP_RET mpp_frame_pool_deinit(void)
+{
+	if (!g_frame_pool)
+		return MPP_OK;
+
+	mpp_mem_pool_deinit(g_frame_pool);
+	g_frame_pool = NULL;
+
+	return MPP_OK;
+}
+
+void mpp_frame_pool_info_show(void *seq_file)
+{
+	mpp_mem_pool_info_show(seq_file, g_frame_pool);
+}
 
 static void setup_mpp_frame_name(MppFrameImpl * frame)
 {
@@ -42,7 +70,7 @@ MPP_RET mpp_frame_init(MppFrame * frame)
 		return MPP_ERR_NULL_PTR;
 	}
 
-	p = mpp_calloc(MppFrameImpl, 1);
+	p = mpp_mem_pool_get(g_frame_pool);
 	if (NULL == p) {
 		mpp_err_f("malloc failed\n");
 		return MPP_ERR_NULL_PTR;
@@ -84,7 +112,7 @@ MPP_RET mpp_frame_deinit(MppFrame * frame)
 		//mpi_buf_unref(pp_info.smear);
 	}
 
-	mpp_free(*frame);
+	mpp_mem_pool_put(g_frame_pool, p);
 	*frame = NULL;
 
 	return MPP_OK;
