@@ -292,6 +292,11 @@ static RK_S32 check_rc_cfg_update(MpiCmd cmd, MppEncCfgSet *cfg)
 
 		if (change & check_flag)
 			return 1;
+
+		change = cfg->tune.change;
+		check_flag = MPP_ENC_TUNE_CFG_CHANGE_MOTION_STATIC_SWITCH_ENABLE;
+		if (change & check_flag)
+			return 1;
 	}
 
 	return 0;
